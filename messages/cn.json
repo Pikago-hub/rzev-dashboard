@@ -1,0 +1,73 @@
+{
+  "home": {
+    "title": "仪表板",
+    "welcome": "欢迎使用Rzev仪表板",
+    "logout": "退出登录"
+  },
+  "auth": {
+    "title": "欢迎回来",
+    "backToHome": "返回首页",
+    "backToEmail": "返回邮箱",
+    "subtitle": "登录您的账户以继续",
+    "emailTab": "邮箱",
+    "googleTab": "谷歌",
+    "createAccount": "创建账户",
+    "creatingAccount": "创建账户中...",
+    "firstName": "名字",
+    "lastName": "姓氏",
+    "phone": "电话",
+    "continue": "继续",
+    "email": "电子邮箱",
+    "password": "密码",
+    "forgotPassword": "忘记密码？",
+    "signIn": "登录",
+    "orContinueWith": "或继续使用",
+    "googleSignIn": "使用谷歌登录",
+    "termsText": "登录即表示您同意我们的",
+    "termsLink": "服务条款",
+    "privacyLink": "隐私政策",
+    "orUse": "或使用",
+    "useMagicLink": "使用魔法链接登录",
+    "sendingMagicLink": "正在发送魔法链接...",
+    "magicLinkSent": "魔法链接已发送",
+    "magicLinkInstructions": "请查看您的电子邮箱获取登录链接。链接将在10分钟后过期。",
+    "magicLinkError": "无法发送魔法链接。请重试。",
+    "error": "错误",
+    "emailCheckError": "无法检查电子邮箱。请重试。",
+    "emailNotVerified": "邮箱未验证",
+    "emailVerificationRequired": "请查看您的电子邮箱获取验证链接。",
+    "signInError": "登录错误",
+    "checkCredentials": "请检查您的凭据并重试。",
+    "callback": {
+      "loading": "正在处理您的登录...",
+      "success": "登录成功！",
+      "error": "登录时出错。",
+      "redirecting": "正在将您重定向到仪表板...",
+      "sessionError": "会话错误"
+    },
+    "confirmEmail": {
+      "title": "确认您的电子邮箱",
+      "loading": "正在验证您的电子邮箱地址...",
+      "success": "电子邮箱验证成功！",
+      "error": "验证您的电子邮箱时出错。",
+      "redirecting": "正在将您重定向到登录页面..."
+    }
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "save": "保存",
+    "cancel": "取消",
+    "edit": "编辑",
+    "delete": "删除",
+    "confirm": "确认",
+    "back": "返回"
+  },
+  "nav": {
+    "dashboard": "仪表板",
+    "profile": "个人资料",
+    "settings": "设置",
+    "logout": "退出登录"
+  }
+}

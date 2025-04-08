@@ -1,0 +1,73 @@
+{
+  "home": {
+    "title": "Panel de Control",
+    "welcome": "Bienvenido al Panel de Control de Rzev",
+    "logout": "Cerrar Sesión"
+  },
+  "auth": {
+    "title": "Bienvenido de Nuevo",
+    "subtitle": "Inicia sesión en tu cuenta para continuar",
+    "emailTab": "Correo electrónico",
+    "googleTab": "Google",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "backToHome": "Volver al inicio",
+    "backToEmail": "Volver al correo",
+    "createAccount": "Crear Cuenta",
+    "creatingAccount": "Creando cuenta...",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "signIn": "Iniciar Sesión",
+    "continue": "Continuar",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "phone": "Teléfono",
+    "orContinueWith": "o continuar con",
+    "googleSignIn": "Iniciar sesión con Google",
+    "termsText": "Al iniciar sesión, aceptas nuestros",
+    "termsLink": "Términos de Servicio",
+    "privacyLink": "Política de Privacidad",
+    "orUse": "o usar",
+    "useMagicLink": "Iniciar sesión con Magic Link",
+    "sendingMagicLink": "Enviando Magic Link...",
+    "magicLinkSent": "Magic Link Enviado",
+    "magicLinkInstructions": "Revisa tu correo electrónico para obtener un enlace de inicio de sesión. El enlace caducará en 10 minutos.",
+    "magicLinkError": "No se pudo enviar el magic link. Por favor, inténtalo de nuevo.",
+    "error": "Error",
+    "emailCheckError": "No se pudo verificar el correo electrónico. Por favor, inténtalo de nuevo.",
+    "emailNotVerified": "Correo electrónico no verificado",
+    "emailVerificationRequired": "Por favor, revisa tu correo electrónico para obtener un enlace de verificación.",
+    "signInError": "Error de inicio de sesión",
+    "checkCredentials": "Por favor, verifica tus credenciales e inténtalo de nuevo.",
+    "callback": {
+      "loading": "Procesando tu inicio de sesión...",
+      "success": "¡Inicio de sesión exitoso!",
+      "error": "Hubo un error al iniciar sesión.",
+      "redirecting": "Redireccionándote al panel de control...",
+      "sessionError": "Error de Sesión"
+    },
+    "confirmEmail": {
+      "title": "Confirmando tu correo electrónico",
+      "loading": "Verificando tu dirección de correo electrónico...",
+      "success": "¡Correo electrónico verificado con éxito!",
+      "error": "Hubo un error al verificar tu correo electrónico.",
+      "redirecting": "Redireccionándote al inicio de sesión..."
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "back": "Atrás"
+  },
+  "nav": {
+    "dashboard": "Panel de Control",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión"
+  }
+}
