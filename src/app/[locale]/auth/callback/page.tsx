@@ -42,6 +42,82 @@ export default function AuthCallbackPage() {
         }
       }
 
+      // Get the current session after it's been set
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+
+      // Check if user exists and if is_merchant flag is not set, update it
+      if (user) {
+        // For Google OAuth users, we need to ensure they have is_merchant flag set
+        // and also ensure they have a merchant_profiles record
+        const isGoogleUser = user.app_metadata?.provider === "google";
+        const needsMerchantFlagUpdate = !user.user_metadata.is_merchant;
+
+        if (needsMerchantFlagUpdate || isGoogleUser) {
+          console.log("Setting user as merchant for OAuth user");
+          // Update user metadata to include is_merchant flag
+          const { error: updateError } = await supabase.auth.updateUser({
+            data: {
+              is_merchant: true,
+              // Preserve existing metadata
+              ...user.user_metadata,
+            },
+          });
+
+          if (updateError) {
+            console.error("Error updating user metadata:", updateError);
+          } else {
+            console.log("User metadata updated successfully");
+
+            // For Google users, we also need to ensure they have a profile record
+            // This will be handled by our database trigger, but we'll check anyway
+            if (isGoogleUser) {
+              try {
+                // Check if the user has a merchant_profiles record
+                const { data: profileData, error: profileError } =
+                  await supabase
+                    .from("merchant_profiles")
+                    .select("id")
+                    .eq("id", user.id)
+                    .single();
+
+                if (profileError || !profileData) {
+                  console.log("Creating merchant profile for Google user");
+                  // Create a merchant_profiles record for this user
+                  const { error: insertError } = await supabase
+                    .from("merchant_profiles")
+                    .insert({
+                      id: user.id,
+                      display_name:
+                        user.user_metadata.full_name ||
+                        user.user_metadata.name ||
+                        user.email,
+                      first_name:
+                        user.user_metadata.given_name ||
+                        user.user_metadata.first_name,
+                      last_name:
+                        user.user_metadata.family_name ||
+                        user.user_metadata.last_name,
+                      avatar_url:
+                        user.user_metadata.picture ||
+                        user.user_metadata.avatar_url,
+                    });
+
+                  if (insertError) {
+                    console.error(
+                      "Error creating merchant profile:",
+                      insertError
+                    );
+                  }
+                }
+              } catch (err) {
+                console.error("Error checking/creating merchant profile:", err);
+              }
+            }
+          }
+        }
+      }
+
       setStatus("success");
       setTimeout(() => {
         router.push("/dashboard");
@@ -52,50 +128,24 @@ export default function AuthCallbackPage() {
   }, [router, supabase, t]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-4 text-center">
-        {status === "loading" && (
-          <>
-            <h1 className="text-2xl font-bold">{t("loading")}</h1>
-            <div className="flex justify-center">
-              <svg
-                className="animate-spin h-8 w-8 text-primary"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-            </div>
-          </>
-        )}
-
-        {status === "success" && (
-          <>
-            <h1 className="text-2xl font-bold">{t("success")}</h1>
-            <p>{t("redirecting")}</p>
-          </>
-        )}
-
-        {status === "error" && (
-          <>
-            <h1 className="text-2xl font-bold">{t("error")}</h1>
-            <p>
-              Please try again or contact support if the problem persists.
+    <div className="container flex items-center justify-center min-h-screen py-4 md:py-8">
+      <div className="w-full max-w-md text-center my-auto bg-background p-6 rounded-lg border border-border shadow-sm">
+        {status === "loading" ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="h-6 w-6 animate-spin mb-2 border-2 border-primary border-t-transparent rounded-full"></div>
+            <p>{t("confirming")}</p>
+          </div>
+        ) : status === "success" ? (
+          <div className="py-8">
+            <p className="text-green-600 font-medium">{t("success")}</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {t("redirecting")}
             </p>
-          </>
+          </div>
+        ) : (
+          <div className="py-8">
+            <p className="text-red-600 font-medium">{t("error")}</p>
+          </div>
         )}
       </div>
     </div>

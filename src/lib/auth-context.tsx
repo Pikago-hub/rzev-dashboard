@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
           queryParams: {
-            user_type: "customer",
+            is_merchant: "true",
           },
         },
       });
@@ -101,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
           data: {
-            user_type: "customer",
+            is_merchant: true,
           },
         },
       });
@@ -119,9 +119,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     options?: { data?: Record<string, unknown> }
   ) => {
     try {
-      // Always include user_type as customer when signing up from the main app
+      // Always include is_merchant flag when signing up from the main app
       const userData = {
-        user_type: "customer",
+        is_merchant: true,
         ...options?.data,
       };
 

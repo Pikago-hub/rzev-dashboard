@@ -45,18 +45,22 @@
     "signInError": "登录错误",
     "checkCredentials": "请检查您的凭据并重试。",
     "callback": {
-      "loading": "正在处理您的登录...",
-      "success": "登录成功！",
-      "error": "登录时出错。",
-      "redirecting": "正在将您重定向到仪表板...",
-      "sessionError": "会话错误"
+      "title": "确认",
+      "confirming": "正在确认您的第三方登录账户...",
+      "success": "✅ 您的账户已确认！现在可以登录了。",
+      "error": "❌ 确认您的账户时出现问题。",
+      "missingToken": "确认链接中缺少令牌信息。",
+      "sessionError": "会话错误",
+      "redirecting": "正在重定向到您的个人资料..."
     },
     "confirmEmail": {
-      "title": "确认您的电子邮箱",
-      "loading": "正在验证您的电子邮箱地址...",
-      "success": "电子邮箱验证成功！",
-      "error": "验证您的电子邮箱时出错。",
-      "redirecting": "正在将您重定向到登录页面..."
+      "title": "确认",
+      "confirming": "正在确认您的电子邮箱...",
+      "success": "✅ 您的电子邮箱已确认！现在可以登录了。",
+      "error": "❌ 确认您的电子邮箱时出现问题。",
+      "missingToken": "确认链接中缺少令牌信息。",
+      "sessionError": "会话错误",
+      "redirecting": "正在重定向到您的个人资料..."
     }
   },
   "common": {

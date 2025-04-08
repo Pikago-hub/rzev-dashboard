@@ -45,18 +45,22 @@
     "signInError": "Error de inicio de sesión",
     "checkCredentials": "Por favor, verifica tus credenciales e inténtalo de nuevo.",
     "callback": {
-      "loading": "Procesando tu inicio de sesión...",
-      "success": "¡Inicio de sesión exitoso!",
-      "error": "Hubo un error al iniciar sesión.",
-      "redirecting": "Redireccionándote al panel de control...",
-      "sessionError": "Error de Sesión"
+      "title": "Confirmación",
+      "confirming": "Confirmando tu cuenta de inicio de sesión de terceros...",
+      "success": "✅ ¡Tu cuenta de inicio de sesión de terceros ha sido confirmada! Ahora puedes iniciar sesión.",
+      "error": "❌ Algo salió mal al confirmar tu cuenta de inicio de sesión de terceros.",
+      "missingToken": "Falta información del token en el enlace de confirmación.",
+      "sessionError": "Error de sesión",
+      "redirecting": "Redirigiendo a tu perfil..."
     },
     "confirmEmail": {
-      "title": "Confirmando tu correo electrónico",
-      "loading": "Verificando tu dirección de correo electrónico...",
-      "success": "¡Correo electrónico verificado con éxito!",
-      "error": "Hubo un error al verificar tu correo electrónico.",
-      "redirecting": "Redireccionándote al inicio de sesión..."
+      "title": "Confirmación",
+      "confirming": "Confirmando tu correo electrónico...",
+      "success": "✅ ¡Tu correo electrónico está confirmado! Ahora puedes iniciar sesión.",
+      "error": "❌ Algo salió mal al confirmar tu correo electrónico.",
+      "missingToken": "Falta información del token en el enlace de confirmación.",
+      "sessionError": "Error de sesión",
+      "redirecting": "Redirigiendo a tu perfil..."
     }
   },
   "common": {

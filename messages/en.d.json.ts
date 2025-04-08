@@ -48,18 +48,22 @@ declare const messages: {
     "signInError": "Sign in error",
     "checkCredentials": "Please check your credentials and try again.",
     "callback": {
-      "loading": "Processing your login...",
-      "success": "Successfully logged in!",
-      "error": "There was an error logging in.",
-      "redirecting": "Redirecting you to the dashboard...",
-      "sessionError": "Session Error"
+      "title": "Confirmation",
+      "confirming": "Confirming your third party login account...",
+      "success": "✅ Your account is confirmed! You can now log in.",
+      "error": "❌ Something went wrong confirming your account.",
+      "missingToken": "Missing token information from confirmation link.",
+      "sessionError": "Session Error",
+      "redirecting": "Redirecting to your profile..."
     },
     "confirmEmail": {
-      "title": "Confirming your email",
-      "loading": "Verifying your email address...",
-      "success": "Email verified successfully!",
-      "error": "There was an error verifying your email.",
-      "redirecting": "Redirecting you to login..."
+      "title": "Confirmation",
+      "confirming": "Confirming your email...",
+      "success": "✅ Your email is confirmed! You can now log in.",
+      "error": "❌ Something went wrong confirming your email.",
+      "missingToken": "Missing token information from confirmation link.",
+      "sessionError": "Session Error",
+      "redirecting": "Redirecting to your profile..."
     }
   },
   "common": {
