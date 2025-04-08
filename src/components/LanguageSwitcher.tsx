@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Check, Globe } from "lucide-react";
+import Flag from "react-world-flags";
 
 const languages = [
   {
@@ -34,16 +35,25 @@ export default function LanguageSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleLanguageChange = (newLocale: string) => {
-    router.replace(pathname, { locale: newLocale });
+  const currentLanguage =
+    languages.find((lang) => lang.code === locale) || languages[0];
+
+  const handleLanguageChange = (langCode: string) => {
+    router.replace(pathname, { locale: langCode });
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Globe className="h-5 w-5" />
-          <span className="sr-only">Switch language</span>
+        <Button variant="ghost" size="sm" className="flex items-center gap-2">
+          <Globe className="h-4 w-4" />
+          <span className="flex items-center">
+            <Flag
+              code={currentLanguage.countryCode}
+              className="h-3.5 w-5 rounded-sm object-cover"
+            />
+          </span>
+          <span className="sr-only md:not-sr-only">{currentLanguage.name}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -53,10 +63,12 @@ export default function LanguageSwitcher() {
             onClick={() => handleLanguageChange(language.code)}
             className="flex items-center gap-2"
           >
-            {locale === language.code && <Check className="h-4 w-4" />}
-            <span className={locale === language.code ? "font-medium" : ""}>
-              {language.name}
-            </span>
+            <Flag
+              code={language.countryCode}
+              className="h-3.5 w-5 rounded-sm object-cover"
+            />
+            <span>{language.name}</span>
+            {locale === language.code && <Check className="h-4 w-4 ml-auto" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

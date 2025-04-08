@@ -4,6 +4,12 @@
     "welcome": "Bienvenido al Panel de Control de Rzev",
     "logout": "Cerrar Sesión"
   },
+  "navbar": {
+    "logoText": "Rzev",
+    "loginSignup": "Iniciar sesión / Registrarse",
+    "customersPortal": "Portal de Clientes",
+    "professionalsPortal": "Portal de Profesionales"
+  },
   "auth": {
     "title": "Bienvenido de Nuevo",
     "subtitle": "Inicia sesión en tu cuenta para continuar",

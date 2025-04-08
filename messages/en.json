@@ -4,6 +4,12 @@
     "welcome": "Welcome to Rzev Dashboard",
     "logout": "Logout"
   },
+  "navbar": {
+    "logoText": "Rzev",
+    "loginSignup": "Login / Sign Up",
+    "customersPortal": "Customers Portal",
+    "professionalsPortal": "Professionals Portal"
+  },
   "auth": {
     "title": "Welcome Back",
     "subtitle": "Sign in to your account to continue",

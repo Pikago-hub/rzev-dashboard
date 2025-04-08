@@ -4,6 +4,12 @@
     "welcome": "欢迎使用Rzev仪表板",
     "logout": "退出登录"
   },
+  "navbar": {
+    "logoText": "Rzev",
+    "loginSignup": "登录 / 注册",
+    "customersPortal": "用户登录",
+    "professionalsPortal": "商家登录"
+  },
   "auth": {
     "title": "欢迎回来",
     "backToHome": "返回首页",

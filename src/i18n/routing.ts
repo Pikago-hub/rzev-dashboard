@@ -10,6 +10,6 @@ export const routing = defineRouting({
     "/auth/confirm-email": "/auth/confirm-email",
     "/dashboard": "/dashboard",
     "/profile": "/profile",
-    "/settings": "/settings"
+    "/settings": "/settings",
   },
 });

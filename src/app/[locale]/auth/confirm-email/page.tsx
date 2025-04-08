@@ -19,18 +19,18 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const handleOAuthCallback = async () => {
       console.log("Starting email confirmation process");
-      
+
       try {
         // Get the current session
         const { data, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           throw error;
         }
 
         if (data.session) {
           setStatus("success");
-          
+
           // Redirect after a short delay
           setTimeout(() => {
             router.push("/dashboard");
