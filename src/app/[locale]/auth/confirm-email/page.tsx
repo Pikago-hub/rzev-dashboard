@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Navbar } from "@/components/sections/navbar";
 
 export default function AuthCallbackPage() {
   const t = useTranslations("auth.confirmEmail");
@@ -374,29 +375,32 @@ export default function AuthCallbackPage() {
   console.log("Current status:", status);
 
   return (
-    <div className="container flex items-center justify-center min-h-screen py-4 md:py-8">
-      <Card className="w-full max-w-md text-center my-auto">
-        <CardHeader>
-          <CardTitle>{t("title")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {status === "loading" && (
-            <div className="flex flex-col items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin mb-2" />
-              <p>{t("confirming")}</p>
-            </div>
-          )}
-          {status === "success" && (
-            <div>
-              <p className="text-green-600">{t("success")}</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {t("redirecting")}
-              </p>
-            </div>
-          )}
-          {status === "error" && <p className="text-red-600">{t("error")}</p>}
-        </CardContent>
-      </Card>
-    </div>
+    <>
+      <Navbar />
+      <div className="container flex items-center justify-center min-h-screen py-4 md:py-8">
+        <Card className="w-full max-w-md text-center my-auto">
+          <CardHeader>
+            <CardTitle>{t("title")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {status === "loading" && (
+              <div className="flex flex-col items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin mb-2" />
+                <p>{t("confirming")}</p>
+              </div>
+            )}
+            {status === "success" && (
+              <div>
+                <p className="text-green-600">{t("success")}</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {t("redirecting")}
+                </p>
+              </div>
+            )}
+            {status === "error" && <p className="text-red-600">{t("error")}</p>}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

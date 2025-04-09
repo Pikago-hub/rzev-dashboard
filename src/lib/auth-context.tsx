@@ -63,11 +63,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
+
+      // After successful sign-in, check if the user has the is_merchant flag
+      // This handles the case where a user previously registered as a customer
+      // but is now signing in as a merchant
+      const user = data.user;
+      if (user) {
+        const needsMerchantFlagUpdate = !user.user_metadata?.is_merchant;
+
+        if (needsMerchantFlagUpdate) {
+          console.log("Updating user as merchant during sign-in");
+          // Update user metadata to include is_merchant flag
+          const { error: updateError } = await supabase.auth.updateUser({
+            data: {
+              is_merchant: true,
+              // Preserve existing metadata
+              ...user.user_metadata,
+            },
+          });
+
+          if (updateError) {
+            console.error("Error updating user metadata:", updateError);
+          } else {
+            console.log("User metadata updated successfully");
+
+            // Check if the user has a merchant_profiles record
+            try {
+              const { data: profileData, error: profileError } = await supabase
+                .from("merchant_profiles")
+                .select("id")
+                .eq("id", user.id)
+                .single();
+
+              if (profileError || !profileData) {
+                console.log("Creating merchant profile for existing user");
+                // Extract name parts from display_name or email
+                const displayName =
+                  user.user_metadata?.display_name || user.email;
+                let firstName = user.user_metadata?.first_name;
+                let lastName = user.user_metadata?.last_name;
+
+                // If we have a display_name but no first/last name, try to split it
+                if (
+                  displayName &&
+                  (!firstName || !lastName) &&
+                  displayName.includes(" ")
+                ) {
+                  const nameParts = displayName.split(" ");
+                  firstName = firstName || nameParts[0];
+                  lastName = lastName || nameParts.slice(1).join(" ");
+                }
+
+                // Create a merchant_profiles record for this user
+                const { error: insertError } = await supabase
+                  .from("merchant_profiles")
+                  .insert({
+                    id: user.id,
+                    display_name: displayName,
+                    first_name: firstName,
+                    last_name: lastName,
+                    phone_number: user.user_metadata?.phone,
+                    avatar_url:
+                      user.user_metadata?.picture ||
+                      user.user_metadata?.avatar_url,
+                  });
+
+                if (insertError) {
+                  console.error(
+                    "Error creating merchant profile:",
+                    insertError
+                  );
+                }
+              }
+            } catch (err) {
+              console.error("Error checking/creating merchant profile:", err);
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error("Error signing in:", error);
       throw error;
@@ -143,11 +221,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign out
   const signOut = async () => {
     try {
+      // First check if we have a session
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      // If no session, manually clear storage and update state
+      if (!sessionData.session) {
+        console.log("No active session found, manually clearing auth state");
+        // Clear local state
+        setUser(null);
+        setSession(null);
+
+        // Manually clear localStorage items related to auth
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("supabase-auth");
+          // You might need to remove other auth-related items if they exist
+        }
+        return;
+      }
+
+      // If we have a session, proceed with normal sign out
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error) {
       console.error("Error signing out:", error);
-      throw error;
+
+      // Even if there's an error, try to clean up the state
+      setUser(null);
+      setSession(null);
+
+      // Don't throw the error - this allows the UI to update even if the API call fails
+      // Instead, we'll just log it and continue
+      console.log("Continuing despite sign out error");
     }
   };
 

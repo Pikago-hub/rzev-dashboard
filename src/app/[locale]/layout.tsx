@@ -3,7 +3,6 @@ import { getMessages } from "next-intl/server";
 import { ReactNode } from "react";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/toaster";
-import { Navbar } from "@/components/sections/navbar";
 
 export default async function LocaleLayout({
   children,
@@ -19,8 +18,9 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <AuthProvider>
-        <Navbar />
-        <main className="max-w-7xl mx-auto relative">{children}</main>
+        <main className="relative flex-1 flex flex-col h-full min-h-screen">
+          {children}
+        </main>
         <Toaster />
       </AuthProvider>
     </NextIntlClientProvider>

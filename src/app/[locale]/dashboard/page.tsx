@@ -4,11 +4,29 @@ import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { DashboardLayout } from "@/components/dashboard/layout/DashboardLayout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  CalendarDays,
+  CreditCard,
+  DollarSign,
+  Users,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 export default function DashboardPage() {
   const t = useTranslations("home");
-  const { user, isLoading, signOut } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -16,11 +34,6 @@ export default function DashboardPage() {
       router.push("/auth");
     }
   }, [user, isLoading, router]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push("/auth");
-  };
 
   if (isLoading) {
     return (
@@ -35,31 +48,189 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">{t("title")}</h1>
-          <Button onClick={handleSignOut} variant="outline">
-            {t("logout", { ns: "nav" })}
-          </Button>
+    <DashboardLayout>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="text-muted-foreground">
+            {t("welcome")}, {user.user_metadata?.full_name || user.email}
+          </p>
         </div>
 
-        <div className="bg-card rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">{t("welcome")}</h2>
-          <p>{user.email}</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-card rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-medium mb-2">Dashboard Card {i}</h3>
-              <p className="text-muted-foreground">
-                This is a placeholder for dashboard content.
-              </p>
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Revenue
+                  </CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$45,231.89</div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-green-500 inline-flex items-center">
+                      <ArrowUpRight className="mr-1 h-3 w-3" />
+                      +20.1%
+                    </span>{" "}
+                    from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Subscriptions
+                  </CardTitle>
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">+2,350</div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-green-500 inline-flex items-center">
+                      <ArrowUpRight className="mr-1 h-3 w-3" />
+                      +180.1%
+                    </span>{" "}
+                    from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Appointments
+                  </CardTitle>
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">+12,234</div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-red-500 inline-flex items-center">
+                      <ArrowDownRight className="mr-1 h-3 w-3" />
+                      -19%
+                    </span>{" "}
+                    from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Active Clients
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">+573</div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-green-500 inline-flex items-center">
+                      <ArrowUpRight className="mr-1 h-3 w-3" />
+                      +201
+                    </span>{" "}
+                    from last month
+                  </p>
+                </CardContent>
+              </Card>
             </div>
-          ))}
-        </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-4">
+                <CardHeader>
+                  <CardTitle>Revenue Overview</CardTitle>
+                </CardHeader>
+                <CardContent className="pl-2">
+                  <div className="h-[200px] flex items-center justify-center">
+                    <p className="text-muted-foreground">
+                      Revenue chart coming soon
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="col-span-3">
+                <CardHeader>
+                  <CardTitle>Recent Appointments</CardTitle>
+                  <CardDescription>
+                    You have 12 appointments today
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center">
+                      <div className="space-y-1 flex-1">
+                        <p className="text-sm font-medium leading-none">
+                          John Doe
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Haircut - 10:00 AM
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        View
+                      </Button>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center">
+                      <div className="space-y-1 flex-1">
+                        <p className="text-sm font-medium leading-none">
+                          Jane Smith
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Manicure - 11:30 AM
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        View
+                      </Button>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center">
+                      <div className="space-y-1 flex-1">
+                        <p className="text-sm font-medium leading-none">
+                          Mike Johnson
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Massage - 2:00 PM
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        View
+                      </Button>
+                    </div>
+                    <Button variant="outline" className="w-full">
+                      View All
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          <TabsContent
+            value="analytics"
+            className="h-[400px] flex items-center justify-center"
+          >
+            <p className="text-muted-foreground">Analytics coming soon</p>
+          </TabsContent>
+          <TabsContent
+            value="reports"
+            className="h-[400px] flex items-center justify-center"
+          >
+            <p className="text-muted-foreground">Reports coming soon</p>
+          </TabsContent>
+          <TabsContent
+            value="notifications"
+            className="h-[400px] flex items-center justify-center"
+          >
+            <p className="text-muted-foreground">Notifications coming soon</p>
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

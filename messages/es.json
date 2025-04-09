@@ -13,6 +13,13 @@
   "auth": {
     "title": "Bienvenido de Nuevo",
     "subtitle": "Inicia sesión en tu cuenta para continuar",
+    "loginTo": "Inicia sesión en tu",
+    "workspace": "Espacio de Trabajo",
+    "loading": "Cargando...",
+    "checkEmailVerify": "Por favor, revisa tu correo electrónico para obtener un enlace de verificación.",
+    "accountCreated": "Cuenta creada",
+    "socialLoginDetected": "Inicio de sesión social detectado",
+    "useSocialProvider": "Estás usando {provider}. Por favor, usa {provider} para iniciar sesión.",
     "emailTab": "Correo electrónico",
     "googleTab": "Google",
     "email": "Correo electrónico",

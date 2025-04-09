@@ -12,6 +12,13 @@
   },
   "auth": {
     "title": "欢迎回来",
+    "loginTo": "登录到您的",
+    "workspace": "管理空间",
+    "loading": "加载中...",
+    "checkEmailVerify": "请检查您的电子邮件以获取验证链接。",
+    "accountCreated": "账户已创建",
+    "socialLoginDetected": "检测到社交媒体登录",
+    "useSocialProvider": "您正在使用{provider}。请使用{provider}登录。",
     "backToHome": "返回首页",
     "backToEmail": "返回邮箱",
     "subtitle": "登录您的账户以继续",

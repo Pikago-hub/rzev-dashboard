@@ -7,6 +7,8 @@ import { ChevronLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import PhoneNumberInput from "@/components/phone-number-input";
+import { AuroraText } from "@/components/ui/aurora-text";
+import { Navbar } from "@/components/sections/navbar";
 
 import {
   Card,
@@ -45,26 +47,51 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
-      // Check if the email exists
-      const response = await fetch(
-        `/api/check-user-exists?email=${encodeURIComponent(email)}`
-      );
-      const data = await response.json();
+      // Use our server-side API to check if user exists
+      const response = await fetch("/api/check-user-exists", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
 
-      if (data.exists) {
-        // User exists, proceed to password step
+      if (!response.ok) {
+        throw new Error(`Error checking email: ${response.statusText}`);
+      }
+
+      const { exists, provider } = await response.json();
+
+      // Based on the server response, show either password or registration form
+      if (exists) {
+        // If the user is using a social provider, show a notification and stay on email page
+        if (provider && provider !== "email") {
+          toast({
+            title: t("socialLoginDetected"),
+            description: t("useSocialProvider", { provider }),
+            duration: 5000,
+          });
+          // Clear the email field to prevent confusion
+          setEmail("");
+          return;
+        }
+
+        // User exists with email provider, show password form
         setAuthStep(AuthStep.PASSWORD);
       } else {
-        // User doesn't exist, proceed to registration
+        // User doesn't exist, show registration form
         setAuthStep(AuthStep.REGISTER);
       }
     } catch (error) {
-      console.error("Error checking email:", error);
+      console.error("Email check error:", error);
       toast({
         title: t("error"),
         description: t("emailCheckError"),
         variant: "destructive",
       });
+
+      // Default to registration if we can't check
+      setAuthStep(AuthStep.REGISTER);
     } finally {
       setIsLoading(false);
     }
@@ -107,29 +134,71 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
+      // Create display name by combining first and last name
+      const displayName = `${firstName} ${lastName}`.trim();
+
+      // Validate phone number
+      if (!phoneNumber || phoneNumber.trim() === "") {
+        toast({
+          title: t("phoneRequired"),
+          description: t("enterValidPhone"),
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       await signUp(email, password, {
         data: {
+          display_name: displayName,
           first_name: firstName,
           last_name: lastName,
-          phone: phoneNumber,
+          phone: phoneNumber, // PhoneNumberInput component already formats with country code
         },
       });
 
       toast({
-        title: t("createAccount"),
-        description: t("emailVerificationRequired"),
-        duration: 6000,
+        title: t("accountCreated"),
+        description: t("checkEmailVerify"),
+        duration: 5000,
       });
 
-      // Redirect to login after registration
+      // Go back to login form instead of home page
       setAuthStep(AuthStep.PASSWORD);
+      setIsLoading(false);
     } catch (error) {
       console.error("Registration error:", error);
-      toast({
-        title: t("error"),
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+
+      // Check for weak password error
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "weak_password"
+      ) {
+        // Create a properly typed version of the error
+        interface WeakPasswordError {
+          code: string;
+          message: string;
+          weak_password?: {
+            reasons: string[];
+          };
+        }
+
+        const weakPasswordError = error as WeakPasswordError;
+        toast({
+          title: t("passwordTooWeak"),
+          description: weakPasswordError.message || t("passwordRequirements"),
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t("accountCreationError"),
+          description:
+            error instanceof Error ? error.message : t("tryAgainLater"),
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -166,6 +235,15 @@ export default function AuthPage() {
     } finally {
       setIsSendingMagicLink(false);
     }
+  };
+
+  // Go back to email step
+  const backToEmail = () => {
+    setAuthStep(AuthStep.EMAIL);
+    setPassword("");
+    setFirstName("");
+    setLastName("");
+    setPhoneNumber("");
   };
 
   // Render the appropriate form based on the current step
@@ -256,17 +334,17 @@ export default function AuthPage() {
       case AuthStep.PASSWORD:
         return (
           <form onSubmit={handleSignIn} className="space-y-4">
-            <div className="flex items-center mb-4">
+            <div className="flex items-center space-x-2 mb-4">
               <Button
-                type="button"
                 variant="ghost"
                 size="sm"
-                className="p-0"
-                onClick={() => setAuthStep(AuthStep.EMAIL)}
+                onClick={backToEmail}
+                type="button"
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
-                <span>{t("backToEmail")}</span>
+                Back
               </Button>
+              <p className="text-sm">{email}</p>
             </div>
 
             <div className="space-y-2">
@@ -297,7 +375,7 @@ export default function AuthPage() {
               {isLoading ? "Signing in..." : t("signIn")}
             </Button>
 
-            <div className="relative">
+            <div className="relative mt-2">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
               </div>
@@ -313,11 +391,11 @@ export default function AuthPage() {
               variant="outline"
               className="w-full"
               onClick={handleMagicLinkSignIn}
-              disabled={isSendingMagicLink}
+              disabled={isLoading || isSendingMagicLink}
             >
               {isSendingMagicLink ? (
                 <span className="flex items-center justify-center">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   {t("sendingMagicLink")}
                 </span>
               ) : (
@@ -330,17 +408,17 @@ export default function AuthPage() {
       case AuthStep.REGISTER:
         return (
           <form onSubmit={handleRegister} className="space-y-4">
-            <div className="flex items-center mb-4">
+            <div className="flex items-center space-x-2 mb-4">
               <Button
-                type="button"
                 variant="ghost"
                 size="sm"
-                className="p-0"
-                onClick={() => setAuthStep(AuthStep.EMAIL)}
+                onClick={backToEmail}
+                type="button"
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
-                <span>{t("backToEmail")}</span>
+                {t("backToEmail")}
               </Button>
+              <p className="text-sm">{email}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -352,6 +430,7 @@ export default function AuthPage() {
                   onChange={(e) => setFirstName(e.target.value)}
                   required
                   disabled={isLoading}
+                  autoFocus
                 />
               </div>
               <div className="space-y-2">
@@ -366,17 +445,10 @@ export default function AuthPage() {
               </div>
             </div>
 
-            <PhoneNumberInput
-              value={phoneNumber}
-              onChange={(value) => setPhoneNumber(value || "")}
-              disabled={isLoading}
-              label={t("phone")}
-            />
-
             <div className="space-y-2">
-              <Label htmlFor="registerPassword">{t("password")}</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <Input
-                id="registerPassword"
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -385,15 +457,16 @@ export default function AuthPage() {
               />
             </div>
 
+            <PhoneNumberInput
+              value={phoneNumber}
+              onChange={(value) => setPhoneNumber(value || "")}
+              required
+              disabled={isLoading}
+              label={t("phone")}
+            />
+
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("creatingAccount")}
-                </span>
-              ) : (
-                t("createAccount")
-              )}
+              {isLoading ? t("creatingAccount") : t("createAccount")}
             </Button>
           </form>
         );
@@ -404,14 +477,20 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 md:p-8">
-      <Card className="mx-auto max-w-md w-full">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
-          <CardDescription>{t("subtitle")}</CardDescription>
-        </CardHeader>
-        <CardContent>{renderAuthForm()}</CardContent>
-      </Card>
-    </div>
+    <>
+      <Navbar />
+      <div className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8">
+        <h1 className="text-4xl font-bold mb-8 tracking-tighter md:text-5xl">
+          {t("loginTo")} <AuroraText>{t("workspace")}</AuroraText>
+        </h1>
+        <Card className="mx-auto max-w-md w-full">
+          <CardHeader className="space-y-1 text-center">
+            <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
+            <CardDescription>{t("subtitle")}</CardDescription>
+          </CardHeader>
+          <CardContent>{renderAuthForm()}</CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

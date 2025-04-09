@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 import { useTranslations } from "next-intl";
+import { Navbar } from "@/components/sections/navbar";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -128,26 +129,29 @@ export default function AuthCallbackPage() {
   }, [router, supabase, t]);
 
   return (
-    <div className="container flex items-center justify-center min-h-screen py-4 md:py-8">
-      <div className="w-full max-w-md text-center my-auto bg-background p-6 rounded-lg border border-border shadow-sm">
-        {status === "loading" ? (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin mb-2 border-2 border-primary border-t-transparent rounded-full"></div>
-            <p>{t("confirming")}</p>
-          </div>
-        ) : status === "success" ? (
-          <div className="py-8">
-            <p className="text-green-600 font-medium">{t("success")}</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              {t("redirecting")}
-            </p>
-          </div>
-        ) : (
-          <div className="py-8">
-            <p className="text-red-600 font-medium">{t("error")}</p>
-          </div>
-        )}
+    <>
+      <Navbar />
+      <div className="container flex items-center justify-center min-h-screen py-4 md:py-8">
+        <div className="w-full max-w-md text-center my-auto bg-background p-6 rounded-lg border border-border shadow-sm">
+          {status === "loading" ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="h-6 w-6 animate-spin mb-2 border-2 border-primary border-t-transparent rounded-full"></div>
+              <p>{t("confirming")}</p>
+            </div>
+          ) : status === "success" ? (
+            <div className="py-8">
+              <p className="text-green-600 font-medium">{t("success")}</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {t("redirecting")}
+              </p>
+            </div>
+          ) : (
+            <div className="py-8">
+              <p className="text-red-600 font-medium">{t("error")}</p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
