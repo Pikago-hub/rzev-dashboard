@@ -1,47 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 import { createBrowserClient } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 import { useOnboarding } from "@/lib/onboarding-context";
-import { useGoogleMaps } from "@/hooks/useGoogleMaps";
-
-// Add Google Maps types
-declare global {
-  interface Window {
-    google: {
-      maps: {
-        places: {
-          Autocomplete: {
-            new (input: HTMLInputElement, options?: object): {
-              addListener(event: string, handler: () => void): void;
-              getPlace(): {
-                address_components?: Array<{
-                  long_name: string;
-                  short_name: string;
-                  types: string[];
-                }>;
-                formatted_address?: string;
-                geometry?: {
-                  location: {
-                    lat(): number;
-                    lng(): number;
-                  };
-                };
-                place_id?: string;
-              };
-            };
-          };
-        };
-        event: {
-          clearInstanceListeners(instance: unknown): void;
-        };
-      };
-    };
-  }
-}
+import { GoogleMapsAddressInput } from "@/components/GoogleMapsAddressInput";
+import { AddressData } from "@/types/addressData";
 import {
   Card,
   CardContent,
@@ -57,8 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Loader2, MapPin } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -89,26 +54,6 @@ export default function BusinessLocationPage() {
   const supabase = createBrowserClient();
   const [isLoading, setIsLoading] = useState(true);
   const [isValidating, setIsValidating] = useState(false);
-  const googleMapsLoaded = useGoogleMaps();
-  const autocompleteRef = useRef<{
-    addListener(event: string, handler: () => void): void;
-    getPlace(): {
-      address_components?: Array<{
-        long_name: string;
-        short_name: string;
-        types: string[];
-      }>;
-      formatted_address?: string;
-      geometry?: {
-        location: {
-          lat(): number;
-          lng(): number;
-        };
-      };
-      place_id?: string;
-    };
-  } | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Create schema with translations
   const formSchema = getFormSchema(t);
@@ -127,122 +72,26 @@ export default function BusinessLocationPage() {
     mode: "onSubmit", // Only validate on submit
   });
 
-  // Initialize Google Maps Autocomplete when the script is loaded
-  const initializeAutocomplete = useCallback(() => {
-    if (!inputRef.current || !window.google || !window.google.maps) {
-      console.log("Cannot initialize autocomplete - missing dependencies");
-      return;
+  // Handle address change from Google Maps component
+  const handleAddressChange = (data: AddressData) => {
+    console.log("Address changed:", data);
+    
+    // Update form values with data from the address input
+    form.setValue("address", data.formatted || "");
+    form.setValue("street", data.street);
+    form.setValue("city", data.city);
+    form.setValue("state", data.state);
+    form.setValue("postalCode", data.postalCode);
+    form.setValue("country", data.country);
+    
+    if (data.lat) {
+      form.setValue("lat", data.lat);
     }
-
-    // Check if autocomplete is already initialized to prevent duplicates
-    if (autocompleteRef.current) {
-      console.log("Autocomplete already initialized");
-      return;
+    if (data.lng) {
+      form.setValue("lng", data.lng);
     }
-
-    console.log("Initializing Google Maps Autocomplete");
-
-    // Create the autocomplete instance
-    autocompleteRef.current = new window.google.maps.places.Autocomplete(
-      inputRef.current,
-      {
-        types: ["address"],
-        fields: [
-          "address_components",
-          "formatted_address",
-          "geometry",
-          "place_id",
-        ],
-      }
-    );
-
-    // Add listener for place changed
-    autocompleteRef.current.addListener("place_changed", () => {
-      if (!autocompleteRef.current) return;
-
-      const place = autocompleteRef.current.getPlace();
-      console.log("Place selected:", place);
-
-      if (!place.geometry || !place.address_components) {
-        console.error("No details available for this place");
-        return;
-      }
-
-      // Extract address components for storage
-      let street_number = "";
-      let route = "";
-      let city = "";
-      let state = "";
-      let postalCode = "";
-      let country = "";
-
-      place.address_components?.forEach(
-        (component: { types: string[]; long_name: string }) => {
-          const types = component.types;
-
-          if (types.includes("street_number")) {
-            street_number = component.long_name;
-          } else if (types.includes("route")) {
-            route = component.long_name;
-          } else if (types.includes("locality")) {
-            city = component.long_name;
-          } else if (
-            types.includes("administrative_area_level_1") ||
-            types.includes("administrative_area_level_2")
-          ) {
-            state = component.long_name;
-          } else if (types.includes("postal_code")) {
-            postalCode = component.long_name;
-          } else if (types.includes("country")) {
-            country = component.long_name;
-          }
-        }
-      );
-
-      // Store the street address
-      const street = `${street_number} ${route}`.trim();
-
-      // Store these values in form state for later use when saving
-      form.setValue("address", place.formatted_address || "");
-      form.setValue("street", street);
-      form.setValue("city", city);
-      form.setValue("state", state);
-      form.setValue("postalCode", postalCode);
-      form.setValue("country", country);
-
-      if (place.geometry?.location) {
-        form.setValue("lat", place.geometry.location.lat());
-        form.setValue("lng", place.geometry.location.lng());
-      }
-
-      form.setValue("place_id", place.place_id || "");
-    });
-  }, [form]);
-
-  // Initialize autocomplete when Google Maps is loaded
-  useEffect(() => {
-    if (googleMapsLoaded) {
-      console.log("Google Maps loaded, initializing autocomplete");
-      // Small delay to ensure DOM is fully rendered
-      setTimeout(() => {
-        initializeAutocomplete();
-      }, 100);
-    }
-
-    // Cleanup function to remove event listeners when component unmounts
-    return () => {
-      if (autocompleteRef.current) {
-        console.log("Cleaning up Google Maps Autocomplete");
-        // Remove all event listeners from autocomplete
-        if (window.google && window.google.maps) {
-          window.google.maps.event.clearInstanceListeners(
-            autocompleteRef.current
-          );
-        }
-        autocompleteRef.current = null;
-      }
-    };
-  }, [googleMapsLoaded, initializeAutocomplete]);
+    form.setValue("place_id", data.place_id || "");
+  };
 
   // Load existing business location from Supabase
   useEffect(() => {
@@ -497,7 +346,7 @@ export default function BusinessLocationPage() {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-6"
               >
-                {/* Google Maps Autocomplete Input */}
+                {/* Google Maps Autocomplete Input Component */}
                 <FormField
                   control={form.control}
                   name="address"
@@ -506,31 +355,15 @@ export default function BusinessLocationPage() {
                       <FormLabel>
                         {t("businessLocation.addressLabel")}
                       </FormLabel>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <FormControl>
-                          <Input
-                            {...field}
-                            ref={(el) => {
-                              // Set the ref for both react-hook-form and our inputRef
-                              inputRef.current = el;
-                              if (typeof field.ref === "function") {
-                                field.ref(el);
-                              }
-                            }}
-                            placeholder={t(
-                              "businessLocation.addressPlaceholder"
-                            )}
-                            className="pl-10"
-                            // Add key event to prevent form submission on Enter
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                              }
-                            }}
-                          />
-                        </FormControl>
-                      </div>
+                      <FormControl>
+                        <GoogleMapsAddressInput 
+                          id="address-input"
+                          value={field.value}
+                          placeholder={t("businessLocation.addressPlaceholder")}
+                          onChange={handleAddressChange}
+                          className="w-full"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

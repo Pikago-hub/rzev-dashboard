@@ -115,6 +115,26 @@ export default function ServicesOfferPage() {
   const handleSubmit = useCallback(async () => {
     if (!user) return false;
 
+    // Validate that at least one service is selected
+    if (selectedServices.length === 0) {
+      toast({
+        title: t("errorTitle"),
+        description: t("servicesOffer.selectionRequired"),
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate that if "other" is selected, the other service text is provided
+    if (selectedServices.includes("other") && !otherServiceValue.trim()) {
+      toast({
+        title: t("errorTitle"),
+        description: t("servicesOffer.otherServiceRequired"),
+        variant: "destructive",
+      });
+      return false;
+    }
+
     try {
       // Save selected services to merchant_profile business_type field as JSON
       const updatedBusinessTypeData = {

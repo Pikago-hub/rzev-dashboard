@@ -10,33 +10,77 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { useMerchantProfile } from "@/hooks/useMerchantProfile";
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createBrowserClient } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/use-toast";
+import { AddressData } from "@/types/addressData";
+
+// Import our newly created components
+import { BusinessInfoForm } from "@/components/settings/BusinessInfoForm";
+import { PasswordForm } from "@/components/settings/PasswordForm";
+import { AddressForm } from "@/components/settings/AddressForm";
+import { TimeZoneForm } from "@/components/settings/TimeZoneForm";
+import { uploadLogo } from "@/components/settings/LogoUploader";
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, changePassword } = useAuth();
   const { toast } = useToast();
   const { merchantProfile, isLoading } = useMerchantProfile();
   const [isSaving, setIsSaving] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [timezone, setTimezone] = useState<string>("");
   const t = useTranslations("dashboard.settings");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  
+  // State for address data from Google Maps
+  const [addressData, setAddressData] = useState<AddressData>({
+    lat: merchantProfile?.lat || null,
+    lng: merchantProfile?.lng || null,
+    place_id: merchantProfile?.address?.place_id || "",
+    formatted: merchantProfile?.address?.formatted || "",
+    street: merchantProfile?.address?.street || "",
+    city: merchantProfile?.address?.city || "",
+    state: merchantProfile?.address?.state || "",
+    postalCode: merchantProfile?.address?.postalCode || "",
+    country: merchantProfile?.address?.country || "US",
+  });
 
-  // Refs for form inputs
-  const businessNameRef = useRef<HTMLInputElement>(null);
-  const businessEmailRef = useRef<HTMLInputElement>(null);
-  const businessPhoneRef = useRef<HTMLInputElement>(null);
-  const businessWebsiteRef = useRef<HTMLInputElement>(null);
-  const addressRef = useRef<HTMLInputElement>(null);
-  const cityRef = useRef<HTMLInputElement>(null);
-  const stateRef = useRef<HTMLInputElement>(null);
-  const zipRef = useRef<HTMLInputElement>(null);
+  // Check if user uses social login
+  const isEmailPasswordUser = user?.app_metadata?.provider === 'email' || !user?.app_metadata?.provider;
+
+  // Set initial data from merchant profile when loaded
+  useEffect(() => {
+    if (merchantProfile?.contact_phone) {
+      setPhoneNumber(merchantProfile.contact_phone);
+    }
+    
+    if (merchantProfile?.logo_url) {
+      setLogoUrl(merchantProfile.logo_url);
+    }
+
+    if (merchantProfile?.timezone) {
+      setTimezone(merchantProfile.timezone);
+    }
+    
+    // Reset addressData when merchantProfile is loaded or changed
+    if (merchantProfile) {
+      setAddressData({
+        lat: merchantProfile.lat || null,
+        lng: merchantProfile.lng || null,
+        place_id: merchantProfile?.address?.place_id || "",
+        formatted: merchantProfile?.address?.formatted || "",
+        street: merchantProfile?.address?.street || "",
+        city: merchantProfile?.address?.city || "",
+        state: merchantProfile?.address?.state || "",
+        postalCode: merchantProfile?.address?.postalCode || "",
+        country: merchantProfile?.address?.country || "US",
+      });
+    }
+  }, [merchantProfile]);
 
   const handleSaveBusinessInfo = async () => {
     if (!user) return;
@@ -45,35 +89,59 @@ export default function SettingsPage() {
       setIsSaving(true);
       const supabase = createBrowserClient();
 
+      // Get form refs from the BusinessInfoForm component
+      const businessNameInput = document.getElementById("business-name") as HTMLInputElement;
+      const businessEmailInput = document.getElementById("business-email") as HTMLInputElement;
+      const businessWebsiteInput = document.getElementById("business-website") as HTMLInputElement;
+      const businessDescriptionInput = document.getElementById("business-description") as HTMLTextAreaElement;
+
+      // Upload logo if a new file was selected
+      let logo_url = merchantProfile?.logo_url;
+      if (logoFile) {
+        const uploadedUrl = await uploadLogo(logoFile, user.id);
+        if (uploadedUrl) {
+          logo_url = uploadedUrl;
+        }
+      } else if (logoUrl === null && merchantProfile?.logo_url) {
+        // Logo was removed
+        logo_url = null;
+      }
+
       // Update merchant profile
       const { error: profileError } = await supabase
         .from("merchant_profiles")
         .update({
-          business_name: businessNameRef.current?.value,
-          contact_email: businessEmailRef.current?.value,
-          contact_phone: businessPhoneRef.current?.value,
-          website: businessWebsiteRef.current?.value,
+          business_name: businessNameInput?.value,
+          contact_email: businessEmailInput?.value,
+          contact_phone: phoneNumber,
+          website: businessWebsiteInput?.value,
+          description: businessDescriptionInput?.value,
+          logo_url: logo_url,
+          timezone: timezone || null,
         })
         .eq("id", user.id);
 
       if (profileError) throw profileError;
 
       // Update address in merchant_profile
-      if (addressRef.current?.value) {
+      if (addressData.street) {
         // Create address object to store in merchant_profile
         const addressObject = {
-          formatted: `${addressRef.current?.value}, ${cityRef.current?.value}, ${stateRef.current?.value} ${zipRef.current?.value}`,
-          street: addressRef.current?.value,
-          city: cityRef.current?.value,
-          state: stateRef.current?.value,
-          postalCode: zipRef.current?.value,
-          country: "US", // Default
+          formatted: addressData.formatted || `${addressData.street}, ${addressData.city}, ${addressData.state} ${addressData.postalCode}`,
+          street: addressData.street,
+          city: addressData.city,
+          state: addressData.state,
+          postalCode: addressData.postalCode,
+          country: addressData.country || "US",
+          place_id: addressData.place_id || "",
         };
 
         const { error: addressError } = await supabase
           .from("merchant_profiles")
           .update({
             address: addressObject,
+            lat: addressData.lat,
+            lng: addressData.lng,
           })
           .eq("id", user.id);
 
@@ -115,9 +183,6 @@ export default function SettingsPage() {
           <Tabs defaultValue="business" className="space-y-4">
             <TabsList>
               <TabsTrigger value="business">{t("tabs.business")}</TabsTrigger>
-              <TabsTrigger value="notifications">
-                {t("tabs.notifications")}
-              </TabsTrigger>
               <TabsTrigger value="security">{t("tabs.security")}</TabsTrigger>
             </TabsList>
 
@@ -128,202 +193,51 @@ export default function SettingsPage() {
                   <CardDescription>{t("business.subtitle")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="business-name">
-                        {t("business.businessName")}
-                      </Label>
-                      <Input
-                        id="business-name"
-                        defaultValue={merchantProfile?.business_name || ""}
-                        placeholder="Your Business Name"
-                        ref={businessNameRef}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="business-email">
-                        {t("business.businessEmail")}
-                      </Label>
-                      <Input
-                        id="business-email"
-                        type="email"
-                        defaultValue={merchantProfile?.contact_email || ""}
-                        placeholder="contact@yourbusiness.com"
-                        ref={businessEmailRef}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="business-phone">
-                        {t("business.businessPhone")}
-                      </Label>
-                      <Input
-                        id="business-phone"
-                        type="tel"
-                        defaultValue={merchantProfile?.contact_phone || ""}
-                        placeholder="+1 (555) 123-4567"
-                        ref={businessPhoneRef}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="business-website">
-                        {t("business.website")}
-                      </Label>
-                      <Input
-                        id="business-website"
-                        type="url"
-                        defaultValue={merchantProfile?.website || ""}
-                        placeholder="https://yourbusiness.com"
-                        ref={businessWebsiteRef}
-                      />
-                    </div>
-                  </div>
+                  {/* Business Info Form */}
+                  <BusinessInfoForm
+                    merchantProfile={merchantProfile}
+                    translationFunc={t}
+                    userId={user?.id || ""}
+                    phoneNumber={phoneNumber}
+                    setPhoneNumber={setPhoneNumber}
+                    logoUrl={logoUrl}
+                    logoFile={logoFile}
+                    setLogoUrl={setLogoUrl}
+                    setLogoFile={setLogoFile}
+                  />
+                  
                   <Separator className="my-4" />
-                  <div className="space-y-2">
-                    <Label htmlFor="business-address">
-                      {t("business.address")}
-                    </Label>
-                    <Input
-                      id="business-address"
-                      defaultValue={merchantProfile?.address?.street || ""}
-                      placeholder="123 Main Street"
-                      ref={addressRef}
+                  
+                  {/* Timezone Form */}
+                  {merchantProfile && (
+                    <TimeZoneForm
+                      merchantProfile={{
+                        timezone: merchantProfile.timezone || undefined
+                      }}
+                      translationFunc={t}
+                      onTimeZoneChange={setTimezone}
                     />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="business-city">
-                        {t("business.city")}
-                      </Label>
-                      <Input
-                        id="business-city"
-                        defaultValue={merchantProfile?.address?.city || ""}
-                        placeholder="San Francisco"
-                        ref={cityRef}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="business-state">
-                        {t("business.state")}
-                      </Label>
-                      <Input
-                        id="business-state"
-                        defaultValue={merchantProfile?.address?.state || ""}
-                        placeholder="CA"
-                        ref={stateRef}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="business-zip">
-                        {t("business.zipCode")}
-                      </Label>
-                      <Input
-                        id="business-zip"
-                        defaultValue={
-                          merchantProfile?.address?.postalCode || ""
-                        }
-                        placeholder="94105"
-                        ref={zipRef}
-                      />
-                    </div>
-                  </div>
+                  )}
+                  
+                  <Separator className="my-4" />
+                  
+                  {/* Address Form */}
+                  <AddressForm
+                    addressData={addressData}
+                    onAddressChange={setAddressData}
+                    translationFunc={t}
+                  />
+                  
                   <div className="flex justify-end">
-                    <Button
+                    <button
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
                       onClick={handleSaveBusinessInfo}
                       disabled={isSaving}
                     >
                       {isSaving
                         ? t("common.loading")
                         : t("business.saveChanges")}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="notifications" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t("notifications.title")}</CardTitle>
-                  <CardDescription>
-                    {t("notifications.subtitle")}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">
-                      {t("notifications.emailNotifications")}
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="email-appointments">
-                            {t("notifications.appointmentNotifications")}
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            {t("notifications.appointmentNotificationsDesc")}
-                          </p>
-                        </div>
-                        <Switch id="email-appointments" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="email-reminders">
-                            {t("notifications.appointmentReminders")}
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            {t("notifications.appointmentRemindersDesc")}
-                          </p>
-                        </div>
-                        <Switch id="email-reminders" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="email-marketing">
-                            {t("notifications.marketingPromotions")}
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            {t("notifications.marketingPromotionsDesc")}
-                          </p>
-                        </div>
-                        <Switch id="email-marketing" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">
-                      {t("notifications.smsNotifications")}
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="sms-appointments">
-                            {t("notifications.smsAppointmentNotifications")}
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            {t("notifications.smsAppointmentNotificationsDesc")}
-                          </p>
-                        </div>
-                        <Switch id="sms-appointments" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="sms-reminders">
-                            {t("notifications.smsAppointmentReminders")}
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            {t("notifications.smsAppointmentRemindersDesc")}
-                          </p>
-                        </div>
-                        <Switch id="sms-reminders" defaultChecked />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <Button>{t("notifications.savePreferences")}</Button>
+                    </button>
                   </div>
                 </CardContent>
               </Card>
@@ -331,11 +245,28 @@ export default function SettingsPage() {
 
             <TabsContent
               value="security"
-              className="h-[400px] flex items-center justify-center"
+              className="space-y-4"
             >
-              <p className="text-muted-foreground">
-                {t("security.comingSoon")}
-              </p>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t("security.title")}</CardTitle>
+                  <CardDescription>{t("security.subtitle")}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {!isEmailPasswordUser ? (
+                    <div className="rounded-md bg-muted p-4">
+                      <p className="text-sm text-muted-foreground">
+                        {t("security.socialLoginMessage")}
+                      </p>
+                    </div>
+                  ) : (
+                    <PasswordForm
+                      translationFunc={t}
+                      changePassword={changePassword}
+                    />
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         )}

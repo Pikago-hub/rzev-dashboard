@@ -30,16 +30,31 @@ export default function PhoneNumberInput({
 
   // Try to detect user's country
   useEffect(() => {
-    fetch("https://ipapi.co/json/")
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.country_code) {
-          setCountry(data.country_code as Country);
-        }
-      })
-      .catch((error) => {
-        console.error("Error detecting country:", error);
-      });
+    // Only attempt to detect country in production environment
+    // to avoid CORS errors in development
+    if (process.env.NODE_ENV === "production") {
+      try {
+        fetch("https://ipapi.co/json/", { mode: "cors" })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (data.country_code) {
+              setCountry(data.country_code as Country);
+            }
+          })
+          .catch((error) => {
+            // Silently fail and use default country
+            console.debug("Could not detect country, using default:", error);
+          });
+      } catch (error) {
+        // Fallback silently to default country
+        console.debug("Error in country detection:", error);
+      }
+    }
   }, []);
 
   return (

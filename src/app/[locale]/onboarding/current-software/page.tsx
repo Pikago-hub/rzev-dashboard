@@ -67,65 +67,35 @@ export default function CurrentSoftwarePage() {
       }
 
       try {
-        // First try to fetch with both fields
-        let { data, error } = await supabase
+        const { data, error } = await supabase
           .from("merchant_profiles")
-          .select("current_software, other_software")
+          .select("current_software")
           .eq("id", user.id)
           .single();
 
-        // If there's an error, it might be because other_software column doesn't exist yet
-        // Try again with just current_software
         if (error) {
-          console.log("First query failed, trying with just current_software");
-          const response = await supabase
-            .from("merchant_profiles")
-            .select("current_software")
-            .eq("id", user.id)
-            .single();
-
-          data = response.data as typeof data;
-          error = response.error;
-
-          if (error) {
-            console.error("Error fetching current software:", error);
-            setIsLoading(false);
-            return;
-          }
+          console.error("Error fetching current software:", error);
+          setIsLoading(false);
+          return;
         }
 
         // Update state with existing data if available
-        if (data) {
-          if (data.current_software) {
-            console.log(
-              "Loaded current software from DB:",
-              data.current_software
-            );
+        if (data && data.current_software) {
+          console.log("Loaded current software from DB:", data.current_software);
 
-            // Check if the current_software contains the 'other:' prefix
-            if (
-              typeof data.current_software === "string" &&
-              data.current_software.startsWith("other: ")
-            ) {
-              // Extract the other software value
-              const otherValue = data.current_software.substring(7); // 'other: '.length === 7
-              setCurrentSoftware("other");
-              setOtherSoftware(otherValue);
-              console.log("Extracted other software value:", otherValue);
-            } else {
-              // Regular software selection
-              setCurrentSoftware((data.current_software as string) || null);
-            }
-          }
-
-          // If other_software field exists and has data, use it
-          if (data.other_software) {
-            console.log("Loaded other software from DB:", data.other_software);
-            setOtherSoftware((data.other_software as string) || "");
-            // Make sure 'other' is selected if we have other_software data
-            if (data.current_software === "other") {
-              setCurrentSoftware("other");
-            }
+          // Check if the current_software contains the 'other:' prefix
+          if (
+            typeof data.current_software === "string" &&
+            data.current_software.startsWith("other: ")
+          ) {
+            // Extract the other software value
+            const otherValue = data.current_software.substring(7); // 'other: '.length === 7
+            setCurrentSoftware("other");
+            setOtherSoftware(otherValue);
+            console.log("Extracted other software value:", otherValue);
+          } else {
+            // Regular software selection
+            setCurrentSoftware(data.current_software as string || null);
           }
         }
       } catch (err) {
@@ -166,34 +136,17 @@ export default function CurrentSoftwarePage() {
     }
 
     try {
-      // Try to update with both fields first
-      let updateResult = await supabase
+      // Store both 'other' and the specific software in one field if 'other' is selected
+      const softwareValue = currentSoftware === "other" 
+        ? `other: ${otherSoftware}` 
+        : currentSoftware;
+        
+      const { error } = await supabase
         .from("merchant_profiles")
         .update({
-          current_software: currentSoftware,
-          other_software: currentSoftware === "other" ? otherSoftware : null,
+          current_software: softwareValue,
         })
         .eq("id", user.id);
-
-      // If there's an error, it might be because other_software column doesn't exist
-      if (updateResult.error) {
-        console.log(
-          "Update with other_software failed, trying with just current_software"
-        );
-        // Try again with just current_software
-        // Store both 'other' and the specific software in one field if 'other' is selected
-        updateResult = await supabase
-          .from("merchant_profiles")
-          .update({
-            current_software:
-              currentSoftware === "other"
-                ? `other: ${otherSoftware}` // Store both 'other' and the specific software in one field
-                : currentSoftware,
-          })
-          .eq("id", user.id);
-      }
-
-      const { error } = updateResult;
 
       if (error) throw error;
 

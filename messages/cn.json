@@ -129,6 +129,8 @@
       "servicesSelectedPlural": "已选择 {count} 项服务",
       "otherServiceLabel": "请指定其他服务",
       "otherServicePlaceholder": "请输入您提供的其他服务",
+      "selectionRequired": "请选择至少一项服务",
+      "otherServiceRequired": "请指明您提供的其他服务",
       "categories": {
         "hair": "美发",
         "nails": "美甲",
@@ -167,7 +169,7 @@
     },
     "serviceLocations": {
       "title": "服务地点",
-      "description": "您在哪里提供服务？",
+      "description": "您在哪里提供服务？",  
       "selectionRequired": "请选择至少一个服务地点选项",
       "options": {
         "inStore": "店内服务",
@@ -307,12 +309,77 @@
     },
     "team": {
       "title": "团队",
-      "subtitle": "管理您的团队成员及其日程安排",
+      "subtitle": "管理您的团队成员及其排班",
       "teamMembers": "团队成员",
       "teamMembersDescription": "查看和管理您的团队",
       "searchPlaceholder": "搜索团队...",
       "addTeamMember": "添加团队成员",
-      "comingSoon": "团队管理即将推出"
+      "noTeamMembers": "未找到团队成员",
+      "common": {
+        "loading": "加载中...",
+        "success": "成功",
+        "error": "错误",
+        "edit": "编辑",
+        "delete": "删除",
+        "noEmail": "没有电子邮件"
+      },
+      "addTeamMemberForm": {
+        "title": "添加团队成员",
+        "editTitle": "编辑团队成员",
+        "name": "姓名",
+        "namePlaceholder": "输入团队成员姓名",
+        "email": "电子邮件",
+        "emailPlaceholder": "输入团队成员电子邮件",
+        "role": "角色",
+        "rolePlaceholder": "选择角色",
+        "roles": {
+          "admin": "管理员",
+          "manager": "经理",
+          "staff": "员工"
+        },
+        "active": "活跃",
+        "add": "添加团队成员",
+        "update": "更新团队成员",
+        "cancel": "取消"
+      },
+      "availability": {
+        "title": "可用时间",
+        "addAvailability": "添加可用时间",
+        "editAvailability": "编辑可用时间",
+        "dayOfWeek": "星期几",
+        "startTime": "开始时间",
+        "endTime": "结束时间",
+        "available": "可用",
+        "days": {
+          "sunday": "星期日",
+          "monday": "星期一",
+          "tuesday": "星期二",
+          "wednesday": "星期三",
+          "thursday": "星期四",
+          "friday": "星期五",
+          "saturday": "星期六"
+        },
+        "noAvailability": "未设置可用时间",
+        "add": "添加",
+        "update": "更新",
+        "cancel": "取消",
+        "delete": "删除"
+      },
+      "deleteConfirmation": {
+        "title": "删除团队成员",
+        "message": "您确定要删除此团队成员吗？此操作无法撤消。",
+        "confirm": "删除",
+        "cancel": "取消"
+      },
+      "notifications": {
+        "addSuccess": "团队成员添加成功",
+        "updateSuccess": "团队成员更新成功",
+        "deleteSuccess": "团队成员删除成功",
+        "error": "发生错误",
+        "availabilityAddSuccess": "可用时间添加成功",
+        "availabilityUpdateSuccess": "可用时间更新成功",
+        "availabilityDeleteSuccess": "可用时间删除成功"
+      }
     },
     "subscriptions": {
       "title": "订阅",
@@ -429,6 +496,26 @@
       "serviceListDescription": "查看和管理所有服务",
       "searchPlaceholder": "搜索服务...",
       "addService": "添加服务",
+      "addServiceTitle": "添加服务",
+      "addServiceDescription": "添加新的服务项目",
+      "cancel": "取消",
+      "serviceName": "服务名称",
+      "serviceNamePlaceholder": "输入服务名称",
+      "serviceDescription": "服务描述",
+      "serviceDescriptionPlaceholder": "输入服务描述",
+      "serviceCategory": "服务类别",
+      "serviceCategoryPlaceholder": "输入服务类别",
+      "serviceDuration": "服务时长",
+      "servicePrice": "服务价格",
+      "serviceActive": "服务状态",
+      "serviceActiveDescription": "启用或禁用服务",
+      "adding": "添加中...",
+      "editServiceTitle": "编辑服务",
+      "editServiceDescription": "编辑现有的服务项目",
+      "updateService": "更新服务",
+      "deleteServiceTitle": "删除服务",
+      "deleteServiceDescription": "删除现有的服务项目",
+      "deleteService": "删除服务",
       "name": "名称",
       "category": "类别",
       "duration": "{duration} 分钟",
@@ -441,7 +528,9 @@
       "title": "设置",
       "subtitle": "管理您的账户和应用程序首选项",
       "common": {
-        "loading": "加载中..."
+        "loading": "加载中...",
+        "success": "成功",
+        "error": "错误"
       },
       "tabs": {
         "profile": "个人资料",
@@ -460,12 +549,24 @@
         "saveChanges": "保存更改"
       },
       "business": {
-        "title": "商家信息",
-        "subtitle": "更新您的商家详细信息",
-        "businessName": "商家名称",
-        "businessEmail": "商家电子邮件",
-        "businessPhone": "商家电话",
+        "title": "企业信息",
+        "subtitle": "更新您的企业详情",
+        "businessName": "企业名称",
+        "businessEmail": "企业邮箱",
+        "businessPhone": "企业电话",
         "website": "网站",
+        "description": "企业描述",
+        "descriptionPlaceholder": "告诉客户关于您的企业...",
+        "logo": "企业标志",
+        "uploadLogo": "上传标志",
+        "selectLogo": "选择标志",
+        "changeLogo": "更改标志",
+        "logoRequirements": "建议尺寸: 400x400像素。最大尺寸: 2MB。格式: JPEG, PNG, GIF, WEBP",
+        "invalidFileType": "文件类型无效。请上传JPEG, PNG, GIF或WEBP图片。",
+        "fileTooLarge": "文件太大。最大尺寸为2MB。",
+        "timezone": "时区",
+        "selectTimezone": "选择一个时区",
+        "timezoneDescription": "此时区将用于您的业务运营和调度。",
         "address": "地址",
         "city": "城市",
         "state": "州/省",
@@ -495,7 +596,20 @@
         "comingSoon": "外观设置即将推出"
       },
       "security": {
-        "comingSoon": "安全设置即将推出"
+        "title": "安全设置",
+        "subtitle": "管理您的账户安全和密码",
+        "currentPassword": "当前密码",
+        "newPassword": "新密码",
+        "confirmPassword": "确认新密码",
+        "passwordRequirements": "必须至少8个字符",
+        "changePassword": "更改密码",
+        "passwordChanged": "密码已成功更改",
+        "passwordChangedLogout": "密码已成功更改。您将在片刻后登出。",
+        "changePasswordError": "更改密码时出错",
+        "passwordTooShort": "密码必须至少8个字符",
+        "passwordsDontMatch": "密码不匹配",
+        "comingSoon": "安全设置即将推出",
+        "socialLoginMessage": "您使用社交提供商（谷歌）注册。请通过您的社交提供商设置管理您的密码。"
       }
     }
   }

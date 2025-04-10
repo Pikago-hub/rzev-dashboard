@@ -129,6 +129,8 @@
       "servicesSelectedPlural": "{count} servicios seleccionados",
       "otherServiceLabel": "Especifique Otro Servicio",
       "otherServicePlaceholder": "Por favor, especifique su otro servicio",
+      "selectionRequired": "Por favor seleccione al menos un servicio",
+      "otherServiceRequired": "Por favor especifique su otro servicio",
       "categories": {
         "hair": "Cabello",
         "nails": "Uñas",
@@ -312,7 +314,72 @@
       "teamMembersDescription": "Ver y gestionar tu equipo",
       "searchPlaceholder": "Buscar equipo...",
       "addTeamMember": "Añadir Miembro",
-      "comingSoon": "Gestión de equipo próximamente"
+      "noTeamMembers": "No se encontraron miembros del equipo",
+      "common": {
+        "loading": "Cargando...",
+        "success": "Éxito",
+        "error": "Error",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "noEmail": "No correo electrónico"
+      },
+      "addTeamMemberForm": {
+        "title": "Añadir Miembro del Equipo",
+        "editTitle": "Editar Miembro del Equipo",
+        "name": "Nombre",
+        "namePlaceholder": "Ingresa el nombre del miembro",
+        "email": "Correo Electrónico",
+        "emailPlaceholder": "Ingresa el correo del miembro",
+        "role": "Rol",
+        "rolePlaceholder": "Selecciona un rol",
+        "roles": {
+          "admin": "Administrador",
+          "manager": "Gerente",
+          "staff": "Personal"
+        },
+        "active": "Activo",
+        "add": "Añadir Miembro",
+        "update": "Actualizar Miembro",
+        "cancel": "Cancelar"
+      },
+      "availability": {
+        "title": "Disponibilidad",
+        "addAvailability": "Añadir Disponibilidad",
+        "editAvailability": "Editar Disponibilidad",
+        "dayOfWeek": "Día de la Semana",
+        "startTime": "Hora de Inicio",
+        "endTime": "Hora de Fin",
+        "available": "Disponible",
+        "days": {
+          "sunday": "Domingo",
+          "monday": "Lunes",
+          "tuesday": "Martes",
+          "wednesday": "Miércoles",
+          "thursday": "Jueves",
+          "friday": "Viernes",
+          "saturday": "Sábado"
+        },
+        "noAvailability": "No hay disponibilidad configurada",
+        "add": "Añadir",
+        "update": "Actualizar",
+        "cancel": "Cancelar",
+        "delete": "Eliminar"
+      },
+      "deleteConfirmation": {
+        "title": "Eliminar Miembro del Equipo",
+        "message": "¿Estás seguro de que deseas eliminar este miembro del equipo? Esta acción no se puede deshacer.",
+        "confirm": "Eliminar",
+        "cancel": "Cancelar"
+      },
+      "notifications": {
+        "addSuccess": "Miembro del equipo añadido con éxito",
+        "updateSuccess": "Miembro del equipo actualizado con éxito",
+        "deleteSuccess": "Miembro del equipo eliminado con éxito",
+        "error": "Ocurrió un error",
+        "availabilityAddSuccess": "Disponibilidad añadida con éxito",
+        "availabilityUpdateSuccess": "Disponibilidad actualizada con éxito",
+        "availabilityDeleteSuccess": "Disponibilidad eliminada con éxito"
+      }
     },
     "subscriptions": {
       "title": "Suscripciones",
@@ -428,6 +495,26 @@
       "serviceList": "Lista de Servicios",
       "serviceListDescription": "Ver y gestionar todos tus servicios",
       "searchPlaceholder": "Buscar servicios...",
+      "addServiceTitle": "Añadir Servicio",
+      "addServiceDescription": "Añadir un nuevo servicio",
+      "cancel": "Cancelar",
+      "serviceName": "Nombre del Servicio",
+      "serviceNamePlaceholder": "Ingresa el nombre del servicio",
+      "serviceDescription": "Descripción del Servicio",
+      "serviceDescriptionPlaceholder": "Ingresa la descripción del servicio",
+      "serviceCategory": "Categoría del Servicio",
+      "serviceCategoryPlaceholder": "Ingresa la categoría del servicio",
+      "serviceDuration": "Duración del Servicio",
+      "servicePrice": "Precio del Servicio",
+      "serviceActive": "Estado del Servicio",
+      "serviceActiveDescription": "Habilitar o deshabilitar el servicio",
+      "adding": "Añadiendo...",
+      "editServiceTitle": "Editar Servicio",
+      "editServiceDescription": "Editar servicio existente",
+      "updateService": "Actualizar Servicio",
+      "deleteServiceTitle": "Eliminar Servicio",
+      "deleteServiceDescription": "Eliminar servicio existente",
+      "deleteService": "Eliminar Servicio",
       "addService": "Añadir Servicio",
       "name": "Nombre",
       "category": "Categoría",
@@ -441,7 +528,9 @@
       "title": "Configuración",
       "subtitle": "Gestiona tu cuenta y preferencias de la aplicación",
       "common": {
-        "loading": "Cargando..."
+        "loading": "Cargando...",
+        "success": "Éxito",
+        "error": "Error"
       },
       "tabs": {
         "profile": "Perfil",
@@ -466,12 +555,24 @@
         "businessEmail": "Correo del Negocio",
         "businessPhone": "Teléfono del Negocio",
         "website": "Sitio Web",
+        "description": "Descripción del Negocio",
+        "descriptionPlaceholder": "Cuéntale a tus clientes sobre tu negocio...",
+        "logo": "Logo del Negocio",
+        "uploadLogo": "Subir logo",
+        "selectLogo": "Seleccionar Logo",
+        "changeLogo": "Cambiar Logo",
+        "logoRequirements": "Tamaño recomendado: 400x400px. Tamaño máximo: 2MB. Formatos: JPEG, PNG, GIF, WEBP",
+        "invalidFileType": "Tipo de archivo inválido. Por favor sube una imagen JPEG, PNG, GIF o WEBP.",
+        "fileTooLarge": "El archivo es demasiado grande. El tamaño máximo es 2MB.",
+        "timezone": "Timezone",
+        "selectTimezone": "Seleccionar un timezone",
+        "timezoneDescription": "Este timezone será usado para tus operaciones de negocio y programación.",
         "address": "Dirección",
         "city": "Ciudad",
         "state": "Estado/Provincia",
         "zipCode": "Código Postal",
         "saveChanges": "Guardar Cambios",
-        "saveSuccess": "Información del negocio guardada con éxito",
+        "saveSuccess": "Información del negocio guardada correctamente",
         "saveError": "Error al guardar la información del negocio"
       },
       "notifications": {
@@ -495,7 +596,20 @@
         "comingSoon": "Configuración de apariencia próximamente"
       },
       "security": {
-        "comingSoon": "Configuración de seguridad próximamente"
+        "title": "Configuración de Seguridad",
+        "subtitle": "Administra la seguridad de tu cuenta y contraseña",
+        "currentPassword": "Contraseña Actual",
+        "newPassword": "Nueva Contraseña",
+        "confirmPassword": "Confirmar Nueva Contraseña",
+        "passwordRequirements": "Debe tener al menos 8 caracteres",
+        "changePassword": "Cambiar Contraseña",
+        "passwordChanged": "Contraseña cambiada correctamente",
+        "passwordChangedLogout": "Contraseña cambiada correctamente. Se cerrará tu sesión en un momento.",
+        "changePasswordError": "Error al cambiar la contraseña",
+        "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+        "passwordsDontMatch": "Las contraseñas no coinciden",
+        "comingSoon": "Configuración de seguridad próximamente",
+        "socialLoginMessage": "Te registraste con un proveedor social (Google). Por favor, administra tu contraseña a través de la configuración de tu proveedor social."
       }
     }
   }

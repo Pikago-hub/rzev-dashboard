@@ -3,35 +3,7 @@
 import { useState, useEffect } from "react";
 import { createBrowserClient } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
-
-export type AddressData = {
-  formatted?: string;
-  street?: string;
-  addressLine2?: string | null;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  country?: string;
-  place_id?: string;
-};
-
-export type MerchantProfile = {
-  id: string;
-  business_name: string | null;
-  display_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  phone_number: string | null;
-  contact_email: string | null;
-  contact_phone: string | null;
-  website: string | null;
-  avatar_url: string | null;
-  address?: AddressData;
-  lat?: number | null;
-  lng?: number | null;
-  created_at: string;
-  updated_at: string;
-};
+import { MerchantProfile } from "@/types/merchant";
 
 export function useMerchantProfile() {
   const [merchantProfile, setMerchantProfile] =
@@ -60,7 +32,7 @@ export function useMerchantProfile() {
           throw error;
         }
 
-        setMerchantProfile(data as MerchantProfile);
+        setMerchantProfile(data as unknown as MerchantProfile);
       } catch (err) {
         console.error("Error fetching merchant profile:", err);
         setError(err instanceof Error ? err : new Error(String(err)));

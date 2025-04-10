@@ -132,6 +132,8 @@ declare const messages: {
       "servicesSelectedPlural": "{count} services selected",
       "otherServiceLabel": "Specify Other Service",
       "otherServicePlaceholder": "Please specify your other service",
+      "selectionRequired": "Please select at least one service",
+      "otherServiceRequired": "Please specify your other service",
       "categories": {
         "hair": "Hair",
         "nails": "Nails",
@@ -315,7 +317,72 @@ declare const messages: {
       "teamMembersDescription": "View and manage your team",
       "searchPlaceholder": "Search team...",
       "addTeamMember": "Add Team Member",
-      "comingSoon": "Team management coming soon"
+      "noTeamMembers": "No team members found",
+      "common": {
+        "loading": "Loading...",
+        "success": "Success",
+        "error": "Error",
+        "edit": "Edit",
+        "delete": "Delete",
+        "noEmail": "No email"
+      },
+      "addTeamMemberForm": {
+        "title": "Add Team Member",
+        "editTitle": "Edit Team Member",
+        "name": "Name",
+        "namePlaceholder": "Enter team member name",
+        "email": "Email",
+        "emailPlaceholder": "Enter team member email",
+        "role": "Role",
+        "rolePlaceholder": "Select role",
+        "roles": {
+          "admin": "Admin",
+          "manager": "Manager",
+          "staff": "Staff"
+        },
+        "active": "Active",
+        "add": "Add Team Member",
+        "update": "Update Team Member",
+        "cancel": "Cancel"
+      },
+      "availability": {
+        "title": "Availability",
+        "addAvailability": "Add Availability",
+        "editAvailability": "Edit Availability",
+        "dayOfWeek": "Day of Week",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "available": "Available",
+        "days": {
+          "sunday": "Sunday",
+          "monday": "Monday",
+          "tuesday": "Tuesday",
+          "wednesday": "Wednesday",
+          "thursday": "Thursday",
+          "friday": "Friday",
+          "saturday": "Saturday"
+        },
+        "noAvailability": "No availability set",
+        "add": "Add",
+        "update": "Update",
+        "cancel": "Cancel",
+        "delete": "Delete"
+      },
+      "deleteConfirmation": {
+        "title": "Delete Team Member",
+        "message": "Are you sure you want to delete this team member? This action cannot be undone.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      },
+      "notifications": {
+        "addSuccess": "Team member added successfully",
+        "updateSuccess": "Team member updated successfully",
+        "deleteSuccess": "Team member deleted successfully",
+        "error": "An error occurred",
+        "availabilityAddSuccess": "Availability added successfully",
+        "availabilityUpdateSuccess": "Availability updated successfully",
+        "availabilityDeleteSuccess": "Availability deleted successfully"
+      }
     },
     "subscriptions": {
       "title": "Subscriptions",
@@ -431,6 +498,26 @@ declare const messages: {
       "serviceList": "Service List",
       "serviceListDescription": "View and manage all your services",
       "searchPlaceholder": "Search services...",
+      "addServiceTitle": "Add Service",
+      "addServiceDescription": "Add a new service",
+      "cancel": "Cancel",
+      "serviceName": "Service Name",
+      "serviceNamePlaceholder": "Enter service name",
+      "serviceDescription": "Service Description",
+      "serviceDescriptionPlaceholder": "Enter service description",
+      "serviceCategory": "Service Category",
+      "serviceCategoryPlaceholder": "Enter service category",
+      "serviceDuration": "Service Duration",
+      "servicePrice": "Service Price",
+      "serviceActive": "Service Status",
+      "serviceActiveDescription": "Enable or disable service",
+      "adding": "Adding...",
+      "editServiceTitle": "Edit Service",
+      "editServiceDescription": "Edit existing service",
+      "updateService": "Update Service",
+      "deleteServiceTitle": "Delete Service",
+      "deleteServiceDescription": "Delete existing service",
+      "deleteService": "Delete Service",
       "addService": "Add Service",
       "name": "Name",
       "category": "Category",
@@ -450,7 +537,9 @@ declare const messages: {
         "security": "Security"
       },
       "common": {
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "success": "Success",
+        "error": "Error"
       },
       "profile": {
         "title": "Profile Information",
@@ -469,6 +558,18 @@ declare const messages: {
         "businessEmail": "Business Email",
         "businessPhone": "Business Phone",
         "website": "Website",
+        "description": "Business Description",
+        "descriptionPlaceholder": "Tell customers about your business...",
+        "logo": "Business Logo",
+        "uploadLogo": "Upload logo",
+        "selectLogo": "Select Logo",
+        "changeLogo": "Change Logo",
+        "logoRequirements": "Recommended size: 400x400px. Max size: 2MB. Formats: JPEG, PNG, GIF, WEBP",
+        "invalidFileType": "Invalid file type. Please upload a JPEG, PNG, GIF or WEBP image.",
+        "fileTooLarge": "File is too large. Maximum size is 2MB.",
+        "timezone": "Timezone",
+        "selectTimezone": "Select a timezone",
+        "timezoneDescription": "This timezone will be used for your business operations and scheduling.",
         "address": "Address",
         "city": "City",
         "state": "State",
@@ -498,7 +599,20 @@ declare const messages: {
         "comingSoon": "Appearance settings coming soon"
       },
       "security": {
-        "comingSoon": "Security settings coming soon"
+        "title": "Security Settings",
+        "subtitle": "Manage your account security and password",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password",
+        "passwordRequirements": "Must be at least 8 characters",
+        "changePassword": "Change Password",
+        "passwordChanged": "Password changed successfully",
+        "passwordChangedLogout": "Password changed successfully. You will be logged out in a moment.",
+        "changePasswordError": "Error changing password",
+        "passwordTooShort": "Password must be at least 8 characters",
+        "passwordsDontMatch": "Passwords don't match",
+        "comingSoon": "Security settings coming soon",
+        "socialLoginMessage": "You signed up with a social provider (Google). Please manage your password through your social provider's settings."
       }
     }
   }

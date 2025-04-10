@@ -17,6 +17,7 @@ type AuthContextType = {
     options?: { data?: Record<string, unknown> }
   ) => Promise<void>;
   signOut: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -256,6 +257,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Change password
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      if (!user) {
+        throw new Error("User not found");
+      }
+      
+      // Check if the user is using email/password authentication
+      const provider = user.app_metadata?.provider;
+      if (provider && provider !== 'email') {
+        throw new Error(`You cannot change your password here because you're using ${provider} authentication.`);
+      }
+      
+      // Verify current password by attempting to sign in
+      if (!user.email) {
+        throw new Error("User email not found");
+      }
+      
+      // Attempt sign in to verify current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+      
+      if (signInError) {
+        throw new Error("Current password is incorrect");
+      }
+      
+      // Change password
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      
+      if (error) throw error;
+      
+      // Sign out the user after successful password change
+      await signOut();
+      
+    } catch (error) {
+      console.error("Error changing password:", error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     session,
@@ -265,6 +310,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithMagicLink,
     signUp,
     signOut,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
