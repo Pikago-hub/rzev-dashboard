@@ -1,6 +1,7 @@
 "use client";
 
 import { Appointment, TeamMember } from "@/types/calendar";
+import { useTranslations } from "next-intl";
 import {
   formatTime,
   calculateEndTime,
@@ -29,6 +30,7 @@ export function AppointmentDetailsDialog({
   onOpenChange,
   teamMember,
 }: AppointmentDetailsDialogProps) {
+  const t = useTranslations("dashboard.calendar.appointmentDetails");
   if (!appointment) return null;
 
   const endTime = calculateEndTime(appointment.time, appointment.duration);
@@ -37,50 +39,48 @@ export function AppointmentDetailsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Appointment Details</DialogTitle>
-          <DialogDescription>
-            View the details of this appointment.
-          </DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("subtitle")}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <span className="text-sm font-medium">Customer:</span>
+            <span className="text-sm font-medium">{t("customer")}:</span>
             <span className="col-span-3">{appointment.customerName}</span>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <span className="text-sm font-medium">Service:</span>
+            <span className="text-sm font-medium">{t("service")}:</span>
             <span className="col-span-3">{appointment.serviceName}</span>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <span className="text-sm font-medium">Date:</span>
+            <span className="text-sm font-medium">{t("date")}:</span>
             <span className="col-span-3">{formatDate(appointment.date)}</span>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <span className="text-sm font-medium">Time:</span>
+            <span className="text-sm font-medium">{t("time")}:</span>
             <span className="col-span-3">
               {formatTime(appointment.time)} - {formatTime(endTime)} (
-              {appointment.duration} min)
+              {t("duration", { duration: appointment.duration })})
             </span>
           </div>
           {teamMember && (
             <div className="grid grid-cols-4 items-center gap-4">
-              <span className="text-sm font-medium">Staff:</span>
+              <span className="text-sm font-medium">{t("staff")}:</span>
               <span className="col-span-3">
                 {teamMember.name} ({teamMember.role})
               </span>
             </div>
           )}
           <div className="grid grid-cols-4 items-center gap-4">
-            <span className="text-sm font-medium">Status:</span>
+            <span className="text-sm font-medium">{t("status")}:</span>
             <Badge variant="outline" className="col-span-3">
-              Confirmed
+              {t("confirmed")}
             </Badge>
           </div>
         </div>
         <div className="flex justify-between mt-4">
-          <Button variant="outline">Reschedule</Button>
+          <Button variant="outline">{t("reschedule")}</Button>
           <Button variant="outline" className="text-destructive">
-            Cancel Appointment
+            {t("cancel")}
           </Button>
         </div>
       </DialogContent>

@@ -1,7 +1,7 @@
 {
   "home": {
-    "title": "仪表板",
-    "welcome": "欢迎使用Rzev仪表板",
+    "title": "管理界面",
+    "welcome": "欢迎使用Rzev管理界面",
     "logout": "退出登录"
   },
   "navbar": {
@@ -79,12 +79,424 @@
     "edit": "编辑",
     "delete": "删除",
     "confirm": "确认",
-    "back": "返回"
+    "back": "返回",
+    "isRequired": "是必填项",
+    "enterValidUrl": "请输入有效的网址",
+    "placeholder": "这是未来实现的占位符"
   },
   "nav": {
-    "dashboard": "仪表板",
+    "dashboard": "管理见面",
     "profile": "个人资料",
     "settings": "设置",
     "logout": "退出登录"
+  },
+  "onboarding": {
+    "title": "完成您的",
+    "businessSetup": "商家设置",
+    "common": {
+      "isRequired": "必填项",
+      "enterValidUrl": "请输入有效的网址"
+    },
+    "steps": {
+      "businessInfo": "商家信息",
+      "servicesOffer": "服务项目",
+      "teamSize": "团队规模",
+      "serviceLocations": "服务地点",
+      "businessLocation": "商家地址",
+      "currentSoftware": "当前软件",
+      "heardAboutUs": "推荐来源",
+      "complete": "完成"
+    },
+    "navigation": {
+      "back": "返回",
+      "next": "下一步",
+      "skip": "跳过",
+      "finish": "完成"
+    },
+    "businessInfo": {
+      "title": "商家信息",
+      "description": "告诉我们关于您的商家",
+      "businessNameLabel": "商家名称",
+      "businessNamePlaceholder": "输入您的商家名称",
+      "websiteLabel": "网站（可选）",
+      "websitePlaceholder": "https://yourbusiness.com"
+    },
+    "servicesOffer": {
+      "title": "提供的服务",
+      "description": "您的商家提供哪些服务？",
+      "selectInstruction": "选择您的商家提供的所有服务。您可以稍后更新这些内容。",
+      "servicesSelected": "已选择 {count} 项服务",
+      "servicesSelectedPlural": "已选择 {count} 项服务",
+      "otherServiceLabel": "请指定其他服务",
+      "otherServicePlaceholder": "请输入您提供的其他服务",
+      "categories": {
+        "hair": "美发",
+        "nails": "美甲",
+        "makeup": "化妆",
+        "skincare": "护肤",
+        "massage": "按摩",
+        "spa": "水疗",
+        "barber": "理发",
+        "waxing": "脱毛",
+        "lashes": "睫毛和眉毛",
+        "tanning": "美黑",
+        "tattoo": "纹身",
+        "piercing": "穿孔",
+        "fitness": "健身",
+        "yoga": "瑜伽",
+        "wellness": "健康",
+        "nutrition": "营养",
+        "therapy": "理疗",
+        "dental": "牙科",
+        "medical": "医疗",
+        "other": "其他"
+      }
+    },
+    "teamSize": {
+      "title": "团队规模",
+      "description": "您的团队有多少人？",
+      "selectionRequired": "请选择一个团队规模选项",
+      "options": {
+        "individual": "个人",
+        "individualDescription": "只有您一个人工作",
+        "small": "小型团队 (2-6人)",
+        "smallDescription": "您和几位团队成员",
+        "large": "大型团队 (7人以上)",
+        "largeDescription": "您和更大的团队"
+      }
+    },
+    "serviceLocations": {
+      "title": "服务地点",
+      "description": "您在哪里提供服务？",
+      "selectionRequired": "请选择至少一个服务地点选项",
+      "options": {
+        "inStore": "店内服务",
+        "inStoreDescription": "客户来到您的地点接受服务",
+        "clientLocation": "客户地点",
+        "clientLocationDescription": "您前往客户的地点提供服务",
+        "both": "两者皆可",
+        "bothDescription": "您同时提供店内服务和上门服务"
+      }
+    },
+    "businessLocation": {
+      "title": "商家地址",
+      "description": "输入您的商家地址，客户将在此处访问您",
+      "addressLabel": "地址",
+      "addressPlaceholder": "开始输入您的地址",
+      "addressRequired": "商家地址为必填项",
+      "addressLine1Label": "地址第一行",
+      "addressLine1Placeholder": "123 主街",
+      "addressLine2Label": "地址第二行（可选）",
+      "addressLine2Placeholder": "100室，2楼等",
+      "cityLabel": "城市",
+      "cityPlaceholder": "输入城市",
+      "stateLabel": "州/省",
+      "statePlaceholder": "输入州或省",
+      "postalCodeLabel": "邮政编码",
+      "postalCodePlaceholder": "输入邮政编码",
+      "countryLabel": "国家",
+      "countryPlaceholder": "选择国家",
+      "validationError": "请输入有效地址",
+      "addressNotFound": "未找到地址。请重试。"
+    },
+    "currentSoftware": {
+      "title": "您目前使用的是哪款软件？",
+      "description": "如果您想要切换，我们可以帮助加快您的业务设置并将您的数据导入到您的新Rzev账户中。",
+      "selectionRequired": "请选择一个软件选项",
+      "otherSoftwareRequired": "请指明您正在使用的其他软件",
+      "otherSoftwareLabel": "请指明您正在使用的软件",
+      "otherSoftwarePlaceholder": "输入您当前使用的软件名称",
+      "options": {
+        "acuity": "Acuity",
+        "booksy": "Booksy",
+        "calendly": "Calendly",
+        "clover": "Clover",
+        "goldie": "Goldie",
+        "glossGenius": "Gloss Genius",
+        "janeapp": "Janeapp",
+        "mangomint": "Mangomint",
+        "mindbody": "Mindbody",
+        "ovatu": "Ovatu",
+        "phorest": "Phorest",
+        "square": "Square",
+        "salonIris": "Salon Iris",
+        "setmore": "Setmore",
+        "shortcuts": "Shortcuts",
+        "squire": "Squire",
+        "styleseat": "Styleseat",
+        "timely": "Timely",
+        "vagaro": "Vagaro",
+        "zenoti": "Zenoti",
+        "none": "我没有使用任何软件",
+        "other": "其他"
+      }
+    },
+    "heardAboutUs": {
+      "title": "您是如何了解我们的？",
+      "description": "我们很想知道您是如何发现我们的平台的",
+      "pleaseSpecify": "请说明：",
+      "otherPlaceholder": "请告诉我们您是如何了解我们的",
+      "selectionRequired": "请选择您是如何了解我们的",
+      "otherSourceRequired": "请指明您是如何了解我们的",
+      "options": {
+        "friend": "朋友推荐",
+        "search": "搜索引擎（如Google、Bing）",
+        "social": "社交媒体",
+        "mail": "邮件广告",
+        "magazine": "杂志广告",
+        "ratings": "评价网站（如Capterra、Trustpilot）",
+        "other": "其他"
+      }
+    },
+    "submitting": "保存中...",
+    "successTitle": "设置完成",
+    "successMessage": "您的商家资料已成功设置",
+    "errorTitle": "设置失败",
+    "errorMessage": "设置商家资料时出错。请重试。"
+  },
+  "dashboard": {
+    "sidebar": {
+      "title": "Rzev 管理界面",
+      "merchantAccount": "商家账户",
+      "signOut": "退出登录",
+      "navigation": {
+        "dashboard": "管理界面",
+        "calendar": "日历",
+        "clients": "客户",
+        "team": "团队",
+        "subscriptions": "订阅",
+        "analytics": "分析",
+        "messages": "消息",
+        "services": "服务项目",
+        "settings": "设置"
+      }
+    },
+    "calendar": {
+      "title": "日历",
+      "subtitle": "管理您的预约和团队日程",
+      "time": "时间",
+      "day": "日",
+      "week": "周",
+      "selectTeamMember": "选择团队成员",
+      "allTeamMembers": "所有团队成员",
+      "available": "可用",
+      "showingSchedule": "显示{count}位团队成员的日程",
+      "appointmentDetails": {
+        "title": "预约详情",
+        "subtitle": "查看此预约的详细信息",
+        "customer": "客户",
+        "service": "服务",
+        "date": "日期",
+        "time": "时间",
+        "staff": "工作人员",
+        "status": "状态",
+        "confirmed": "已确认",
+        "reschedule": "重新安排",
+        "cancel": "取消预约",
+        "duration": "{duration}分钟"
+      }
+    },
+    "clients": {
+      "title": "客户",
+      "subtitle": "管理您的客户数据库和信息",
+      "clientList": "客户列表",
+      "clientListDescription": "查看和管理所有客户",
+      "searchPlaceholder": "搜索客户...",
+      "addClient": "添加客户",
+      "comingSoon": "客户管理即将推出"
+    },
+    "team": {
+      "title": "团队",
+      "subtitle": "管理您的团队成员及其日程安排",
+      "teamMembers": "团队成员",
+      "teamMembersDescription": "查看和管理您的团队",
+      "searchPlaceholder": "搜索团队...",
+      "addTeamMember": "添加团队成员",
+      "comingSoon": "团队管理即将推出"
+    },
+    "subscriptions": {
+      "title": "订阅",
+      "subtitle": "管理您的订阅计划和账单",
+      "tabs": {
+        "plans": "订阅计划",
+        "billing": "账单历史",
+        "settings": "支付设置"
+      },
+      "plans": {
+        "basic": {
+          "name": "基础版",
+          "description": "适合刚起步的小型企业",
+          "price": "$29",
+          "period": "/月",
+          "features": {
+            "0": "每月最多100个预约",
+            "1": "2名团队成员",
+            "2": "基础分析",
+            "3": "电子邮件通知",
+            "length": "4"
+          },
+          "button": "当前计划"
+        },
+        "professional": {
+          "name": "专业版",
+          "description": "适合需求更多的成长型企业",
+          "price": "$79",
+          "period": "/月",
+          "badge": "热门",
+          "features": {
+            "0": "无限预约",
+            "1": "最多5名团队成员",
+            "2": "高级分析",
+            "3": "电子邮件和短信通知",
+            "4": "自定义品牌",
+            "length": "5"
+          },
+          "button": "升级计划"
+        },
+        "enterprise": {
+          "name": "企业版",
+          "description": "适合有高级需求的大型企业",
+          "price": "$199",
+          "period": "/月",
+          "features": {
+            "0": "一切无限制",
+            "1": "无限团队成员",
+            "2": "优先支持",
+            "3": "高级集成",
+            "4": "专属客户经理",
+            "length": "5"
+          },
+          "button": "联系销售"
+        }
+      },
+      "comingSoon": {
+        "billing": "账单历史即将推出",
+        "settings": "支付设置即将推出"
+      }
+    },
+    "analytics": {
+      "title": "分析",
+      "subtitle": "跟踪您的业务表现和增长",
+      "periods": {
+        "selectPeriod": "选择时间段",
+        "7days": "过去7天",
+        "30days": "过去30天",
+        "90days": "过去90天",
+        "year": "今年",
+        "custom": "自定义范围"
+      },
+      "tabs": {
+        "overview": "概览",
+        "revenue": "收入",
+        "appointments": "预约",
+        "clients": "客户",
+        "team": "团队"
+      },
+      "metrics": {
+        "totalRevenue": "总收入",
+        "appointments": "预约数",
+        "newClients": "新客户",
+        "conversionRate": "转化率",
+        "fromLastPeriod": "较上期增长{percent}%"
+      },
+      "charts": {
+        "revenueTrend": "收入趋势",
+        "revenueTrendDesc": "过去12个月的月收入",
+        "appointmentDistribution": "预约分布",
+        "appointmentDistributionDesc": "按服务类型细分",
+        "comingSoon": "即将推出",
+        "revenueChartComing": "收入图表即将推出",
+        "distributionChartComing": "分布图表即将推出",
+        "revenueAnalyticsComing": "详细收入分析即将推出",
+        "appointmentAnalyticsComing": "预约分析即将推出",
+        "clientAnalyticsComing": "客户分析即将推出",
+        "teamAnalyticsComing": "团队绩效分析即将推出"
+      }
+    },
+    "messages": {
+      "title": "消息",
+      "subtitle": "与您的客户沟通",
+      "conversations": "对话",
+      "searchPlaceholder": "搜索消息...",
+      "lastActive": "上次活动时间: {time}",
+      "messageHistoryComing": "消息历史即将推出",
+      "typePlaceholder": "输入您的消息..."
+    },
+    "services": {
+      "title": "服务项目",
+      "subtitle": "管理您的服务项目和价格",
+      "serviceList": "服务列表",
+      "serviceListDescription": "查看和管理所有服务",
+      "searchPlaceholder": "搜索服务...",
+      "addService": "添加服务",
+      "name": "名称",
+      "category": "类别",
+      "duration": "{duration} 分钟",
+      "price": "价格",
+      "actions": "操作",
+      "edit": "编辑",
+      "delete": "删除"
+    },
+    "settings": {
+      "title": "设置",
+      "subtitle": "管理您的账户和应用程序首选项",
+      "common": {
+        "loading": "加载中..."
+      },
+      "tabs": {
+        "profile": "个人资料",
+        "business": "商家信息",
+        "notifications": "通知",
+        "security": "安全"
+      },
+      "profile": {
+        "title": "个人资料信息",
+        "subtitle": "更新您的个人信息",
+        "fullName": "全名",
+        "email": "电子邮件",
+        "emailCannotBeChanged": "您的电子邮件无法更改",
+        "phone": "电话号码",
+        "role": "角色",
+        "saveChanges": "保存更改"
+      },
+      "business": {
+        "title": "商家信息",
+        "subtitle": "更新您的商家详细信息",
+        "businessName": "商家名称",
+        "businessEmail": "商家电子邮件",
+        "businessPhone": "商家电话",
+        "website": "网站",
+        "address": "地址",
+        "city": "城市",
+        "state": "州/省",
+        "zipCode": "邮政编码",
+        "saveChanges": "保存更改",
+        "saveSuccess": "商家信息保存成功",
+        "saveError": "保存商家信息时出错"
+      },
+      "notifications": {
+        "title": "通知首选项",
+        "subtitle": "管理您接收通知的方式",
+        "emailNotifications": "电子邮件通知",
+        "appointmentNotifications": "预约通知",
+        "appointmentNotificationsDesc": "接收有关新的、更新的或取消的预约的电子邮件",
+        "appointmentReminders": "预约提醒",
+        "appointmentRemindersDesc": "在即将到来的预约之前接收提醒电子邮件",
+        "marketingPromotions": "营销和促销",
+        "marketingPromotionsDesc": "接收有关特别优惠和促销的电子邮件",
+        "smsNotifications": "短信通知",
+        "smsAppointmentNotifications": "预约通知",
+        "smsAppointmentNotificationsDesc": "接收有关新的、更新的或取消的预约的短信",
+        "smsAppointmentReminders": "预约提醒",
+        "smsAppointmentRemindersDesc": "在即将到来的预约之前接收提醒短信",
+        "savePreferences": "保存首选项"
+      },
+      "appearance": {
+        "comingSoon": "外观设置即将推出"
+      },
+      "security": {
+        "comingSoon": "安全设置即将推出"
+      }
+    }
   }
 }

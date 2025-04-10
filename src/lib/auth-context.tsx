@@ -131,6 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     avatar_url:
                       user.user_metadata?.picture ||
                       user.user_metadata?.avatar_url,
+                    onboarding_complete: false, // Set onboarding status to false for new users
                   });
 
                 if (insertError) {
@@ -177,7 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
           data: {
             is_merchant: true,
           },

@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
+import { useMerchantProfile } from "@/hooks/useMerchantProfile";
 
 type DashboardSidebarProps = React.HTMLAttributes<HTMLDivElement>;
 
@@ -28,6 +30,8 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const t = useTranslations("dashboard.sidebar");
+  const { merchantProfile } = useMerchantProfile();
 
   const handleSignOut = async () => {
     try {
@@ -57,55 +61,55 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
 
   const routes: RouteType[] = [
     {
-      label: "Dashboard",
+      label: t("navigation.dashboard"),
       icon: LayoutDashboard,
       href: "/dashboard",
       active: pathname === "/dashboard",
     },
     {
-      label: "Calendar",
+      label: t("navigation.calendar"),
       icon: CalendarDays,
       href: "/dashboard/calendar",
       active: pathname?.includes("/dashboard/calendar"),
     },
     {
-      label: "Clients",
+      label: t("navigation.clients"),
       icon: Users,
       href: "/dashboard/clients",
       active: pathname?.includes("/dashboard/clients"),
     },
     {
-      label: "Team",
+      label: t("navigation.team"),
       icon: Users,
       href: "/dashboard/team",
       active: pathname?.includes("/dashboard/team"),
     },
     {
-      label: "Subscriptions",
+      label: t("navigation.subscriptions"),
       icon: CreditCard,
       href: "/dashboard/subscriptions",
       active: pathname?.includes("/dashboard/subscriptions"),
     },
     {
-      label: "Analytics",
+      label: t("navigation.analytics"),
       icon: BarChart3,
       href: "/dashboard/analytics",
       active: pathname?.includes("/dashboard/analytics"),
     },
     {
-      label: "Messages",
+      label: t("navigation.messages"),
       icon: MessageSquare,
       href: "/dashboard/messages",
       active: pathname?.includes("/dashboard/messages"),
     },
     {
-      label: "Services",
+      label: t("navigation.services"),
       icon: Store,
       href: "/dashboard/services",
       active: pathname?.includes("/dashboard/services"),
     },
     {
-      label: "Settings",
+      label: t("navigation.settings"),
       icon: Settings,
       href: "/dashboard/settings",
       active: pathname?.includes("/dashboard/settings"),
@@ -128,7 +132,7 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
             height={32}
             className="h-8 w-8"
           />
-          <h1 className="text-xl font-semibold">Rzev Dashboard</h1>
+          <h1 className="text-xl font-semibold">{t("title")}</h1>
         </Link>
       </div>
       <Separator />
@@ -156,14 +160,18 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
           <Avatar>
             <AvatarImage src={user?.user_metadata?.avatar_url} />
             <AvatarFallback>
-              {user?.email?.charAt(0).toUpperCase() || "U"}
+              {merchantProfile?.business_name?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
             <p className="text-sm font-medium">
-              {user?.user_metadata?.full_name || user?.email}
+              {merchantProfile?.business_name ||
+                user?.user_metadata?.full_name ||
+                user?.email}
             </p>
-            <p className="text-xs text-muted-foreground">Merchant Account</p>
+            <p className="text-xs text-muted-foreground">
+              {t("merchantAccount")}
+            </p>
           </div>
         </div>
         <Button
@@ -172,7 +180,7 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
           onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4" />
-          Sign Out
+          {t("signOut")}
         </Button>
       </div>
     </div>

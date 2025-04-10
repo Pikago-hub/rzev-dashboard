@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link as IntlLink } from "@/i18n/navigation";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@/lib/supabase";
+import { useRouter } from "@/i18n/navigation";
 import PhoneNumberInput from "@/components/phone-number-input";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { Navbar } from "@/components/sections/navbar";
@@ -39,8 +40,45 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
   const [authStep, setAuthStep] = useState(AuthStep.EMAIL);
-  const { signIn, signUp, signInWithGoogle, signInWithMagicLink } = useAuth();
+  const {
+    user,
+    isLoading: authLoading,
+    signIn,
+    signUp,
+    signInWithGoogle,
+    signInWithMagicLink,
+  } = useAuth();
   const router = useRouter();
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      // Check if the user has completed onboarding
+      const checkOnboarding = async () => {
+        const supabase = createBrowserClient();
+
+        try {
+          const { data: profileData } = await supabase
+            .from("merchant_profiles")
+            .select("onboarding_complete")
+            .eq("id", user.id)
+            .single();
+
+          if (profileData && profileData.onboarding_complete) {
+            router.push("/dashboard");
+          } else {
+            router.push("/onboarding/business-info");
+          }
+        } catch (err) {
+          console.error("Error checking onboarding status:", err);
+          // Default to dashboard if we can't determine status
+          router.push("/dashboard");
+        }
+      };
+
+      checkOnboarding();
+    }
+  }, [user, authLoading, router]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,7 +141,28 @@ export default function AuthPage() {
 
     try {
       await signIn(email, password);
-      router.push("/dashboard");
+
+      // Check if the user has completed onboarding
+      const supabase = createBrowserClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+
+      if (user) {
+        const { data: profileData } = await supabase
+          .from("merchant_profiles")
+          .select("onboarding_complete")
+          .eq("id", user.id)
+          .single();
+
+        if (profileData && profileData.onboarding_complete) {
+          router.push("/dashboard");
+        } else {
+          router.push("/onboarding/business-info");
+        }
+      } else {
+        // Fallback if no user found
+        router.push("/dashboard");
+      }
     } catch (error) {
       console.error("Sign in error:", error);
 
@@ -475,6 +534,25 @@ export default function AuthPage() {
         return null;
     }
   };
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  // If user is authenticated, we'll redirect in the useEffect
+  // This prevents a flash of the login form before redirect
+  if (user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -1,6 +1,7 @@
 "use client";
 
 import { TeamMember } from "@/types/calendar";
+import { useTranslations } from "next-intl";
 import {
   formatDate,
   formatDateRange,
@@ -48,6 +49,7 @@ export function CalendarHeader({
   onTeamMemberChange,
   onDateSelect,
 }: CalendarHeaderProps) {
+  const t = useTranslations("dashboard.calendar");
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
       <div className="flex items-center gap-2">
@@ -100,19 +102,19 @@ export function CalendarHeader({
         >
           <TabsList>
             <TabsTrigger value="day" className="text-xs sm:text-sm">
-              Day
+              {t("day")}
             </TabsTrigger>
             <TabsTrigger value="week" className="text-xs sm:text-sm">
-              Week
+              {t("week")}
             </TabsTrigger>
           </TabsList>
         </Tabs>
         <Select value={selectedTeamMember} onValueChange={onTeamMemberChange}>
           <SelectTrigger className="w-full sm:w-[180px] text-xs sm:text-sm">
-            <SelectValue placeholder="Select team member" />
+            <SelectValue placeholder={t("selectTeamMember")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Team Members</SelectItem>
+            <SelectItem value="all">{t("allTeamMembers")}</SelectItem>
             {teamMembers.map((member) => (
               <SelectItem key={member.id} value={member.id}>
                 {member.name}

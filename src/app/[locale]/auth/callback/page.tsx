@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { createBrowserClient } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 import { useTranslations } from "next-intl";
@@ -102,6 +102,7 @@ export default function AuthCallbackPage() {
                       avatar_url:
                         user.user_metadata.picture ||
                         user.user_metadata.avatar_url,
+                      onboarding_complete: false, // Set onboarding status to false for new users
                     });
 
                   if (insertError) {
@@ -117,8 +118,38 @@ export default function AuthCallbackPage() {
             }
           }
         }
+
+        // Check if the user has completed onboarding
+        try {
+          const { data: profileData } = await supabase
+            .from("merchant_profiles")
+            .select("onboarding_complete")
+            .eq("id", user.id)
+            .single();
+
+          setStatus("success");
+
+          // Redirect based on onboarding status
+          setTimeout(() => {
+            if (profileData && profileData.onboarding_complete) {
+              router.push("/dashboard");
+            } else {
+              router.push("/onboarding/business-info");
+            }
+          }, 1500);
+
+          return;
+        } catch (err) {
+          console.error("Error checking onboarding status:", err);
+          // Default to onboarding if we can't determine status
+          setStatus("success");
+          setTimeout(() => {
+            router.push("/onboarding/business-info");
+          }, 1500);
+        }
       }
 
+      // Fallback if no user found
       setStatus("success");
       setTimeout(() => {
         router.push("/dashboard");
@@ -131,7 +162,7 @@ export default function AuthCallbackPage() {
   return (
     <>
       <Navbar />
-      <div className="container flex items-center justify-center min-h-screen py-4 md:py-8">
+      <div className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-md text-center my-auto bg-background p-6 rounded-lg border border-border shadow-sm">
           {status === "loading" ? (
             <div className="flex flex-col items-center justify-center py-8">

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard/layout/DashboardLayout";
 import {

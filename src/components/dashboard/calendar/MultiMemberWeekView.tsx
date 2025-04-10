@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Appointment, TeamMember } from "@/types/calendar";
 import {
   formatTimeDisplay,
@@ -24,6 +25,7 @@ export function MultiMemberWeekView({
   appointments,
   timeSlots,
 }: MultiMemberWeekViewProps) {
+  const t = useTranslations("dashboard.calendar");
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
   const [selectedTeamMember, setSelectedTeamMember] =
@@ -89,7 +91,7 @@ export function MultiMemberWeekView({
         {/* Header row with days of the week - Fixed outside of scrollable area */}
         <div className="grid grid-cols-[60px_repeat(7,1fr)] sticky top-0 z-20 bg-background shadow-sm">
           <div className="p-2 sm:p-3 font-medium border-b border-r text-[10px] sm:text-xs text-center">
-            Time
+            {t("time")}
           </div>
           {weekDates.map((day) => (
             <div
@@ -196,12 +198,18 @@ export function MultiMemberWeekView({
                                       {appointment.duration >= 30 ? (
                                         <p className="truncate text-muted-foreground">
                                           {appointment.serviceName} (
-                                          {appointment.duration} min)
+                                          {t("appointmentDetails.duration", {
+                                            duration: appointment.duration,
+                                          })}
+                                          )
                                         </p>
                                       ) : (
                                         <p className="truncate text-muted-foreground hidden sm:block">
                                           {appointment.serviceName} (
-                                          {appointment.duration} min)
+                                          {t("appointmentDetails.duration", {
+                                            duration: appointment.duration,
+                                          })}
+                                          )
                                         </p>
                                       )}
                                     </div>
@@ -222,7 +230,7 @@ export function MultiMemberWeekView({
       </div>
 
       <div className="mt-2 sm:mt-4 text-center text-xs sm:text-sm text-muted-foreground">
-        <p>Showing weekly schedule for {teamMembers.length} team member(s)</p>
+        <p>{t("showingSchedule", { count: teamMembers.length })}</p>
       </div>
 
       {/* Appointment Details Dialog */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { DashboardLayout } from "@/components/dashboard/layout/DashboardLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { generateTimeSlots } from "@/utils/calendar-utils";
@@ -10,6 +11,7 @@ import { MultiMemberWeekView } from "@/components/dashboard/calendar/MultiMember
 import { TeamMember, Appointment } from "@/types/calendar";
 
 export default function CalendarPage() {
+  const t = useTranslations("dashboard.calendar");
   const [date, setDate] = useState<Date>(new Date());
   const [view, setView] = useState<"day" | "week">("day");
   const [selectedTeamMember, setSelectedTeamMember] = useState<string>("all");
@@ -175,10 +177,10 @@ export default function CalendarPage() {
       <div className="flex flex-col gap-4 sm:gap-6 h-full flex-1 min-h-[calc(100vh-8rem)]">
         <div className="flex flex-col gap-1 sm:gap-2">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Calendar
+            {t("title")}
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
-            Manage your appointments and team schedule
+            {t("subtitle")}
           </p>
         </div>
 

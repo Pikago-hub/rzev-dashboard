@@ -82,13 +82,425 @@ declare const messages: {
     "edit": "Edit",
     "delete": "Delete",
     "confirm": "Confirm",
-    "back": "Back"
+    "back": "Back",
+    "isRequired": "is required",
+    "enterValidUrl": "Please enter a valid URL",
+    "placeholder": "This is a placeholder for future implementation"
   },
   "nav": {
     "dashboard": "Dashboard",
     "profile": "Profile",
     "settings": "Settings",
     "logout": "Logout"
+  },
+  "onboarding": {
+    "title": "Complete Your",
+    "businessSetup": "Business Setup",
+    "common": {
+      "isRequired": "is required",
+      "enterValidUrl": "Please enter a valid URL"
+    },
+    "steps": {
+      "businessInfo": "Business Info",
+      "servicesOffer": "Services",
+      "teamSize": "Team",
+      "serviceLocations": "Locations",
+      "businessLocation": "Business Address",
+      "currentSoftware": "Current Software",
+      "heardAboutUs": "Referral",
+      "complete": "Complete"
+    },
+    "navigation": {
+      "back": "Back",
+      "next": "Next",
+      "skip": "Skip",
+      "finish": "Finish"
+    },
+    "businessInfo": {
+      "title": "Business Information",
+      "description": "Tell us about your business",
+      "businessNameLabel": "Business Name",
+      "businessNamePlaceholder": "Enter your business name",
+      "websiteLabel": "Website (Optional)",
+      "websitePlaceholder": "https://yourbusiness.com"
+    },
+    "servicesOffer": {
+      "title": "Services You Offer",
+      "description": "What services does your business provide?",
+      "selectInstruction": "Select all services that your business offers. You can update these later.",
+      "servicesSelected": "{count} service selected",
+      "servicesSelectedPlural": "{count} services selected",
+      "otherServiceLabel": "Specify Other Service",
+      "otherServicePlaceholder": "Please specify your other service",
+      "categories": {
+        "hair": "Hair",
+        "nails": "Nails",
+        "makeup": "Makeup",
+        "skincare": "Skincare",
+        "massage": "Massage",
+        "spa": "Spa",
+        "barber": "Barber",
+        "waxing": "Waxing",
+        "lashes": "Lashes & Brows",
+        "tanning": "Tanning",
+        "tattoo": "Tattoo",
+        "piercing": "Piercing",
+        "fitness": "Fitness",
+        "yoga": "Yoga",
+        "wellness": "Wellness",
+        "nutrition": "Nutrition",
+        "therapy": "Therapy",
+        "dental": "Dental",
+        "medical": "Medical",
+        "other": "Other"
+      }
+    },
+    "teamSize": {
+      "title": "Team Size",
+      "description": "How many people are in your team?",
+      "selectionRequired": "Please select a team size option",
+      "options": {
+        "individual": "Individual",
+        "individualDescription": "Just you working alone",
+        "small": "Small Team (2-6)",
+        "smallDescription": "You and a few team members",
+        "large": "Large Team (7+)",
+        "largeDescription": "You and a larger team"
+      }
+    },
+    "serviceLocations": {
+      "title": "Service Locations",
+      "description": "Where do you provide your services?",
+      "selectionRequired": "Please select at least one service location option",
+      "options": {
+        "inStore": "In-Store",
+        "inStoreDescription": "Clients come to your location for services",
+        "clientLocation": "Client's Location",
+        "clientLocationDescription": "You travel to the client's location",
+        "both": "Both",
+        "bothDescription": "You offer services both in-store and at client locations"
+      }
+    },
+    "businessLocation": {
+      "title": "Business Location",
+      "description": "Enter your business address where clients will visit you",
+      "addressLabel": "Address",
+      "addressPlaceholder": "Start typing your address",
+      "addressRequired": "Business address is required",
+      "addressLine1Label": "Address Line 1",
+      "addressLine1Placeholder": "123 Main Street",
+      "addressLine2Label": "Address Line 2 (Optional)",
+      "addressLine2Placeholder": "Suite 100, Floor 2, etc.",
+      "cityLabel": "City",
+      "cityPlaceholder": "Enter city",
+      "stateLabel": "State/Province",
+      "statePlaceholder": "Enter state or province",
+      "postalCodeLabel": "Postal Code",
+      "postalCodePlaceholder": "Enter postal code",
+      "countryLabel": "Country",
+      "countryPlaceholder": "Select country",
+      "validationError": "Please enter a valid address",
+      "addressNotFound": "Address not found. Please try again."
+    },
+    "currentSoftware": {
+      "title": "Which software are you currently using?",
+      "description": "If you're looking to switch, we can help speed up your business setup and import your data into your new Rzev account.",
+      "selectionRequired": "Please select a software option",
+      "otherSoftwareRequired": "Please specify the other software you are using",
+      "otherSoftwareLabel": "Please specify the software you are using",
+      "otherSoftwarePlaceholder": "Enter the name of your current software",
+      "options": {
+        "acuity": "Acuity",
+        "booksy": "Booksy",
+        "calendly": "Calendly",
+        "clover": "Clover",
+        "goldie": "Goldie",
+        "glossGenius": "Gloss Genius",
+        "janeapp": "Janeapp",
+        "mangomint": "Mangomint",
+        "mindbody": "Mindbody",
+        "ovatu": "Ovatu",
+        "phorest": "Phorest",
+        "square": "Square",
+        "salonIris": "Salon Iris",
+        "setmore": "Setmore",
+        "shortcuts": "Shortcuts",
+        "squire": "Squire",
+        "styleseat": "Styleseat",
+        "timely": "Timely",
+        "vagaro": "Vagaro",
+        "zenoti": "Zenoti",
+        "none": "I'm not using any software",
+        "other": "Other"
+      }
+    },
+    "heardAboutUs": {
+      "title": "How Did You Hear About Us?",
+      "description": "We'd love to know how you discovered our platform",
+      "pleaseSpecify": "Please specify:",
+      "otherPlaceholder": "Please tell us how you heard about us",
+      "selectionRequired": "Please select how you heard about us",
+      "otherSourceRequired": "Please specify how you heard about us",
+      "options": {
+        "friend": "Recommended by a friend",
+        "search": "Search engine (e.g. Google, Bing)",
+        "social": "Social media",
+        "mail": "Advert in the mail",
+        "magazine": "Magazine ad",
+        "ratings": "Ratings website (e.g. Capterra, Trustpilot)",
+        "other": "Other"
+      }
+    },
+    "submitting": "Saving...",
+    "successTitle": "Setup Complete",
+    "successMessage": "Your business profile has been set up successfully",
+    "errorTitle": "Setup Failed",
+    "errorMessage": "There was an error setting up your business profile. Please try again."
+  },
+  "dashboard": {
+    "sidebar": {
+      "title": "Rzev Dashboard",
+      "merchantAccount": "Merchant Account",
+      "signOut": "Sign Out",
+      "navigation": {
+        "dashboard": "Dashboard",
+        "calendar": "Calendar",
+        "clients": "Clients",
+        "team": "Team",
+        "subscriptions": "Subscriptions",
+        "analytics": "Analytics",
+        "messages": "Messages",
+        "services": "Services",
+        "settings": "Settings"
+      }
+    },
+    "calendar": {
+      "title": "Calendar",
+      "subtitle": "Manage your appointments and team schedule",
+      "time": "Time",
+      "day": "Day",
+      "week": "Week",
+      "selectTeamMember": "Select team member",
+      "allTeamMembers": "All Team Members",
+      "available": "Available",
+      "showingSchedule": "Showing schedule for {count} team member(s)",
+      "appointmentDetails": {
+        "title": "Appointment Details",
+        "subtitle": "View the details of this appointment",
+        "customer": "Customer",
+        "service": "Service",
+        "date": "Date",
+        "time": "Time",
+        "staff": "Staff",
+        "status": "Status",
+        "confirmed": "Confirmed",
+        "reschedule": "Reschedule",
+        "cancel": "Cancel Appointment",
+        "duration": "{duration} min"
+      }
+    },
+    "clients": {
+      "title": "Clients",
+      "subtitle": "Manage your client database and information",
+      "clientList": "Client List",
+      "clientListDescription": "View and manage all your clients",
+      "searchPlaceholder": "Search clients...",
+      "addClient": "Add Client",
+      "comingSoon": "Client management coming soon"
+    },
+    "team": {
+      "title": "Team",
+      "subtitle": "Manage your team members and their schedules",
+      "teamMembers": "Team Members",
+      "teamMembersDescription": "View and manage your team",
+      "searchPlaceholder": "Search team...",
+      "addTeamMember": "Add Team Member",
+      "comingSoon": "Team management coming soon"
+    },
+    "subscriptions": {
+      "title": "Subscriptions",
+      "subtitle": "Manage your subscription plans and billing",
+      "tabs": {
+        "plans": "Subscription Plans",
+        "billing": "Billing History",
+        "settings": "Payment Settings"
+      },
+      "plans": {
+        "basic": {
+          "name": "Basic",
+          "description": "For small businesses just getting started",
+          "price": "$29",
+          "period": "/month",
+          "features": {
+            "0": "Up to 100 appointments/month",
+            "1": "2 team members",
+            "2": "Basic analytics",
+            "3": "Email notifications",
+            "length": "4"
+          },
+          "button": "Current Plan"
+        },
+        "professional": {
+          "name": "Professional",
+          "description": "For growing businesses with more needs",
+          "price": "$79",
+          "period": "/month",
+          "badge": "Popular",
+          "features": {
+            "0": "Unlimited appointments",
+            "1": "Up to 5 team members",
+            "2": "Advanced analytics",
+            "3": "Email & SMS notifications",
+            "4": "Custom branding",
+            "length": "5"
+          },
+          "button": "Upgrade Plan"
+        },
+        "enterprise": {
+          "name": "Enterprise",
+          "description": "For large businesses with advanced requirements",
+          "price": "$199",
+          "period": "/month",
+          "features": {
+            "0": "Unlimited everything",
+            "1": "Unlimited team members",
+            "2": "Priority support",
+            "3": "Advanced integrations",
+            "4": "Dedicated account manager",
+            "length": "5"
+          },
+          "button": "Contact Sales"
+        }
+      },
+      "comingSoon": {
+        "billing": "Billing history coming soon",
+        "settings": "Payment settings coming soon"
+      }
+    },
+    "analytics": {
+      "title": "Analytics",
+      "subtitle": "Track your business performance and growth",
+      "periods": {
+        "selectPeriod": "Select period",
+        "7days": "Last 7 days",
+        "30days": "Last 30 days",
+        "90days": "Last 90 days",
+        "year": "This year",
+        "custom": "Custom range"
+      },
+      "tabs": {
+        "overview": "Overview",
+        "revenue": "Revenue",
+        "appointments": "Appointments",
+        "clients": "Clients",
+        "team": "Team"
+      },
+      "metrics": {
+        "totalRevenue": "Total Revenue",
+        "appointments": "Appointments",
+        "newClients": "New Clients",
+        "conversionRate": "Conversion Rate",
+        "fromLastPeriod": "+{percent}% from last period"
+      },
+      "charts": {
+        "revenueTrend": "Revenue Trend",
+        "revenueTrendDesc": "Monthly revenue for the last 12 months",
+        "appointmentDistribution": "Appointment Distribution",
+        "appointmentDistributionDesc": "Breakdown by service type",
+        "comingSoon": "Coming soon",
+        "revenueChartComing": "Revenue chart coming soon",
+        "distributionChartComing": "Distribution chart coming soon",
+        "revenueAnalyticsComing": "Detailed revenue analytics coming soon",
+        "appointmentAnalyticsComing": "Appointment analytics coming soon",
+        "clientAnalyticsComing": "Client analytics coming soon",
+        "teamAnalyticsComing": "Team performance analytics coming soon"
+      }
+    },
+    "messages": {
+      "title": "Messages",
+      "subtitle": "Communicate with your clients",
+      "conversations": "Conversations",
+      "searchPlaceholder": "Search messages...",
+      "lastActive": "Last active: {time}",
+      "messageHistoryComing": "Message history coming soon",
+      "typePlaceholder": "Type your message..."
+    },
+    "services": {
+      "title": "Services",
+      "subtitle": "Manage your service offerings and pricing",
+      "serviceList": "Service List",
+      "serviceListDescription": "View and manage all your services",
+      "searchPlaceholder": "Search services...",
+      "addService": "Add Service",
+      "name": "Name",
+      "category": "Category",
+      "duration": "{duration} min",
+      "price": "Price",
+      "actions": "Actions",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Manage your account and application preferences",
+      "tabs": {
+        "profile": "Profile",
+        "business": "Business",
+        "notifications": "Notifications",
+        "security": "Security"
+      },
+      "common": {
+        "loading": "Loading..."
+      },
+      "profile": {
+        "title": "Profile Information",
+        "subtitle": "Update your personal information",
+        "fullName": "Full Name",
+        "email": "Email",
+        "emailCannotBeChanged": "Your email cannot be changed",
+        "phone": "Phone Number",
+        "role": "Role",
+        "saveChanges": "Save Changes"
+      },
+      "business": {
+        "title": "Business Information",
+        "subtitle": "Update your business details",
+        "businessName": "Business Name",
+        "businessEmail": "Business Email",
+        "businessPhone": "Business Phone",
+        "website": "Website",
+        "address": "Address",
+        "city": "City",
+        "state": "State",
+        "zipCode": "ZIP Code",
+        "saveChanges": "Save Changes",
+        "saveSuccess": "Business information saved successfully",
+        "saveError": "Error saving business information"
+      },
+      "notifications": {
+        "title": "Notification Preferences",
+        "subtitle": "Manage how you receive notifications",
+        "emailNotifications": "Email Notifications",
+        "appointmentNotifications": "Appointment Notifications",
+        "appointmentNotificationsDesc": "Receive emails about new, updated, or canceled appointments",
+        "appointmentReminders": "Appointment Reminders",
+        "appointmentRemindersDesc": "Receive reminder emails before upcoming appointments",
+        "marketingPromotions": "Marketing & Promotions",
+        "marketingPromotionsDesc": "Receive emails about special offers and promotions",
+        "smsNotifications": "SMS Notifications",
+        "smsAppointmentNotifications": "Appointment Notifications",
+        "smsAppointmentNotificationsDesc": "Receive SMS about new, updated, or canceled appointments",
+        "smsAppointmentReminders": "Appointment Reminders",
+        "smsAppointmentRemindersDesc": "Receive reminder SMS before upcoming appointments",
+        "savePreferences": "Save Preferences"
+      },
+      "appearance": {
+        "comingSoon": "Appearance settings coming soon"
+      },
+      "security": {
+        "comingSoon": "Security settings coming soon"
+      }
+    }
   }
 };
 export default messages;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { createBrowserClient } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
@@ -227,6 +227,7 @@ export default function AuthCallbackPage() {
                       first_name: firstName,
                       last_name: lastName,
                       phone_number: user.user_metadata.phone,
+                      onboarding_complete: false, // Set onboarding status to false for new users
                     });
 
                   if (insertError) {
@@ -241,11 +242,37 @@ export default function AuthCallbackPage() {
               }
             }
 
-            setStatus("success");
-            setTimeout(() => {
-              router.push("/dashboard");
-            }, 1500);
-            return;
+            // Check if the user has completed onboarding
+            try {
+              // Make sure user is defined before proceeding
+              if (user) {
+                const { data: profileData } = await supabase
+                  .from("merchant_profiles")
+                  .select("onboarding_complete")
+                  .eq("id", user.id)
+                  .single();
+
+                setStatus("success");
+
+                // Redirect based on onboarding status
+                setTimeout(() => {
+                  if (profileData && profileData.onboarding_complete) {
+                    router.push("/dashboard");
+                  } else {
+                    router.push("/onboarding/business-info");
+                  }
+                }, 1500);
+                return;
+              }
+            } catch (err) {
+              console.error("Error checking onboarding status:", err);
+              // Default to onboarding if we can't determine status
+              setStatus("success");
+              setTimeout(() => {
+                router.push("/onboarding/business-info");
+              }, 1500);
+              return;
+            }
           }
 
           // If no tokens found in hash or URL params
@@ -342,6 +369,7 @@ export default function AuthCallbackPage() {
                   phone_number: user.user_metadata.phone,
                   avatar_url:
                     user.user_metadata.picture || user.user_metadata.avatar_url,
+                  onboarding_complete: false, // Set onboarding status to false for new users
                 });
 
               if (insertError) {
@@ -353,11 +381,36 @@ export default function AuthCallbackPage() {
           }
         }
 
-        setStatus("success");
-        // Redirect to dashboard after a short delay to show success message
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1500);
+        // Check if the user has completed onboarding
+        try {
+          if (user) {
+            const { data: profileData } = await supabase
+              .from("merchant_profiles")
+              .select("onboarding_complete")
+              .eq("id", user.id)
+              .single();
+
+            setStatus("success");
+
+            // Redirect based on onboarding status
+            setTimeout(() => {
+              if (profileData && profileData.onboarding_complete) {
+                router.push("/dashboard");
+              } else {
+                router.push("/onboarding");
+              }
+            }, 1500);
+            return;
+          }
+        } catch (err) {
+          console.error("Error checking onboarding status:", err);
+          // Default to onboarding if we can't determine status
+          setStatus("success");
+          setTimeout(() => {
+            router.push("/onboarding");
+          }, 1500);
+          return;
+        }
       } catch (err) {
         console.error("Unexpected error during confirmation:", err);
         setStatus("error");
@@ -377,7 +430,7 @@ export default function AuthCallbackPage() {
   return (
     <>
       <Navbar />
-      <div className="container flex items-center justify-center min-h-screen py-4 md:py-8">
+      <div className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8">
         <Card className="w-full max-w-md text-center my-auto">
           <CardHeader>
             <CardTitle>{t("title")}</CardTitle>

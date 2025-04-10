@@ -79,12 +79,424 @@
     "edit": "Editar",
     "delete": "Eliminar",
     "confirm": "Confirmar",
-    "back": "Atrás"
+    "back": "Atrás",
+    "isRequired": "es obligatorio",
+    "enterValidUrl": "Por favor, introduce una URL válida",
+    "placeholder": "Este es un marcador de posición para implementación futura"
   },
   "nav": {
     "dashboard": "Panel de Control",
     "profile": "Perfil",
     "settings": "Configuración",
     "logout": "Cerrar Sesión"
+  },
+  "onboarding": {
+    "title": "Complete Su",
+    "businessSetup": "Configuración de Negocio",
+    "common": {
+      "isRequired": "es obligatorio",
+      "enterValidUrl": "Por favor, introduce una URL válida"
+    },
+    "steps": {
+      "businessInfo": "Información",
+      "servicesOffer": "Servicios",
+      "teamSize": "Equipo",
+      "serviceLocations": "Ubicaciones",
+      "businessLocation": "Dirección del Negocio",
+      "currentSoftware": "Software Actual",
+      "heardAboutUs": "Referencia",
+      "complete": "Completar"
+    },
+    "navigation": {
+      "back": "Atrás",
+      "next": "Siguiente",
+      "skip": "Omitir",
+      "finish": "Finalizar"
+    },
+    "businessInfo": {
+      "title": "Información del Negocio",
+      "description": "Cuéntenos sobre su negocio",
+      "businessNameLabel": "Nombre del Negocio",
+      "businessNamePlaceholder": "Ingrese el nombre de su negocio",
+      "websiteLabel": "Sitio Web (Opcional)",
+      "websitePlaceholder": "https://sunegocio.com"
+    },
+    "servicesOffer": {
+      "title": "Servicios que Ofrece",
+      "description": "¿Qué servicios proporciona su negocio?",
+      "selectInstruction": "Seleccione todos los servicios que ofrece su negocio. Puede actualizarlos más tarde.",
+      "servicesSelected": "{count} servicio seleccionado",
+      "servicesSelectedPlural": "{count} servicios seleccionados",
+      "otherServiceLabel": "Especifique Otro Servicio",
+      "otherServicePlaceholder": "Por favor, especifique su otro servicio",
+      "categories": {
+        "hair": "Cabello",
+        "nails": "Uñas",
+        "makeup": "Maquillaje",
+        "skincare": "Cuidado de la Piel",
+        "massage": "Masaje",
+        "spa": "Spa",
+        "barber": "Barbería",
+        "waxing": "Depilación con Cera",
+        "lashes": "Pestañas y Cejas",
+        "tanning": "Bronceado",
+        "tattoo": "Tatuaje",
+        "piercing": "Perforación",
+        "fitness": "Fitness",
+        "yoga": "Yoga",
+        "wellness": "Bienestar",
+        "nutrition": "Nutrición",
+        "therapy": "Terapia",
+        "dental": "Dental",
+        "medical": "Médico",
+        "other": "Otro"
+      }
+    },
+    "teamSize": {
+      "title": "Tamaño del Equipo",
+      "description": "¿Cuántas personas hay en su equipo?",
+      "selectionRequired": "Por favor seleccione una opción de tamaño de equipo",
+      "options": {
+        "individual": "Individual",
+        "individualDescription": "Solo tú trabajando solo",
+        "small": "Equipo Pequeño (2-6)",
+        "smallDescription": "Tú y algunos miembros del equipo",
+        "large": "Equipo Grande (7+)",
+        "largeDescription": "Tú y un equipo más grande"
+      }
+    },
+    "serviceLocations": {
+      "title": "Ubicaciones de Servicio",
+      "description": "¿Dónde proporciona sus servicios?",
+      "selectionRequired": "Por favor seleccione al menos una opción de ubicación de servicio",
+      "options": {
+        "inStore": "En Tienda",
+        "inStoreDescription": "Los clientes vienen a su ubicación para recibir servicios",
+        "clientLocation": "Ubicación del Cliente",
+        "clientLocationDescription": "Usted viaja a la ubicación del cliente",
+        "both": "Ambos",
+        "bothDescription": "Ofrece servicios tanto en tienda como en ubicaciones de clientes"
+      }
+    },
+    "businessLocation": {
+      "title": "Dirección del Negocio",
+      "description": "Ingrese la dirección de su negocio donde los clientes lo visitarán",
+      "addressLabel": "Dirección",
+      "addressPlaceholder": "Comience a escribir su dirección",
+      "addressRequired": "La dirección del negocio es obligatoria",
+      "addressLine1Label": "Línea de Dirección 1",
+      "addressLine1Placeholder": "123 Calle Principal",
+      "addressLine2Label": "Línea de Dirección 2 (Opcional)",
+      "addressLine2Placeholder": "Suite 100, Piso 2, etc.",
+      "cityLabel": "Ciudad",
+      "cityPlaceholder": "Ingrese ciudad",
+      "stateLabel": "Estado/Provincia",
+      "statePlaceholder": "Ingrese estado o provincia",
+      "postalCodeLabel": "Código Postal",
+      "postalCodePlaceholder": "Ingrese código postal",
+      "countryLabel": "País",
+      "countryPlaceholder": "Seleccione país",
+      "validationError": "Por favor ingrese una dirección válida",
+      "addressNotFound": "Dirección no encontrada. Por favor intente de nuevo."
+    },
+    "currentSoftware": {
+      "title": "¿Qué software está utilizando actualmente?",
+      "description": "Si está buscando cambiar, podemos ayudar a acelerar la configuración de su negocio e importar sus datos a su nueva cuenta de Rzev.",
+      "selectionRequired": "Por favor seleccione una opción de software",
+      "otherSoftwareRequired": "Por favor especifique el otro software que está utilizando",
+      "otherSoftwareLabel": "Por favor especifique el software que está utilizando",
+      "otherSoftwarePlaceholder": "Ingrese el nombre de su software actual",
+      "options": {
+        "acuity": "Acuity",
+        "booksy": "Booksy",
+        "calendly": "Calendly",
+        "clover": "Clover",
+        "goldie": "Goldie",
+        "glossGenius": "Gloss Genius",
+        "janeapp": "Janeapp",
+        "mangomint": "Mangomint",
+        "mindbody": "Mindbody",
+        "ovatu": "Ovatu",
+        "phorest": "Phorest",
+        "square": "Square",
+        "salonIris": "Salon Iris",
+        "setmore": "Setmore",
+        "shortcuts": "Shortcuts",
+        "squire": "Squire",
+        "styleseat": "Styleseat",
+        "timely": "Timely",
+        "vagaro": "Vagaro",
+        "zenoti": "Zenoti",
+        "none": "No estoy usando ningún software",
+        "other": "Otro"
+      }
+    },
+    "heardAboutUs": {
+      "title": "¿Cómo se enteró de nosotros?",
+      "description": "Nos encantaría saber cómo descubrió nuestra plataforma",
+      "pleaseSpecify": "Por favor especifique:",
+      "otherPlaceholder": "Por favor díganos cómo se enteró de nosotros",
+      "selectionRequired": "Por favor seleccione cómo se enteró de nosotros",
+      "otherSourceRequired": "Por favor especifique cómo se enteró de nosotros",
+      "options": {
+        "friend": "Recomendado por un amigo",
+        "search": "Motor de búsqueda (ej. Google, Bing)",
+        "social": "Redes sociales",
+        "mail": "Anuncio por correo",
+        "magazine": "Anuncio en revista",
+        "ratings": "Sitio de calificaciones (ej. Capterra, Trustpilot)",
+        "other": "Otro"
+      }
+    },
+    "submitting": "Guardando...",
+    "successTitle": "Configuración Completa",
+    "successMessage": "La información de su negocio ha sido configurada exitosamente",
+    "errorTitle": "Error en la Configuración",
+    "errorMessage": "Hubo un error al configurar la información de su negocio. Por favor, inténtelo de nuevo."
+  },
+  "dashboard": {
+    "sidebar": {
+      "title": "Panel de Control Rzev",
+      "merchantAccount": "Cuenta de Comerciante",
+      "signOut": "Cerrar Sesión",
+      "navigation": {
+        "dashboard": "Panel de Control",
+        "calendar": "Calendario",
+        "clients": "Clientes",
+        "team": "Equipo",
+        "subscriptions": "Suscripciones",
+        "analytics": "Análisis",
+        "messages": "Mensajes",
+        "services": "Servicios",
+        "settings": "Configuración"
+      }
+    },
+    "calendar": {
+      "title": "Calendario",
+      "subtitle": "Gestiona tus citas y el horario del equipo",
+      "time": "Hora",
+      "day": "Día",
+      "week": "Semana",
+      "selectTeamMember": "Seleccionar miembro del equipo",
+      "allTeamMembers": "Todos los Miembros",
+      "available": "Disponible",
+      "showingSchedule": "Mostrando horario para {count} miembro(s) del equipo",
+      "appointmentDetails": {
+        "title": "Detalles de la Cita",
+        "subtitle": "Ver los detalles de esta cita",
+        "customer": "Cliente",
+        "service": "Servicio",
+        "date": "Fecha",
+        "time": "Hora",
+        "staff": "Personal",
+        "status": "Estado",
+        "confirmed": "Confirmado",
+        "reschedule": "Reprogramar",
+        "cancel": "Cancelar Cita",
+        "duration": "{duration} min"
+      }
+    },
+    "clients": {
+      "title": "Clientes",
+      "subtitle": "Gestiona tu base de datos de clientes e información",
+      "clientList": "Lista de Clientes",
+      "clientListDescription": "Ver y gestionar todos tus clientes",
+      "searchPlaceholder": "Buscar clientes...",
+      "addClient": "Añadir Cliente",
+      "comingSoon": "Gestión de clientes próximamente"
+    },
+    "team": {
+      "title": "Equipo",
+      "subtitle": "Gestiona a los miembros de tu equipo y sus horarios",
+      "teamMembers": "Miembros del Equipo",
+      "teamMembersDescription": "Ver y gestionar tu equipo",
+      "searchPlaceholder": "Buscar equipo...",
+      "addTeamMember": "Añadir Miembro",
+      "comingSoon": "Gestión de equipo próximamente"
+    },
+    "subscriptions": {
+      "title": "Suscripciones",
+      "subtitle": "Gestiona tus planes de suscripción y facturación",
+      "tabs": {
+        "plans": "Planes de Suscripción",
+        "billing": "Historial de Facturación",
+        "settings": "Configuración de Pago"
+      },
+      "plans": {
+        "basic": {
+          "name": "Básico",
+          "description": "Para pequeñas empresas que están comenzando",
+          "price": "$29",
+          "period": "/mes",
+          "features": {
+            "0": "Hasta 100 citas/mes",
+            "1": "2 miembros del equipo",
+            "2": "Análisis básicos",
+            "3": "Notificaciones por correo electrónico",
+            "length": "4"
+          },
+          "button": "Plan Actual"
+        },
+        "professional": {
+          "name": "Profesional",
+          "description": "Para empresas en crecimiento con más necesidades",
+          "price": "$79",
+          "period": "/mes",
+          "badge": "Popular",
+          "features": {
+            "0": "Citas ilimitadas",
+            "1": "Hasta 5 miembros del equipo",
+            "2": "Análisis avanzados",
+            "3": "Notificaciones por correo y SMS",
+            "4": "Marca personalizada",
+            "length": "5"
+          },
+          "button": "Actualizar Plan"
+        },
+        "enterprise": {
+          "name": "Empresarial",
+          "description": "Para grandes empresas con requisitos avanzados",
+          "price": "$199",
+          "period": "/mes",
+          "features": {
+            "0": "Todo ilimitado",
+            "1": "Miembros del equipo ilimitados",
+            "2": "Soporte prioritario",
+            "3": "Integraciones avanzadas",
+            "4": "Gestor de cuenta dedicado",
+            "length": "5"
+          },
+          "button": "Contactar Ventas"
+        }
+      },
+      "comingSoon": {
+        "billing": "Historial de facturación próximamente",
+        "settings": "Configuración de pago próximamente"
+      }
+    },
+    "analytics": {
+      "title": "Analíticas",
+      "subtitle": "Monitorea el rendimiento y crecimiento de tu negocio",
+      "periods": {
+        "selectPeriod": "Seleccionar período",
+        "7days": "Últimos 7 días",
+        "30days": "Últimos 30 días",
+        "90days": "Últimos 90 días",
+        "year": "Este año",
+        "custom": "Rango personalizado"
+      },
+      "tabs": {
+        "overview": "Resumen",
+        "revenue": "Ingresos",
+        "appointments": "Citas",
+        "clients": "Clientes",
+        "team": "Equipo"
+      },
+      "metrics": {
+        "totalRevenue": "Ingresos Totales",
+        "appointments": "Citas",
+        "newClients": "Nuevos Clientes",
+        "conversionRate": "Tasa de Conversión",
+        "fromLastPeriod": "+{percent}% desde el período anterior"
+      },
+      "charts": {
+        "revenueTrend": "Tendencia de Ingresos",
+        "revenueTrendDesc": "Ingresos mensuales de los últimos 12 meses",
+        "appointmentDistribution": "Distribución de Citas",
+        "appointmentDistributionDesc": "Desglose por tipo de servicio",
+        "comingSoon": "Próximamente",
+        "revenueChartComing": "Gráfico de ingresos próximamente",
+        "distributionChartComing": "Gráfico de distribución próximamente",
+        "revenueAnalyticsComing": "Análisis detallado de ingresos próximamente",
+        "appointmentAnalyticsComing": "Análisis de citas próximamente",
+        "clientAnalyticsComing": "Análisis de clientes próximamente",
+        "teamAnalyticsComing": "Análisis de rendimiento del equipo próximamente"
+      }
+    },
+    "messages": {
+      "title": "Mensajes",
+      "subtitle": "Comunícate con tus clientes",
+      "conversations": "Conversaciones",
+      "searchPlaceholder": "Buscar mensajes...",
+      "lastActive": "Última actividad: {time}",
+      "messageHistoryComing": "Historial de mensajes próximamente",
+      "typePlaceholder": "Escribe tu mensaje..."
+    },
+    "services": {
+      "title": "Servicios",
+      "subtitle": "Gestiona tus servicios y precios",
+      "serviceList": "Lista de Servicios",
+      "serviceListDescription": "Ver y gestionar todos tus servicios",
+      "searchPlaceholder": "Buscar servicios...",
+      "addService": "Añadir Servicio",
+      "name": "Nombre",
+      "category": "Categoría",
+      "duration": "{duration} min",
+      "price": "Precio",
+      "actions": "Acciones",
+      "edit": "Editar",
+      "delete": "Eliminar"
+    },
+    "settings": {
+      "title": "Configuración",
+      "subtitle": "Gestiona tu cuenta y preferencias de la aplicación",
+      "common": {
+        "loading": "Cargando..."
+      },
+      "tabs": {
+        "profile": "Perfil",
+        "business": "Negocio",
+        "notifications": "Notificaciones",
+        "security": "Seguridad"
+      },
+      "profile": {
+        "title": "Información de Perfil",
+        "subtitle": "Actualiza tu información personal",
+        "fullName": "Nombre Completo",
+        "email": "Correo Electrónico",
+        "emailCannotBeChanged": "Tu correo electrónico no puede ser cambiado",
+        "phone": "Número de Teléfono",
+        "role": "Rol",
+        "saveChanges": "Guardar Cambios"
+      },
+      "business": {
+        "title": "Información del Negocio",
+        "subtitle": "Actualiza los detalles de tu negocio",
+        "businessName": "Nombre del Negocio",
+        "businessEmail": "Correo del Negocio",
+        "businessPhone": "Teléfono del Negocio",
+        "website": "Sitio Web",
+        "address": "Dirección",
+        "city": "Ciudad",
+        "state": "Estado/Provincia",
+        "zipCode": "Código Postal",
+        "saveChanges": "Guardar Cambios",
+        "saveSuccess": "Información del negocio guardada con éxito",
+        "saveError": "Error al guardar la información del negocio"
+      },
+      "notifications": {
+        "title": "Preferencias de Notificaciones",
+        "subtitle": "Gestiona cómo recibes notificaciones",
+        "emailNotifications": "Notificaciones por Correo",
+        "appointmentNotifications": "Notificaciones de Citas",
+        "appointmentNotificationsDesc": "Recibe correos sobre citas nuevas, actualizadas o canceladas",
+        "appointmentReminders": "Recordatorios de Citas",
+        "appointmentRemindersDesc": "Recibe correos de recordatorio antes de próximas citas",
+        "marketingPromotions": "Marketing y Promociones",
+        "marketingPromotionsDesc": "Recibe correos sobre ofertas especiales y promociones",
+        "smsNotifications": "Notificaciones SMS",
+        "smsAppointmentNotifications": "Notificaciones de Citas",
+        "smsAppointmentNotificationsDesc": "Recibe SMS sobre citas nuevas, actualizadas o canceladas",
+        "smsAppointmentReminders": "Recordatorios de Citas",
+        "smsAppointmentRemindersDesc": "Recibe SMS de recordatorio antes de próximas citas",
+        "savePreferences": "Guardar Preferencias"
+      },
+      "appearance": {
+        "comingSoon": "Configuración de apariencia próximamente"
+      },
+      "security": {
+        "comingSoon": "Configuración de seguridad próximamente"
+      }
+    }
   }
 }

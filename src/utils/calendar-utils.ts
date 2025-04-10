@@ -1,9 +1,23 @@
 /**
  * Format time slot for display (e.g., "09:00" to "9 AM")
+ * Supports localization based on the current locale
  */
 export const formatTimeDisplay = (timeSlot: string): string => {
+  // Get the current locale from the document or default to 'en-US'
+  const locale =
+    typeof document !== "undefined"
+      ? document.documentElement.lang || "en-US"
+      : "en-US";
+
   const [hour, minute] = timeSlot.split(":");
   const hourNum = parseInt(hour, 10);
+
+  // For non-English locales, we might want to use 24-hour format
+  // This is a simple check - for a more robust solution, you'd check locale preferences
+  if (locale !== "en-US" && locale !== "en-GB" && !locale.startsWith("en")) {
+    return `${hour}:${minute}`;
+  }
+
   const ampm = hourNum >= 12 ? "PM" : "AM";
   const hour12 = hourNum % 12 || 12;
   return `${hour12}${minute !== "00" ? ":" + minute : ""} ${ampm}`;
@@ -11,10 +25,24 @@ export const formatTimeDisplay = (timeSlot: string): string => {
 
 /**
  * Format time for detailed display (e.g., "09:00" to "9:00 AM")
+ * Supports localization based on the current locale
  */
 export const formatTime = (timeStr: string): string => {
+  // Get the current locale from the document or default to 'en-US'
+  const locale =
+    typeof document !== "undefined"
+      ? document.documentElement.lang || "en-US"
+      : "en-US";
+
   const [hour, minute] = timeStr.split(":");
   const hourNum = parseInt(hour, 10);
+
+  // For non-English locales, we might want to use 24-hour format
+  // This is a simple check - for a more robust solution, you'd check locale preferences
+  if (locale !== "en-US" && locale !== "en-GB" && !locale.startsWith("en")) {
+    return `${hour}:${minute}`;
+  }
+
   const ampm = hourNum >= 12 ? "PM" : "AM";
   const hour12 = hourNum % 12 || 12;
   return `${hour12}:${minute} ${ampm}`;
@@ -23,20 +51,27 @@ export const formatTime = (timeStr: string): string => {
 /**
  * Format date for display (e.g., "Monday, January 1, 2023")
  * On smaller screens, it will use a shorter format
+ * Supports localization based on the current locale
  */
 export const formatDate = (date: Date): string => {
+  // Get the current locale from the document or default to 'en-US'
+  const locale =
+    typeof document !== "undefined"
+      ? document.documentElement.lang || "en-US"
+      : "en-US";
+
   // Check if we're in a browser environment
   if (typeof window !== "undefined") {
     // Use a shorter format for mobile devices
     if (window.innerWidth < 640) {
-      return date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
       });
     }
   }
 
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(locale, {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -46,9 +81,16 @@ export const formatDate = (date: Date): string => {
 
 /**
  * Format date for short display (e.g., "Mon, Jan 1")
+ * Supports localization based on the current locale
  */
 export const formatShortDate = (date: Date): string => {
-  return date.toLocaleDateString("en-US", {
+  // Get the current locale from the document or default to 'en-US'
+  const locale =
+    typeof document !== "undefined"
+      ? document.documentElement.lang || "en-US"
+      : "en-US";
+
+  return date.toLocaleDateString(locale, {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -71,8 +113,15 @@ export const getWeekRange = (date: Date): { start: Date; end: Date } => {
 /**
  * Format a date range for display (e.g., "January 1-7, 2023")
  * On smaller screens, it will use a shorter format
+ * Supports localization based on the current locale
  */
 export const formatDateRange = (start: Date, end: Date): string => {
+  // Get the current locale from the document or default to 'en-US'
+  const locale =
+    typeof document !== "undefined"
+      ? document.documentElement.lang || "en-US"
+      : "en-US";
+
   const sameMonth = start.getMonth() === end.getMonth();
   const sameYear = start.getFullYear() === end.getFullYear();
 
@@ -80,20 +129,20 @@ export const formatDateRange = (start: Date, end: Date): string => {
   if (typeof window !== "undefined" && window.innerWidth < 640) {
     // Use a shorter format for mobile devices
     if (sameMonth && sameYear) {
-      return `${start.toLocaleDateString("en-US", {
+      return `${start.toLocaleDateString(locale, {
         month: "short",
       })} ${start.getDate()}-${end.getDate()}`;
     } else if (sameYear) {
-      return `${start.toLocaleDateString("en-US", {
+      return `${start.toLocaleDateString(locale, {
         month: "short",
-      })} ${start.getDate()} - ${end.toLocaleDateString("en-US", {
+      })} ${start.getDate()} - ${end.toLocaleDateString(locale, {
         month: "short",
       })} ${end.getDate()}`;
     } else {
-      return `${start.toLocaleDateString("en-US", {
+      return `${start.toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
-      })} - ${end.toLocaleDateString("en-US", {
+      })} - ${end.toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
       })}`;
@@ -102,21 +151,21 @@ export const formatDateRange = (start: Date, end: Date): string => {
 
   // Default format for larger screens
   if (sameMonth && sameYear) {
-    return `${start.toLocaleDateString("en-US", {
+    return `${start.toLocaleDateString(locale, {
       month: "long",
     })} ${start.getDate()}-${end.getDate()}, ${start.getFullYear()}`;
   } else if (sameYear) {
-    return `${start.toLocaleDateString("en-US", {
+    return `${start.toLocaleDateString(locale, {
       month: "long",
-    })} ${start.getDate()} - ${end.toLocaleDateString("en-US", {
+    })} ${start.getDate()} - ${end.toLocaleDateString(locale, {
       month: "long",
     })} ${end.getDate()}, ${start.getFullYear()}`;
   } else {
-    return `${start.toLocaleDateString("en-US", {
+    return `${start.toLocaleDateString(locale, {
       month: "long",
       day: "numeric",
       year: "numeric",
-    })} - ${end.toLocaleDateString("en-US", {
+    })} - ${end.toLocaleDateString(locale, {
       month: "long",
       day: "numeric",
       year: "numeric",

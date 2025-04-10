@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Appointment, TeamMember } from "@/types/calendar";
 import {
   formatTimeDisplay,
@@ -20,6 +21,7 @@ export function MultiMemberDayView({
   appointments,
   timeSlots,
 }: MultiMemberDayViewProps) {
+  const t = useTranslations("dashboard.calendar");
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
   const [selectedTeamMember, setSelectedTeamMember] =
@@ -76,7 +78,7 @@ export function MultiMemberDayView({
         {/* Header row with team members - Fixed outside of scrollable area */}
         <div className="grid grid-cols-[60px_1fr] sticky top-0 z-20 bg-background shadow-sm">
           <div className="p-2 sm:p-3 font-medium border-b border-r text-xs text-center">
-            Time
+            {t("time")}
           </div>
           <div className={`grid ${getGridColumns()} border-b`}>
             {teamMembers.map((member) => (
@@ -188,12 +190,18 @@ export function MultiMemberDayView({
                                       {appointment.duration >= 30 ? (
                                         <p className="truncate text-muted-foreground">
                                           {appointment.serviceName} (
-                                          {appointment.duration} min)
+                                          {t("appointmentDetails.duration", {
+                                            duration: appointment.duration,
+                                          })}
+                                          )
                                         </p>
                                       ) : (
                                         <p className="truncate text-muted-foreground hidden sm:block">
                                           {appointment.serviceName} (
-                                          {appointment.duration} min)
+                                          {t("appointmentDetails.duration", {
+                                            duration: appointment.duration,
+                                          })}
+                                          )
                                         </p>
                                       )}
                                     </div>
@@ -206,7 +214,7 @@ export function MultiMemberDayView({
                           {isWorkingHour && hourAppointments.length === 0 && (
                             <div className="h-full flex items-center justify-center">
                               <p className="text-[10px] sm:text-xs text-muted-foreground">
-                                Available
+                                {t("available")}
                               </p>
                             </div>
                           )}
@@ -222,7 +230,7 @@ export function MultiMemberDayView({
       </div>
 
       <div className="mt-2 sm:mt-4 text-center text-xs sm:text-sm text-muted-foreground">
-        <p>Showing schedule for {teamMembers.length} team member(s)</p>
+        <p>{t("showingSchedule", { count: teamMembers.length })}</p>
       </div>
 
       {/* Appointment Details Dialog */}

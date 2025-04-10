@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface DashboardHeaderProps {
   children?: React.ReactNode;
@@ -21,7 +22,7 @@ export function DashboardHeader({ children }: DashboardHeaderProps) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
       {children}
-      
+
       <div className="hidden md:flex-1 md:flex md:gap-4 lg:gap-8">
         <form className="flex-1 md:max-w-sm lg:max-w-md">
           <div className="relative">
@@ -34,8 +35,9 @@ export function DashboardHeader({ children }: DashboardHeaderProps) {
           </div>
         </form>
       </div>
-      
+
       <div className="flex items-center gap-4">
+        <LanguageSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon" className="relative">
@@ -52,19 +54,25 @@ export function DashboardHeader({ children }: DashboardHeaderProps) {
             <DropdownMenuItem>
               <div className="flex flex-col gap-1">
                 <p className="text-sm font-medium">New booking</p>
-                <p className="text-xs text-muted-foreground">John Doe booked a haircut</p>
+                <p className="text-xs text-muted-foreground">
+                  John Doe booked a haircut
+                </p>
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <div className="flex flex-col gap-1">
                 <p className="text-sm font-medium">Subscription renewed</p>
-                <p className="text-xs text-muted-foreground">Your premium plan was renewed</p>
+                <p className="text-xs text-muted-foreground">
+                  Your premium plan was renewed
+                </p>
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <div className="flex flex-col gap-1">
                 <p className="text-sm font-medium">Team member request</p>
-                <p className="text-xs text-muted-foreground">Jane Smith wants to join your team</p>
+                <p className="text-xs text-muted-foreground">
+                  Jane Smith wants to join your team
+                </p>
               </div>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
