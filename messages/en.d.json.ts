@@ -363,7 +363,7 @@ declare const messages: {
   "dashboard": {
     "sidebar": {
       "title": "Rzev Dashboard",
-      "merchantAccount": "Merchant Account",
+      "professionalAccount": "Professional Account",
       "signOut": "Sign Out",
       "navigation": {
         "dashboard": "Dashboard",

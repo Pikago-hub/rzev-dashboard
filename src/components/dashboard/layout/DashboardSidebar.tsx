@@ -20,18 +20,21 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { useMerchantProfile } from "@/hooks/useMerchantProfile";
 
 type DashboardSidebarProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function DashboardSidebar({ className }: DashboardSidebarProps) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
+  const { userRole } = useWorkspace();
   const router = useRouter();
   const t = useTranslations("dashboard.sidebar");
-  const { merchantProfile } = useMerchantProfile();
+
+  // Check if user is staff (not owner or admin)
+  const isStaff = userRole === 'staff';
 
   const handleSignOut = async () => {
     try {
@@ -59,7 +62,7 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
     active: boolean;
   };
 
-  const routes: RouteType[] = [
+  const allRoutes: RouteType[] = [
     {
       label: t("navigation.dashboard"),
       icon: LayoutDashboard,
@@ -116,15 +119,27 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
     },
   ];
 
+  // Filter routes based on user role
+  // Staff cannot see: dashboard, clients, subscriptions, analytics, messages
+  const routes = isStaff
+    ? allRoutes.filter(route => 
+        !["/dashboard", 
+          "/dashboard/clients", 
+          "/dashboard/subscriptions", 
+          "/dashboard/analytics", 
+          "/dashboard/messages"].includes(route.href)
+      )
+    : allRoutes;
+
   return (
     <div
       className={cn(
-        "flex flex-col border-r h-full min-h-screen w-72",
+        "flex flex-col border-r h-full min-h-screen w-72 overflow-hidden",
         className
       )}
     >
       <div className="px-4 py-6">
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <Link href={isStaff ? "/dashboard/calendar" : "/dashboard"} className="flex items-center gap-2">
           <Image
             src="/rzev-logo-black-bgwhite.png"
             alt="Rzev Logo"
@@ -136,8 +151,8 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
         </Link>
       </div>
       <Separator />
-      <ScrollArea className="flex-1 px-4 py-6">
-        <nav className="flex flex-col gap-2">
+      <ScrollArea className="flex-1">
+        <nav className="flex flex-col gap-2 px-4 py-6">
           {routes.map((route) => (
             <Link 
               key={route.href} 
@@ -160,28 +175,26 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
         </nav>
       </ScrollArea>
       <Separator />
-      <div className="p-4">
+      <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] lg:pb-4">
         <div className="flex items-center gap-4 mb-4">
           <Avatar>
             <AvatarImage src={user?.user_metadata?.avatar_url} />
             <AvatarFallback>
-              {merchantProfile?.business_name?.charAt(0).toUpperCase() || "U"}
+              {user?.user_metadata?.full_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
             <p className="text-sm font-medium">
-              {merchantProfile?.business_name ||
-                user?.user_metadata?.full_name ||
-                user?.email}
+              {user?.user_metadata?.full_name || user?.email}
             </p>
             <p className="text-xs text-muted-foreground">
-              {t("merchantAccount")}
+              {t("professionalAccount")}
             </p>
           </div>
         </div>
         <Button
           variant="outline"
-          className="w-full justify-start gap-2"
+          className="w-full justify-start gap-2 mb-[env(safe-area-inset-bottom)] lg:mb-0"
           onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4" />

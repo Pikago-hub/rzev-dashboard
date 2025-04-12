@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { useRouter } from "@/i18n/navigation";
 import { useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard/layout/DashboardLayout";
@@ -20,13 +21,54 @@ import {
   Users,
   ArrowUpRight,
   ArrowDownRight,
+  UserPlus,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
+// Role-based action panel component
+function RoleBasedActionPanel() {
+  const { userRole } = useWorkspace();
+  const router = useRouter();
+  
+  // Only show admin actions for owner or admin roles
+  const isAdmin = userRole === 'owner' || userRole === 'admin';
+  
+  if (!isAdmin) return null;
+  
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="text-lg">Admin Actions</CardTitle>
+        <CardDescription>Special actions available to {userRole}s</CardDescription>
+      </CardHeader>
+      <CardContent className="flex gap-4">
+        <Button 
+          variant="secondary" 
+          onClick={() => router.push('/dashboard/team')}
+          className="flex items-center gap-2"
+        >
+          <UserPlus className="h-4 w-4" />
+          Manage Team
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => router.push('/dashboard/settings')}
+          className="flex items-center gap-2"
+        >
+          <Settings className="h-4 w-4" />
+          Workspace Settings
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
   const t = useTranslations("home");
   const { user, isLoading } = useAuth();
+  const { workspaceProfile } = useWorkspace();
   const router = useRouter();
 
   useEffect(() => {
@@ -54,8 +96,12 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">
             {t("welcome")}, {user.user_metadata?.full_name || user.email}
+            {workspaceProfile ? ` to ${workspaceProfile.name}` : ''}
           </p>
         </div>
+
+        {/* Admin action panel - only shown to admin/owner roles */}
+        <RoleBasedActionPanel />
 
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>

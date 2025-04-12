@@ -8,17 +8,23 @@ import { createBrowserClient } from '@/lib/supabase';
 // Context type
 type WorkspaceContextType = {
   workspaceProfile: WorkspaceProfile | null;
+  userRole: string | null;
+  isActive: boolean;
   isLoading: boolean;
   error: string | null;
   refreshWorkspace: () => Promise<void>;
+  debug: () => void; // Debug utility function
 };
 
 // Create context with default values
 const WorkspaceContext = createContext<WorkspaceContextType>({
   workspaceProfile: null,
+  userRole: null,
+  isActive: false,
   isLoading: true,
   error: null,
   refreshWorkspace: async () => {},
+  debug: () => {}, // Default no-op debug function
 });
 
 // Hook to use workspace context
@@ -27,14 +33,20 @@ export const useWorkspace = () => useContext(WorkspaceContext);
 type WorkspaceProviderProps = {
   children: ReactNode;
   initialWorkspaceData?: WorkspaceProfile | null;
+  initialUserRole?: string | null;
+  initialIsActive?: boolean;
 };
 
 // Create a provider component
 export function WorkspaceProvider({ 
   children, 
-  initialWorkspaceData = null 
+  initialWorkspaceData = null,
+  initialUserRole = null,
+  initialIsActive = false
 }: WorkspaceProviderProps) {
   const [workspaceProfile, setWorkspaceProfile] = useState<WorkspaceProfile | null>(initialWorkspaceData);
+  const [userRole, setUserRole] = useState<string | null>(initialUserRole);
+  const [isActive, setIsActive] = useState<boolean>(initialIsActive);
   const [isLoading, setIsLoading] = useState(!initialWorkspaceData);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -43,6 +55,33 @@ export function WorkspaceProvider({
   const isFetchingRef = useRef(false);
   // Track if we've already done the initial fetch
   const didInitialFetchRef = useRef(false);
+
+  // Debug function to log workspace data to console
+  const debug = useCallback(() => {
+    console.group('Workspace Context Debug Info');
+    console.log('User Role:', userRole);
+    console.log('Is Active:', isActive);
+    console.log('Workspace Profile:', workspaceProfile);
+    console.log('Loading State:', isLoading);
+    console.log('Error:', error);
+    console.groupEnd();
+  }, [workspaceProfile, userRole, isActive, isLoading, error]);
+
+  // Make debug function available in window for easy access
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as Window & { __rzevDebug?: { workspace: () => void } }).__rzevDebug = {
+        workspace: debug
+      };
+      console.log('Workspace debug available at window.__rzevDebug.workspace()');
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as Window & { __rzevDebug?: { workspace: () => void } }).__rzevDebug;
+      }
+    };
+  }, [debug]);
 
   // Function to fetch workspace data from API
   const fetchWorkspaceData = useCallback(async () => {
@@ -94,6 +133,8 @@ export function WorkspaceProvider({
       }
 
       setWorkspaceProfile(data.workspaceProfile);
+      setUserRole(data.userRole);
+      setIsActive(data.isActive ?? false);
       setLastFetchTime(Date.now());
     } catch (err) {
       console.error('Error fetching workspace profile:', err);
@@ -127,10 +168,13 @@ export function WorkspaceProvider({
   return (
     <WorkspaceContext.Provider 
       value={{ 
-        workspaceProfile, 
+        workspaceProfile,
+        userRole,
+        isActive, 
         isLoading, 
         error, 
-        refreshWorkspace 
+        refreshWorkspace,
+        debug
       }}
     >
       {children}

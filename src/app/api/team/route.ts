@@ -8,18 +8,20 @@ const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 // Initialize the admin client with service role key (not the anon key)
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRole);
 
-// Define types for the data structure returned by Supabase
-interface TeamMember {
+
+// The final transformed team member format
+interface FormattedTeamMember {
   id: string;
   display_name: string;
   email: string | null;
-}
-
-interface WorkspaceMember {
-  team_member_id: string;
   role: string;
   active: boolean;
-  team_members: TeamMember[] | null;
+}
+
+// Auth user structure
+interface AuthUser {
+  id: string;
+  email: string | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -71,14 +73,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch team members
+    // Fetch team members with both team_members data and auth.users email
     const { data, error } = await supabaseAdmin
       .from('workspace_members')
       .select(`
         team_member_id,
         role,
         active,
-        team_members(id, display_name, email)
+        team_members:team_member_id (id, display_name, email)
       `)
       .eq('workspace_id', workspaceId);
 
@@ -90,14 +92,65 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Transform the data
-    const formattedMembers = (data as unknown as WorkspaceMember[]).map(item => ({
-      id: item.team_member_id,
-      display_name: item.team_members && item.team_members[0]?.display_name || "Team Member",
-      email: item.team_members && item.team_members[0]?.email || null,
-      role: item.role,
-      active: item.active
-    }));
+    // If no team members found in the workspace
+    if (!data || data.length === 0) {
+      return NextResponse.json({
+        success: true,
+        teamMembers: []
+      });
+    }
+
+    // Get auth user emails as a backup
+    const memberIds = data.map(member => member.team_member_id);
+    
+    // Use a direct SQL query with the service role key
+    const { data: authUsers, error: authError } = await supabaseAdmin
+      .from('team_members')
+      .select('id, email')
+      .in('id', memberIds);
+
+    if (authError) {
+      console.error("Error fetching auth users:", authError);
+    }
+
+    // Create a map of user IDs to emails from auth.users
+    const userEmailMap = new Map<string, string>();
+    if (authUsers && authUsers.length > 0) {
+      (authUsers as AuthUser[]).forEach(user => {
+        if (user.id && user.email) {
+          userEmailMap.set(user.id, user.email);
+        }
+      });
+    }
+
+    // Transform the data with email fallback logic
+    const formattedMembers: FormattedTeamMember[] = data.map(item => {
+      let teamMemberData: { id: string; display_name: string; email: string | null } = {
+        id: item.team_member_id,
+        display_name: "Team Member",
+        email: null
+      };
+
+      // Handle both array and direct object format for team_members
+      if (item.team_members) {
+        if (Array.isArray(item.team_members) && item.team_members.length > 0) {
+          teamMemberData = item.team_members[0];
+        } else if (!Array.isArray(item.team_members)) {
+          teamMemberData = item.team_members;
+        }
+      }
+
+      // First try to get email from team_members, then from auth.users
+      const email = teamMemberData.email || userEmailMap.get(item.team_member_id) || null;
+
+      return {
+        id: item.team_member_id,
+        display_name: teamMemberData.display_name || "Team Member",
+        email: email,
+        role: item.role,
+        active: item.active
+      };
+    });
 
     return NextResponse.json({
       success: true,

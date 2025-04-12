@@ -353,7 +353,7 @@
   "dashboard": {
     "sidebar": {
       "title": "Panel de Control Rzev",
-      "merchantAccount": "Cuenta de Comerciante",
+      "professionalAccount": "Cuenta Profesional",
       "signOut": "Cerrar Sesión",
       "navigation": {
         "dashboard": "Panel de Control",

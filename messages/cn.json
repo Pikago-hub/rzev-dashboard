@@ -353,7 +353,7 @@
   "dashboard": {
     "sidebar": {
       "title": "Rzev 管理界面",
-      "merchantAccount": "商家账户",
+      "professionalAccount": "专业账户",
       "signOut": "退出登录",
       "navigation": {
         "dashboard": "管理界面",

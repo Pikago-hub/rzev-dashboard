@@ -19,6 +19,9 @@ const config: Config = {
           "100%": { backgroundPosition: "bottom center" },
         },
       },
+      spacing: {
+        'safe': 'env(safe-area-inset-bottom)',
+      },
     },
   },
   plugins: [],

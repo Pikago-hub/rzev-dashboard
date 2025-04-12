@@ -22,7 +22,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Mobile Sidebar */}
       <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
-        <SheetContent side="left" className="p-0 w-72">
+        <SheetContent side="left" className="p-0 w-72 pb-[env(safe-area-inset-bottom)]">
           <SheetTitle>
             <VisuallyHidden>Dashboard Navigation</VisuallyHidden>
           </SheetTitle>

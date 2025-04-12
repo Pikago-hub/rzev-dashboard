@@ -6,11 +6,19 @@ import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { Loader2 } from "lucide-react";
 import { WorkspaceProvider } from "@/lib/workspace-context";
+import { WorkspaceProfile } from "@/types/workspace";
 
-export default function DashboardLayout({
+// Export as named export instead of default
+export function ClientDashboardLayout({
   children,
+  initialWorkspaceData = null,
+  initialUserRole = null,
+  initialIsActive = false
 }: {
   children: React.ReactNode;
+  initialWorkspaceData?: WorkspaceProfile | null;
+  initialUserRole?: string | null;
+  initialIsActive?: boolean;
 }) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
@@ -71,7 +79,11 @@ export default function DashboardLayout({
   }
 
   return (
-    <WorkspaceProvider>
+    <WorkspaceProvider 
+      initialWorkspaceData={initialWorkspaceData}
+      initialUserRole={initialUserRole}
+      initialIsActive={initialIsActive}
+    >
       <div className="flex flex-col flex-1 h-full min-h-screen">
         {children}
         <Toaster position="top-right" />
@@ -79,3 +91,6 @@ export default function DashboardLayout({
     </WorkspaceProvider>
   );
 }
+
+// Default export for Next.js routing
+export default ClientDashboardLayout;

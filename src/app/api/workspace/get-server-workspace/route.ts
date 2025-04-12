@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     const { data: workspaceMember, error: workspaceMemberError } =
       await supabaseAdmin
         .from("workspace_members")
-        .select("workspace_id")
+        .select("workspace_id, role, active")
         .eq("team_member_id", user.id)
         .single();
 
@@ -80,6 +80,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       workspaceProfile: workspace,
+      userRole: workspaceMember.role,
+      isActive: workspaceMember.active
     });
   } catch (error) {
     console.error("Server error:", error);

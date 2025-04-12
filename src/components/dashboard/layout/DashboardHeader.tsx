@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { UserRoleBadge } from "@/components/dashboard/UserRoleBadge";
 
 interface DashboardHeaderProps {
   children?: React.ReactNode;
@@ -37,6 +38,7 @@ export function DashboardHeader({ children }: DashboardHeaderProps) {
       </div>
 
       <div className="flex items-center gap-4">
+        <UserRoleBadge />
         <LanguageSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
