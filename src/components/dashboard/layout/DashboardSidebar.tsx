@@ -15,50 +15,74 @@ import {
   Settings,
   Users,
   BarChart3,
-  MessageSquare,
   Store,
   LogOut,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
+import { useTeamMemberProfile } from "@/hooks/useTeamMemberProfile";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type DashboardSidebarProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function DashboardSidebar({ className }: DashboardSidebarProps) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const { userRole } = useWorkspace();
+  const { userRole, isLoading: workspaceLoading } = useWorkspace();
+  const { profile: teamMemberProfile, isLoading: profileLoading } =
+    useTeamMemberProfile();
   const router = useRouter();
   const t = useTranslations("dashboard.sidebar");
 
-  // Check if user is staff (not owner or admin)
-  const isStaff = userRole === 'staff';
+  // Only determine role after data is loaded
+  const isRoleLoading = workspaceLoading || !userRole;
+
+  // Check if user is staff (not owner)
+  const isStaff = !isRoleLoading && userRole === "staff";
+  // Check if user is owner
+  const isOwner = !isRoleLoading && userRole === "owner";
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.push("/auth");
+      router.push({
+        pathname: "/auth",
+      });
     } catch (error) {
       console.error("Error during sign out:", error);
-      router.push("/auth");
+      router.push({
+        pathname: "/auth",
+      });
     }
   };
+
+  // Define valid route paths based on the routing.ts configuration
+  type ValidRoutePath =
+    | "/dashboard"
+    | "/dashboard/staff"
+    | "/dashboard/admin"
+    | "/dashboard/calendar"
+    | "/dashboard/clients"
+    | "/dashboard/team"
+    | "/dashboard/subscriptions"
+    | "/dashboard/analytics"
+    | "/dashboard/services"
+    | "/dashboard/settings";
+
+  // Determine appropriate dashboard path based on role
+  const dashboardPath = isStaff
+    ? ("/dashboard/staff" as ValidRoutePath)
+    : isOwner
+      ? ("/dashboard/admin" as ValidRoutePath)
+      : ("/dashboard" as ValidRoutePath);
 
   type RouteType = {
     label: string;
     icon: React.ElementType;
-    href:
-      | "/dashboard"
-      | "/dashboard/calendar"
-      | "/dashboard/clients"
-      | "/dashboard/team"
-      | "/dashboard/subscriptions"
-      | "/dashboard/analytics"
-      | "/dashboard/messages"
-      | "/dashboard/services"
-      | "/dashboard/settings";
+    href: ValidRoutePath;
     active: boolean;
   };
 
@@ -66,8 +90,12 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
     {
       label: t("navigation.dashboard"),
       icon: LayoutDashboard,
-      href: "/dashboard",
-      active: pathname === "/dashboard",
+      href: dashboardPath,
+      active:
+        pathname === dashboardPath ||
+        pathname === "/dashboard" ||
+        pathname === "/dashboard/staff" ||
+        pathname === "/dashboard/admin",
     },
     {
       label: t("navigation.calendar"),
@@ -99,12 +127,7 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
       href: "/dashboard/analytics",
       active: pathname?.includes("/dashboard/analytics"),
     },
-    {
-      label: t("navigation.messages"),
-      icon: MessageSquare,
-      href: "/dashboard/messages",
-      active: pathname?.includes("/dashboard/messages"),
-    },
+
     {
       label: t("navigation.services"),
       icon: Store,
@@ -119,17 +142,20 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
     },
   ];
 
-  // Filter routes based on user role
-  // Staff cannot see: dashboard, clients, subscriptions, analytics, messages
-  const routes = isStaff
-    ? allRoutes.filter(route => 
-        !["/dashboard", 
-          "/dashboard/clients", 
-          "/dashboard/subscriptions", 
-          "/dashboard/analytics", 
-          "/dashboard/messages"].includes(route.href)
-      )
-    : allRoutes;
+  // Only filter routes once role information is loaded
+  // Staff cannot see: clients, subscriptions, analytics
+  const routes = isRoleLoading
+    ? [] // Show no routes while loading to prevent flashing
+    : isStaff
+      ? allRoutes.filter(
+          (route) =>
+            ![
+              "/dashboard/clients",
+              "/dashboard/subscriptions",
+              "/dashboard/analytics",
+            ].includes(route.href)
+        )
+      : allRoutes;
 
   return (
     <div
@@ -139,7 +165,12 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
       )}
     >
       <div className="px-4 py-6">
-        <Link href={isStaff ? "/dashboard/calendar" : "/dashboard"} className="flex items-center gap-2">
+        <Link
+          href={{
+            pathname: dashboardPath,
+          }}
+          className="flex items-center gap-2"
+        >
           <Image
             src="/rzev-logo-black-bgwhite.png"
             alt="Rzev Logo"
@@ -153,43 +184,76 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
       <Separator />
       <ScrollArea className="flex-1">
         <nav className="flex flex-col gap-2 px-4 py-6">
-          {routes.map((route) => (
-            <Link 
-              key={route.href} 
-              href={route.href}
-              prefetch={false} 
-              shallow={true}
-            >
-              <Button
-                variant={route.active ? "default" : "ghost"}
-                className={cn(
-                  "w-full justify-start gap-2",
-                  route.active ? "bg-primary text-primary-foreground" : ""
-                )}
+          {isRoleLoading ? (
+            // Skeleton loading state for navigation items
+            <>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center space-x-2 py-2">
+                  <Skeleton className="h-5 w-5 rounded-full" />
+                  <Skeleton className="h-4 w-[100px]" />
+                </div>
+              ))}
+            </>
+          ) : (
+            // Real navigation items once role is determined
+            routes.map((route) => (
+              <Link
+                key={route.href}
+                href={{
+                  pathname: route.href,
+                }}
+                prefetch={false}
               >
-                <route.icon className="h-5 w-5" />
-                {route.label}
-              </Button>
-            </Link>
-          ))}
+                <Button
+                  variant={route.active ? "default" : "ghost"}
+                  className={cn(
+                    "w-full justify-start gap-2",
+                    route.active ? "bg-primary text-primary-foreground" : ""
+                  )}
+                >
+                  <route.icon className="h-5 w-5" />
+                  {route.label}
+                </Button>
+              </Link>
+            ))
+          )}
         </nav>
       </ScrollArea>
       <Separator />
       <div className="p-4 pt-2 pb-24 sm:pb-20 md:pb-6 lg:pb-4 lg:pt-4 safe-bottom">
         <div className="flex items-center gap-4 mb-4">
           <Avatar>
-            <AvatarImage src={user?.user_metadata?.avatar_url} />
+            <AvatarImage
+              src={
+                teamMemberProfile?.avatar_url || user?.user_metadata?.avatar_url
+              }
+            />
             <AvatarFallback>
-              {user?.user_metadata?.full_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
+              {profileLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                teamMemberProfile?.display_name?.charAt(0).toUpperCase() ||
+                user?.user_metadata?.full_name?.charAt(0).toUpperCase() ||
+                user?.email?.charAt(0).toUpperCase() ||
+                "U"
+              )}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <p className="text-sm font-medium">
-              {user?.user_metadata?.full_name || user?.email}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {t("professionalAccount")}
-            </p>
+            {profileLoading ? (
+              <Skeleton className="h-4 w-[120px] mb-2" />
+            ) : (
+              <>
+                <p className="text-sm font-medium">
+                  {!profileLoading && teamMemberProfile?.display_name
+                    ? teamMemberProfile.display_name
+                    : user?.user_metadata?.full_name || user?.email}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t("professionalAccount")}
+                </p>
+              </>
+            )}
           </div>
         </div>
         <Button

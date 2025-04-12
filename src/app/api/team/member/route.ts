@@ -1,105 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-
-// Create a Supabase client with the service role key for admin operations
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
-const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
-
-// Initialize the admin client with service role key (not the anon key)
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRole);
-
-// Helper function to get the auth token and user
-async function getAuth(request: NextRequest) {
-  // Try to get token from Authorization header first
-  const authHeader = request.headers.get('Authorization');
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    
-    // Use token to get user
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (!userError && user) {
-      return { token, user };
-    }
-  }
-  
-  // Try cookie-based auth with normal supabase client
-  const cookieStore = await cookies();
-  
-  // Debug cookies
-  console.log("All cookies:", cookieStore.getAll().map(c => c.name));
-  
-  // Create a supabase client using cookieStore
-  const supabase = createClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      auth: {
-        persistSession: false,
-        detectSessionInUrl: false,
-      },
-      global: {
-        headers: {
-          cookie: cookieStore.getAll().map(c => `${c.name}=${c.value}`).join('; ')
-        }
-      }
-    }
-  );
-  
-  // Try to get session directly
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
-  console.log("Session result:", !!session, "Error:", !!sessionError);
-  
-  if (sessionError || !session) {
-    return { token: null, user: null };
-  }
-  
-  return { token: session.access_token, user: session.user };
-}
-
-// Helper function to validate user has admin access to the workspace
-async function validateUserAndWorkspace(
-  userId: string, 
-  workspaceId: string
-) {
-  if (!userId) {
-    return { error: "Authentication required", status: 401, user: null };
-  }
-
-  // Check if user is a member of the workspace
-  const { data: workspaceMember, error: memberError } = await supabaseAdmin
-    .from('workspace_members')
-    .select('role')
-    .eq('workspace_id', workspaceId)
-    .eq('team_member_id', userId)
-    .single();
-
-  if (memberError || !workspaceMember) {
-    return { error: "You don't have access to this workspace", status: 403, user: null };
-  }
-
-  // Check if user has admin role (only admins can manage team members)
-  if (workspaceMember.role !== 'admin' && workspaceMember.role !== 'owner') {
-    return { error: "You don't have permission to manage team members", status: 403, user: null };
-  }
-
-  return { error: null, status: 200, user: userId };
-}
+import { supabaseAdmin } from "@/lib/server/auth-utils";
+import { getAuthAndValidateWorkspaceAction } from "@/lib/server/workspace-actions";
 
 // Create or update a team member
 export async function POST(request: NextRequest) {
   try {
-    const { 
-      teamMemberId,
-      name,
-      email,
-      role,
-      active,
-      workspaceId 
-    } = await request.json();
+    const { teamMemberId, name, email, role, active, workspaceId } =
+      await request.json();
 
     if (!workspaceId) {
       return NextResponse.json(
@@ -108,22 +15,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get authorization and user
-    const { user } = await getAuth(request);
-    
-    if (!user) {
+    // Get authorization and validate workspace access (owner required for managing team members)
+    const auth = await getAuthAndValidateWorkspaceAction(
+      request,
+      workspaceId,
+      "owner"
+    );
+
+    if (auth.error) {
       return NextResponse.json(
-        { error: "Authorization required" },
-        { status: 401 }
-      );
-    }
-    
-    // Validate user has admin access to the workspace
-    const validation = await validateUserAndWorkspace(user.id, workspaceId);
-    if (validation.error) {
-      return NextResponse.json(
-        { error: validation.error },
-        { status: validation.status }
+        { error: auth.error },
+        { status: auth.status || 401 }
       );
     }
 
@@ -133,11 +35,12 @@ export async function POST(request: NextRequest) {
     if (!teamMemberToUpdate) {
       // Check if a team member with this email already exists
       if (email) {
-        const { data: existingUser, error: existingUserError } = await supabaseAdmin
-          .from('team_members')
-          .select('id')
-          .eq('email', email)
-          .maybeSingle();
+        const { data: existingUser, error: existingUserError } =
+          await supabaseAdmin
+            .from("team_members")
+            .select("id")
+            .eq("email", email)
+            .maybeSingle();
 
         if (existingUserError) {
           console.error("Error checking existing user:", existingUserError);
@@ -151,18 +54,18 @@ export async function POST(request: NextRequest) {
           teamMemberToUpdate = existingUser.id;
         }
       }
-      
+
       if (!teamMemberToUpdate) {
         // Create a new team member
         const { data: newTeamMember, error: createError } = await supabaseAdmin
-          .from('team_members')
+          .from("team_members")
           .insert({
             display_name: name,
             email,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           })
-          .select('id')
+          .select("id")
           .single();
 
         if (createError) {
@@ -178,12 +81,12 @@ export async function POST(request: NextRequest) {
     } else {
       // Update existing team member info
       const { error: updateError } = await supabaseAdmin
-        .from('team_members')
+        .from("team_members")
         .update({
           display_name: name,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', teamMemberToUpdate);
+        .eq("id", teamMemberToUpdate);
 
       if (updateError) {
         console.error("Error updating team member:", updateError);
@@ -195,12 +98,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if this member is already associated with the workspace
-    const { data: existingWorkspaceMember, error: existingError } = await supabaseAdmin
-      .from('workspace_members')
-      .select('team_member_id')
-      .eq('workspace_id', workspaceId)
-      .eq('team_member_id', teamMemberToUpdate)
-      .maybeSingle();
+    const { data: existingWorkspaceMember, error: existingError } =
+      await supabaseAdmin
+        .from("workspace_members")
+        .select("team_member_id")
+        .eq("workspace_id", workspaceId)
+        .eq("team_member_id", teamMemberToUpdate)
+        .maybeSingle();
 
     if (existingError) {
       console.error("Error checking workspace membership:", existingError);
@@ -213,14 +117,14 @@ export async function POST(request: NextRequest) {
     if (existingWorkspaceMember) {
       // Update existing workspace member
       const { error: updateError } = await supabaseAdmin
-        .from('workspace_members')
+        .from("workspace_members")
         .update({
           role,
           active,
           updated_at: new Date().toISOString(),
         })
-        .eq('workspace_id', workspaceId)
-        .eq('team_member_id', teamMemberToUpdate);
+        .eq("workspace_id", workspaceId)
+        .eq("team_member_id", teamMemberToUpdate);
 
       if (updateError) {
         console.error("Error updating workspace member:", updateError);
@@ -232,7 +136,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Add to workspace_members
       const { error: memberError } = await supabaseAdmin
-        .from('workspace_members')
+        .from("workspace_members")
         .insert({
           workspace_id: workspaceId,
           team_member_id: teamMemberToUpdate,
@@ -254,7 +158,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Team member updated successfully",
-      teamMemberId: teamMemberToUpdate
+      teamMemberId: teamMemberToUpdate,
     });
   } catch (error) {
     console.error("Server error:", error);
@@ -270,8 +174,8 @@ export async function DELETE(request: NextRequest) {
   try {
     // Get the workspace ID and team member ID from the query string
     const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId');
-    const teamMemberId = searchParams.get('teamMemberId');
+    const workspaceId = searchParams.get("workspaceId");
+    const teamMemberId = searchParams.get("teamMemberId");
 
     if (!workspaceId) {
       return NextResponse.json(
@@ -287,27 +191,22 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Get authorization and user
-    const { user } = await getAuth(request);
-    
-    if (!user) {
+    // Get authorization and validate workspace access (owner required for managing team members)
+    const auth = await getAuthAndValidateWorkspaceAction(
+      request,
+      workspaceId,
+      "owner"
+    );
+
+    if (auth.error) {
       return NextResponse.json(
-        { error: "Authorization required" },
-        { status: 401 }
-      );
-    }
-    
-    // Validate user has admin access to the workspace
-    const validation = await validateUserAndWorkspace(user.id, workspaceId);
-    if (validation.error) {
-      return NextResponse.json(
-        { error: validation.error },
-        { status: validation.status }
+        { error: auth.error },
+        { status: auth.status || 401 }
       );
     }
 
     // Can't delete yourself
-    if (user.id === teamMemberId) {
+    if (auth.user?.id === teamMemberId) {
       return NextResponse.json(
         { error: "You cannot remove yourself from the workspace" },
         { status: 400 }
@@ -316,10 +215,10 @@ export async function DELETE(request: NextRequest) {
 
     // Remove the team member from the workspace
     const { error: deleteError } = await supabaseAdmin
-      .from('workspace_members')
+      .from("workspace_members")
       .delete()
-      .eq('workspace_id', workspaceId)
-      .eq('team_member_id', teamMemberId);
+      .eq("workspace_id", workspaceId)
+      .eq("team_member_id", teamMemberId);
 
     if (deleteError) {
       console.error("Error deleting team member:", deleteError);
@@ -331,7 +230,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Team member removed from workspace successfully"
+      message: "Team member removed from workspace successfully",
     });
   } catch (error) {
     console.error("Server error:", error);
@@ -340,4 +239,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

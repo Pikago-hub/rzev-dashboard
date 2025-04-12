@@ -8,12 +8,12 @@ import { Loader2 } from "lucide-react";
 import { WorkspaceProvider } from "@/lib/workspace-context";
 import { WorkspaceProfile } from "@/types/workspace";
 
-// Export as named export instead of default
-export function ClientDashboardLayout({
+// Dashboard layout component - this will be wrapped by the default export
+function ClientDashboardLayout({
   children,
   initialWorkspaceData = null,
   initialUserRole = null,
-  initialIsActive = false
+  initialIsActive = false,
 }: {
   children: React.ReactNode;
   initialWorkspaceData?: WorkspaceProfile | null;
@@ -79,7 +79,7 @@ export function ClientDashboardLayout({
   }
 
   return (
-    <WorkspaceProvider 
+    <WorkspaceProvider
       initialWorkspaceData={initialWorkspaceData}
       initialUserRole={initialUserRole}
       initialIsActive={initialIsActive}
@@ -92,5 +92,11 @@ export function ClientDashboardLayout({
   );
 }
 
-// Default export for Next.js routing
-export default ClientDashboardLayout;
+// Next.js layout component - only accepts children prop
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <ClientDashboardLayout>{children}</ClientDashboardLayout>;
+}

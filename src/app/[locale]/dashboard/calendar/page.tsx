@@ -4,11 +4,16 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { DashboardLayout } from "@/components/dashboard/layout/DashboardLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { generateTimeSlots } from "@/utils/calendar-utils";
+import {
+  generateTimeSlotsRange,
+  findOperatingHoursRange,
+} from "@/utils/calendar-utils";
 import { CalendarHeader } from "@/components/dashboard/calendar/CalendarHeader";
 import { MultiMemberDayView } from "@/components/dashboard/calendar/MultiMemberDayView";
 import { MultiMemberWeekView } from "@/components/dashboard/calendar/MultiMemberWeekView";
-import { TeamMember, Appointment } from "@/types/calendar";
+import { Appointment } from "@/types/calendar";
+import { useWorkspaceOperatingHours } from "@/hooks/useWorkspaceOperatingHours";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CalendarPage() {
   const t = useTranslations("dashboard.calendar");
@@ -16,27 +21,12 @@ export default function CalendarPage() {
   const [view, setView] = useState<"day" | "week">("day");
   const [selectedTeamMember, setSelectedTeamMember] = useState<string>("all");
 
-  // Mock team members data
-  const teamMembers: TeamMember[] = [
-    {
-      id: "1",
-      name: "John Doe",
-      role: "Barber",
-      workingHours: { start: "09:00", end: "17:00" },
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      role: "Stylist",
-      workingHours: { start: "10:00", end: "18:00" },
-    },
-    {
-      id: "3",
-      name: "Mike Johnson",
-      role: "Massage Therapist",
-      workingHours: { start: "08:00", end: "16:00" },
-    },
-  ];
+  // Fetch team members with workspace operating hours
+  const { teamMembers, operatingHours, isLoading } =
+    useWorkspaceOperatingHours();
+
+  // Check if we have any team members
+  const hasTeamMembers = teamMembers.length > 0;
 
   // Create dates for the current week
   const today = new Date();
@@ -148,8 +138,13 @@ export default function CalendarPage() {
     },
   ];
 
-  // Generate time slots for full day (12 AM to 12 PM)
-  const timeSlots = generateTimeSlots();
+  // Find the earliest and latest operating hours
+  const { earliest, latest } = findOperatingHoursRange(
+    operatingHours || undefined
+  );
+
+  // Generate time slots based on operating hours with a 1-hour buffer
+  const timeSlots = generateTimeSlotsRange(earliest, latest, 1);
 
   // Navigate to previous/next day or week
   const navigateDate = (direction: "prev" | "next") => {
@@ -189,25 +184,47 @@ export default function CalendarPage() {
           <div className="flex-1 flex flex-col min-h-0">
             <Card className="flex flex-col flex-1 h-[calc(100vh-16rem)]">
               <CardHeader className="pb-2 sm:pb-3">
-                <CalendarHeader
-                  date={date}
-                  view={view}
-                  selectedTeamMember={selectedTeamMember}
-                  teamMembers={teamMembers}
-                  onDateChange={navigateDate}
-                  onViewChange={(v) => setView(v as "day" | "week")}
-                  onTeamMemberChange={setSelectedTeamMember}
-                  onDateSelect={setDate}
-                />
+                {isLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ) : (
+                  <CalendarHeader
+                    date={date}
+                    view={view}
+                    selectedTeamMember={selectedTeamMember}
+                    teamMembers={teamMembers}
+                    onDateChange={navigateDate}
+                    onViewChange={(v) => setView(v as "day" | "week")}
+                    onTeamMemberChange={setSelectedTeamMember}
+                    onDateSelect={setDate}
+                  />
+                )}
               </CardHeader>
               <CardContent className="flex-1 p-0 overflow-hidden">
-                {view === "week" ? (
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <Skeleton className="h-[400px] w-full" />
+                    </div>
+                  </div>
+                ) : !hasTeamMembers ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center p-4">
+                      <p className="text-muted-foreground">
+                        {t("noTeamMembers")}
+                      </p>
+                    </div>
+                  </div>
+                ) : view === "week" ? (
                   <MultiMemberWeekView
                     date={date}
                     teamMembers={
                       selectedTeamMember === "all"
                         ? teamMembers
-                        : teamMembers.filter((m) => m.id === selectedTeamMember)
+                        : teamMembers.filter(
+                            (m: { id: string }) => m.id === selectedTeamMember
+                          )
                     }
                     appointments={appointments.filter((a) =>
                       selectedTeamMember === "all"
@@ -221,7 +238,9 @@ export default function CalendarPage() {
                     teamMembers={
                       selectedTeamMember === "all"
                         ? teamMembers
-                        : teamMembers.filter((m) => m.id === selectedTeamMember)
+                        : teamMembers.filter(
+                            (m: { id: string }) => m.id === selectedTeamMember
+                          )
                     }
                     appointments={appointments.filter(
                       (a) =>

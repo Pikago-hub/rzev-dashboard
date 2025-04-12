@@ -1,13 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-
-// Create a Supabase client with the service role key for admin operations
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
-const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
-
-// Initialize the admin client with service role key (not the anon key)
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRole);
-
+import { supabaseAdmin } from "@/lib/server/auth-utils";
+import { getAuthAndValidateWorkspaceAction } from "@/lib/server/workspace-actions";
 
 // The final transformed team member format
 interface FormattedTeamMember {
@@ -28,7 +21,7 @@ export async function GET(request: NextRequest) {
   try {
     // Get the workspace ID from the query string
     const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId');
+    const workspaceId = searchParams.get("workspaceId");
 
     if (!workspaceId) {
       return NextResponse.json(
@@ -37,52 +30,39 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get authorization header
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Get authorization and validate workspace access
+    const auth = await getAuthAndValidateWorkspaceAction(request, workspaceId);
+
+    if (auth.error) {
       return NextResponse.json(
-        { error: "Authorization required" },
-        { status: 401 }
+        { error: auth.error },
+        { status: auth.status || 401 }
       );
     }
 
-    const token = authHeader.split(' ')[1];
-    
-    // Validate the token and get the user
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: "Invalid authorization" },
-        { status: 401 }
-      );
-    }
+    // Check user's role - staff can only see themselves
+    const isStaff = auth.isStaff || false;
 
-    // Check if user is a member of the workspace
-    const { data: workspaceMember, error: memberError } = await supabaseAdmin
-      .from('workspace_members')
-      .select('role')
-      .eq('workspace_id', workspaceId)
-      .eq('team_member_id', user.id)
-      .single();
-
-    if (memberError || !workspaceMember) {
-      return NextResponse.json(
-        { error: "You don't have access to this workspace" },
-        { status: 403 }
-      );
-    }
-
-    // Fetch team members with both team_members data and auth.users email
-    const { data, error } = await supabaseAdmin
-      .from('workspace_members')
-      .select(`
+    // Build the query for team members
+    let query = supabaseAdmin
+      .from("workspace_members")
+      .select(
+        `
         team_member_id,
         role,
         active,
         team_members:team_member_id (id, display_name, email)
-      `)
-      .eq('workspace_id', workspaceId);
+      `
+      )
+      .eq("workspace_id", workspaceId);
+
+    // If user is staff, only fetch their own record
+    if (isStaff) {
+      query = query.eq("team_member_id", auth.user?.id || "");
+    }
+
+    // Execute the query
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error fetching team members:", error);
@@ -96,18 +76,18 @@ export async function GET(request: NextRequest) {
     if (!data || data.length === 0) {
       return NextResponse.json({
         success: true,
-        teamMembers: []
+        teamMembers: [],
       });
     }
 
     // Get auth user emails as a backup
-    const memberIds = data.map(member => member.team_member_id);
-    
+    const memberIds = data.map((member) => member.team_member_id);
+
     // Use a direct SQL query with the service role key
     const { data: authUsers, error: authError } = await supabaseAdmin
-      .from('team_members')
-      .select('id, email')
-      .in('id', memberIds);
+      .from("team_members")
+      .select("id, email")
+      .in("id", memberIds);
 
     if (authError) {
       console.error("Error fetching auth users:", authError);
@@ -116,7 +96,7 @@ export async function GET(request: NextRequest) {
     // Create a map of user IDs to emails from auth.users
     const userEmailMap = new Map<string, string>();
     if (authUsers && authUsers.length > 0) {
-      (authUsers as AuthUser[]).forEach(user => {
+      (authUsers as AuthUser[]).forEach((user) => {
         if (user.id && user.email) {
           userEmailMap.set(user.id, user.email);
         }
@@ -124,11 +104,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform the data with email fallback logic
-    const formattedMembers: FormattedTeamMember[] = data.map(item => {
-      let teamMemberData: { id: string; display_name: string; email: string | null } = {
+    const formattedMembers: FormattedTeamMember[] = data.map((item) => {
+      let teamMemberData: {
+        id: string;
+        display_name: string;
+        email: string | null;
+      } = {
         id: item.team_member_id,
         display_name: "Team Member",
-        email: null
+        email: null,
       };
 
       // Handle both array and direct object format for team_members
@@ -141,20 +125,22 @@ export async function GET(request: NextRequest) {
       }
 
       // First try to get email from team_members, then from auth.users
-      const email = teamMemberData.email || userEmailMap.get(item.team_member_id) || null;
+      const email =
+        teamMemberData.email || userEmailMap.get(item.team_member_id) || null;
 
       return {
         id: item.team_member_id,
         display_name: teamMemberData.display_name || "Team Member",
         email: email,
         role: item.role,
-        active: item.active
+        active: item.active,
       };
     });
 
     return NextResponse.json({
       success: true,
-      teamMembers: formattedMembers
+      teamMembers: formattedMembers,
+      isStaff: isStaff, // Include this flag so frontend knows if user is staff
     });
   } catch (error) {
     console.error("Server error:", error);
@@ -163,4 +149,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

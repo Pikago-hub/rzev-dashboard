@@ -272,8 +272,8 @@ function processBusinessInfo(info: Record<string, unknown>): BusinessInfo {
         (locationKey === "instore"
           ? "inStore"
           : locationKey === "clientlocation"
-          ? "clientLocation"
-          : String(loc))
+            ? "clientLocation"
+            : String(loc))
       ); // Keep original if no match
     });
   }

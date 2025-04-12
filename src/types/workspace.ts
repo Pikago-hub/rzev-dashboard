@@ -1,5 +1,20 @@
 import { AddressObject } from "./addressData";
 
+export interface DayHours {
+  open: string;
+  close: string;
+}
+
+export interface OperatingHours {
+  monday?: DayHours[] | null;
+  tuesday?: DayHours[] | null;
+  wednesday?: DayHours[] | null;
+  thursday?: DayHours[] | null;
+  friday?: DayHours[] | null;
+  saturday?: DayHours[] | null;
+  sunday?: DayHours[] | null;
+}
+
 export interface WorkspaceProfile {
   id: string;
   name: string;
@@ -14,6 +29,7 @@ export interface WorkspaceProfile {
   lat: number | null;
   lng: number | null;
   timezone: string | null;
+  operating_hours: OperatingHours | null;
   active_status: boolean;
   onboarding_complete: boolean;
   heard_about_us: string | null;

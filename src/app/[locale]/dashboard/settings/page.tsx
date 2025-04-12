@@ -16,24 +16,38 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/use-toast";
 import { AddressData } from "@/types/addressData";
+import { useTeamMemberProfile } from "@/hooks/useTeamMemberProfile";
+import { useWorkspace } from "@/lib/workspace-context";
+import { OperatingHours } from "@/types/workspace";
 
 // Import our newly created components
 import { BusinessInfoForm } from "@/components/settings/BusinessInfoForm";
 import { PasswordForm } from "@/components/settings/PasswordForm";
 import { AddressForm } from "@/components/settings/AddressForm";
 import { TimeZoneForm } from "@/components/settings/TimeZoneForm";
+import { ProfileForm } from "@/components/settings/ProfileForm";
 import { uploadLogo } from "@/components/settings/LogoUploader";
 
 export default function SettingsPage() {
   const { user, changePassword } = useAuth();
   const { toast } = useToast();
   const { workspaceProfile, isLoading, refreshProfile } = useWorkspaceProfile();
+  const { userRole } = useWorkspace();
+  const {
+    profile: teamMemberProfile,
+    isLoading: profileLoading,
+    refreshProfile: refreshTeamMemberProfile,
+  } = useTeamMemberProfile();
   const [isSaving, setIsSaving] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [timezone, setTimezone] = useState<string>("");
   const t = useTranslations("dashboard.settings");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [operatingHours, setOperatingHours] = useState<OperatingHours | null>(
+    null
+  );
+  const [activeTab, setActiveTab] = useState<string>("profile");
 
   // State for address data from Google Maps
   const [addressData, setAddressData] = useState<AddressData>({
@@ -52,6 +66,9 @@ export default function SettingsPage() {
   const isEmailPasswordUser =
     user?.app_metadata?.provider === "email" || !user?.app_metadata?.provider;
 
+  // Check if user is staff - staff shouldn't see business tab
+  const isStaffUser = userRole === "staff";
+
   // Set initial data from workspace profile when loaded
   useEffect(() => {
     if (workspaceProfile?.contact_phone) {
@@ -64,6 +81,10 @@ export default function SettingsPage() {
 
     if (workspaceProfile?.timezone) {
       setTimezone(workspaceProfile.timezone);
+    }
+
+    if (workspaceProfile?.operating_hours) {
+      setOperatingHours(workspaceProfile.operating_hours);
     }
 
     // Reset addressData when workspaceProfile is loaded or changed
@@ -82,12 +103,68 @@ export default function SettingsPage() {
     }
   }, [workspaceProfile]);
 
+  const handleUpdateOperatingHours = async (hours: OperatingHours) => {
+    if (!user) return;
+
+    try {
+      // Set the active tab to business to ensure we stay on this tab
+      setActiveTab("business");
+
+      // Call the API to update operating hours
+      const response = await fetch("/api/workspace/update-operating-hours", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          operatingHours: hours,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update operating hours");
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to update operating hours");
+      }
+
+      toast({
+        title: t("common.success"),
+        description:
+          t("business.operatingHoursSaved") ||
+          "Operating hours saved successfully",
+      });
+
+      // Use the context's refresh function instead of reloading the page
+      if (refreshProfile) {
+        await refreshProfile();
+      }
+
+      // Ensure we stay on the business tab after refresh
+      setActiveTab("business");
+    } catch (error) {
+      console.error("Error updating operating hours:", error);
+      toast({
+        title: t("common.error"),
+        description:
+          t("business.operatingHoursError") ||
+          "Failed to update operating hours",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSaveBusinessInfo = async () => {
     if (!user) return;
 
     try {
       setIsSaving(true);
-      
+
       // Get form refs from the BusinessInfoForm component
       const businessNameInput = document.getElementById(
         "business-name"
@@ -129,26 +206,29 @@ export default function SettingsPage() {
         description: businessDescriptionInput?.value,
         logo_url: logo_url,
         timezone: timezone || null,
-        address: addressData?.street ? {
-          formatted:
-            addressData.formatted ||
-            `${addressData.street}, ${addressData.city}, ${addressData.state} ${addressData.postalCode}`,
-          street: addressData.street,
-          city: addressData.city,
-          state: addressData.state,
-          postalCode: addressData.postalCode,
-          country: addressData.country || "US",
-          place_id: addressData.place_id || "",
-        } : null,
+        operating_hours: operatingHours,
+        address: addressData?.street
+          ? {
+              formatted:
+                addressData.formatted ||
+                `${addressData.street}, ${addressData.city}, ${addressData.state} ${addressData.postalCode}`,
+              street: addressData.street,
+              city: addressData.city,
+              state: addressData.state,
+              postalCode: addressData.postalCode,
+              country: addressData.country || "US",
+              place_id: addressData.place_id || "",
+            }
+          : null,
         lat: addressData.lat,
         lng: addressData.lng,
       };
 
       // Call the server-side update endpoint
-      const response = await fetch('/api/workspace/update', {
-        method: 'POST',
+      const response = await fetch("/api/workspace/update", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           userId: user.id,
@@ -159,13 +239,13 @@ export default function SettingsPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update workspace');
+        throw new Error(errorData.error || "Failed to update workspace");
       }
 
       const result = await response.json();
-      
+
       if (!result.success) {
-        throw new Error(result.error || 'Failed to update workspace');
+        throw new Error(result.error || "Failed to update workspace");
       }
 
       toast({
@@ -202,68 +282,104 @@ export default function SettingsPage() {
             <p className="text-muted-foreground">{t("common.loading")}</p>
           </div>
         ) : (
-          <Tabs defaultValue="business" className="space-y-4">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="space-y-4"
+          >
             <TabsList>
-              <TabsTrigger value="business">{t("tabs.business")}</TabsTrigger>
+              <TabsTrigger value="profile">{t("tabs.profile")}</TabsTrigger>
+              {!isStaffUser && (
+                <TabsTrigger value="business">{t("tabs.business")}</TabsTrigger>
+              )}
               <TabsTrigger value="security">{t("tabs.security")}</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="business" className="space-y-4">
+            {/* Profile Tab */}
+            <TabsContent value="profile" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t("business.title")}</CardTitle>
-                  <CardDescription>{t("business.subtitle")}</CardDescription>
+                  <CardTitle>{t("profile.title")}</CardTitle>
+                  <CardDescription>{t("profile.subtitle")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Business Info Form */}
-                  <BusinessInfoForm
-                    workspaceProfile={workspaceProfile}
-                    translationFunc={t}
-                    userId={user?.id || ""}
-                    phoneNumber={phoneNumber}
-                    setPhoneNumber={setPhoneNumber}
-                    logoUrl={logoUrl}
-                    logoFile={logoFile}
-                    setLogoUrl={setLogoUrl}
-                    setLogoFile={setLogoFile}
-                  />
-
-                  <Separator className="my-4" />
-
-                  {/* Timezone Form */}
-                  {workspaceProfile && (
-                    <TimeZoneForm
-                      workspaceProfile={{
-                        timezone: workspaceProfile.timezone || undefined,
-                      }}
+                  {profileLoading ? (
+                    <div className="flex items-center justify-center h-40">
+                      <p className="text-muted-foreground">
+                        {t("common.loading")}
+                      </p>
+                    </div>
+                  ) : (
+                    <ProfileForm
+                      teamMemberProfile={teamMemberProfile || undefined}
                       translationFunc={t}
-                      onTimeZoneChange={setTimezone}
+                      onSaveSuccess={refreshTeamMemberProfile}
                     />
                   )}
-
-                  <Separator className="my-4" />
-
-                  {/* Address Form */}
-                  <AddressForm
-                    addressData={addressData}
-                    onAddressChange={setAddressData}
-                    translationFunc={t}
-                  />
-
-                  <div className="flex justify-end">
-                    <button
-                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-                      onClick={handleSaveBusinessInfo}
-                      disabled={isSaving}
-                    >
-                      {isSaving
-                        ? t("common.loading")
-                        : t("business.saveChanges")}
-                    </button>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Business Tab - only show for non-staff */}
+            {!isStaffUser && (
+              <TabsContent value="business" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("business.title")}</CardTitle>
+                    <CardDescription>{t("business.subtitle")}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Business Info Form */}
+                    <BusinessInfoForm
+                      workspaceProfile={workspaceProfile}
+                      translationFunc={t}
+                      userId={user?.id || ""}
+                      phoneNumber={phoneNumber}
+                      setPhoneNumber={setPhoneNumber}
+                      logoUrl={logoUrl}
+                      logoFile={logoFile}
+                      setLogoUrl={setLogoUrl}
+                      setLogoFile={setLogoFile}
+                      onOperatingHoursChange={handleUpdateOperatingHours}
+                    />
+
+                    <Separator className="my-4" />
+
+                    {/* Timezone Form */}
+                    {workspaceProfile && (
+                      <TimeZoneForm
+                        workspaceProfile={{
+                          timezone: workspaceProfile.timezone || undefined,
+                        }}
+                        translationFunc={t}
+                        onTimeZoneChange={setTimezone}
+                      />
+                    )}
+
+                    <Separator className="my-4" />
+
+                    {/* Address Form */}
+                    <AddressForm
+                      addressData={addressData}
+                      onAddressChange={setAddressData}
+                      translationFunc={t}
+                    />
+
+                    <div className="flex justify-end">
+                      <button
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                        onClick={handleSaveBusinessInfo}
+                        disabled={isSaving}
+                      >
+                        {isSaving
+                          ? t("common.loading")
+                          : t("business.saveChanges")}
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
 
             <TabsContent value="security" className="space-y-4">
               <Card>

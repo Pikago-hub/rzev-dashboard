@@ -28,8 +28,9 @@ export function MultiMemberDayView({
     useState<TeamMember | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Group time slots by hour for main display
-  const hourlyTimeSlots = timeSlots.filter((slot) => slot.endsWith("00"));
+  // Use all time slots including half-hour slots for more precise operating hours
+  // For a less crowded view, you could filter to hourly slots with: timeSlots.filter((slot) => slot.endsWith("00"))
+  const displayTimeSlots = timeSlots;
 
   // Process all appointments to determine their position in the grid
   const processedAppointmentsByMember = teamMembers.map((member) => {
@@ -109,7 +110,7 @@ export function MultiMemberDayView({
         <div className="overflow-y-auto flex-1">
           {/* Time slots rows */}
           <div className="relative">
-            {hourlyTimeSlots.map((timeSlot) => {
+            {displayTimeSlots.map((timeSlot: string) => {
               // Calculate hour boundaries in minutes
               const [hourStr] = timeSlot.split(":");
               const hour = parseInt(hourStr, 10);
@@ -128,13 +129,46 @@ export function MultiMemberDayView({
                   {/* Team member columns */}
                   <div className={`grid ${getGridColumns()}`}>
                     {teamMembers.map((member) => {
-                      // Check if this hour is within working hours
-                      const [startHourStr] =
-                        member.workingHours.start.split(":");
-                      const [endHourStr] = member.workingHours.end.split(":");
-                      const startHour = parseInt(startHourStr, 10);
-                      const endHour = parseInt(endHourStr, 10);
-                      const isWorkingHour = hour >= startHour && hour < endHour;
+                      // Check if this hour is within workspace operating hours
+                      // We're using the workingHours property which is already set based on the current day
+
+                      // Get operating hours for today from member's workingHours
+                      // Default to not working if no operating hours are set
+                      let isWorkingHour = false;
+
+                      // Use the member's workingHours which is set from workspace operating hours
+                      const { start, end } = member.workingHours;
+
+                      if (
+                        start &&
+                        end &&
+                        start !== "00:00" &&
+                        end !== "00:00"
+                      ) {
+                        // Parse start and end times to minutes for more precise comparison
+                        const [startHourStr, startMinStr] = start.split(":");
+                        const [endHourStr, endMinStr] = end.split(":");
+                        const startHour = parseInt(startHourStr, 10);
+                        const startMin = parseInt(startMinStr, 10);
+                        const endHour = parseInt(endHourStr, 10);
+                        const endMin = parseInt(endMinStr, 10);
+
+                        // Convert to minutes since midnight
+                        const startMinutes = startHour * 60 + startMin;
+                        const endMinutes = endHour * 60 + endMin;
+
+                        // Get the current time slot in minutes
+                        const [timeSlotHourStr, timeSlotMinStr] =
+                          timeSlot.split(":");
+                        const timeSlotHour = parseInt(timeSlotHourStr, 10);
+                        const timeSlotMin = parseInt(timeSlotMinStr, 10);
+                        const timeSlotMinutes = timeSlotHour * 60 + timeSlotMin;
+
+                        // Check if this time slot is within working hours
+                        isWorkingHour =
+                          timeSlotMinutes >= startMinutes &&
+                          timeSlotMinutes < endMinutes;
+                      }
 
                       // Only show appointments that start in this hour for this member
                       const memberData = processedAppointmentsByMember.find(
@@ -150,8 +184,11 @@ export function MultiMemberDayView({
                         <div
                           key={`${member.id}-${timeSlot}`}
                           className={`border-r relative h-38 ${
-                            !isWorkingHour ? "bg-muted/30" : "bg-card"
+                            !isWorkingHour
+                              ? "bg-muted/30 unavailable-time-slot"
+                              : "bg-card"
                           }`}
+                          data-unavailable={!isWorkingHour ? "true" : "false"}
                         >
                           {/* Render appointments */}
                           {hourAppointments.map((appointment) => {

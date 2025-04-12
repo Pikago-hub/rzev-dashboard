@@ -24,7 +24,10 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
 import { AvailabilityForm } from "./AvailabilityForm";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
-import { getAuthToken } from "@/lib/auth";
+import { TeamMemberServices } from "./TeamMemberServices";
+import { getAuthToken } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
+import { useAuth } from "@/lib/auth-context";
 
 interface TeamMemberCardProps {
   teamMember: {
@@ -34,9 +37,10 @@ interface TeamMemberCardProps {
     role: string;
     active: boolean;
   };
-  onEdit: (teamMember: TeamMemberCardProps["teamMember"]) => void;
-  onDelete: (id: string) => void;
+  onEdit?: (teamMember: TeamMemberCardProps["teamMember"]) => void;
+  onDelete?: (id: string) => void;
   translationFunc: (key: string) => string;
+  readOnly?: boolean;
 }
 
 interface Availability {
@@ -51,48 +55,61 @@ export function TeamMemberCard({
   onEdit,
   onDelete,
   translationFunc: t,
+  readOnly = false,
 }: TeamMemberCardProps) {
+  const { workspaceProfile } = useWorkspace();
+  const { session } = useAuth();
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAvailabilityDialogOpen, setIsAvailabilityDialogOpen] = useState(false);
-  const [selectedAvailability, setSelectedAvailability] = useState<Availability | undefined>(undefined);
-  const [isDeleteAvailabilityOpen, setIsDeleteAvailabilityOpen] = useState(false);
-  const [availabilityToDelete, setAvailabilityToDelete] = useState<string | null>(null);
+  const [isAvailabilityDialogOpen, setIsAvailabilityDialogOpen] =
+    useState(false);
+  const [selectedAvailability, setSelectedAvailability] = useState<
+    Availability | undefined
+  >(undefined);
+  const [isDeleteAvailabilityOpen, setIsDeleteAvailabilityOpen] =
+    useState(false);
+  const [availabilityToDelete, setAvailabilityToDelete] = useState<
+    string | null
+  >(null);
   const { toast } = useToast();
-
 
   // Fetch availabilities for this team member
   const fetchAvailabilities = useCallback(async () => {
     try {
       setIsLoading(true);
       const token = await getAuthToken();
-      
-      const response = await fetch(`/api/team/member/availability?teamMemberId=${teamMember.id}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
+
+      const response = await fetch(
+        `/api/team/member/availability?teamMemberId=${teamMember.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       const result = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch availabilities');
+        throw new Error(result.error || "Failed to fetch availabilities");
       }
-      
+
       if (result.availabilities) {
-        const typedData = result.availabilities.map((item: { 
-          id: string; 
-          day_of_week: number; 
-          start_time: string; 
-          end_time: string;
-        }) => ({
-          id: item.id as string,
-          day_of_week: item.day_of_week as number,
-          start_time: item.start_time as string,
-          end_time: item.end_time as string
-        }));
+        const typedData = result.availabilities.map(
+          (item: {
+            id: string;
+            day_of_week: number;
+            start_time: string;
+            end_time: string;
+          }) => ({
+            id: item.id as string,
+            day_of_week: item.day_of_week as number,
+            start_time: item.start_time as string,
+            end_time: item.end_time as string,
+          })
+        );
         setAvailabilities(typedData);
       } else {
         setAvailabilities([]);
@@ -126,26 +143,29 @@ export function TeamMemberCard({
   const handleDeleteAvailability = async (id: string) => {
     try {
       const token = await getAuthToken();
-      
-      const response = await fetch(`/api/team/member/availability?id=${id}&teamMemberId=${teamMember.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
+
+      const response = await fetch(
+        `/api/team/member/availability?id=${id}&teamMemberId=${teamMember.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       const result = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete availability');
+        throw new Error(result.error || "Failed to delete availability");
       }
 
       toast({
         title: t("common.success"),
         description: t("notifications.availabilityDeleteSuccess"),
       });
-      
+
       fetchAvailabilities();
     } catch (error) {
       console.error("Error deleting availability:", error);
@@ -199,144 +219,174 @@ export function TeamMemberCard({
             )}
           </div>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setTimeout(() => onEdit(teamMember), 0)}>
-              <Edit className="mr-2 h-4 w-4" />
-              {t("common.edit")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setTimeout(() => onDelete(teamMember.id), 0)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash className="mr-2 h-4 w-4" />
-              {t("common.delete")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {!readOnly && onEdit && onDelete && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => setTimeout(() => onEdit(teamMember), 0)}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                {t("common.edit")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setTimeout(() => onDelete(teamMember.id), 0)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                {t("common.delete")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </CardHeader>
-      
+
       <CardContent>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center">
-              <Calendar className="mr-2 h-4 w-4" />
-              <span className="font-medium">{t("availability.title")}</span>
-            </div>
-            <Button onClick={handleAddAvailability} size="sm" variant="outline">
-              <Plus className="mr-1 h-3 w-3" />
-              {t("availability.addAvailability")}
-            </Button>
-          </div>
-          
-          <Separator />
-          
-          {isLoading ? (
-            <div className="py-4 text-center text-sm text-muted-foreground">
-              {t("common.loading")}
-            </div>
-          ) : availabilities.length > 0 ? (
-            <div className="space-y-2 mt-2">
-              {availabilities.map((slot) => (
-                <div
-                  key={slot.id}
-                  className="flex items-center justify-between py-1 text-sm"
+        <div className="space-y-6">
+          {/* Availability Section */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <Calendar className="mr-2 h-4 w-4" />
+                <span className="font-medium">{t("availability.title")}</span>
+              </div>
+              {!readOnly && (
+                <Button
+                  onClick={handleAddAvailability}
+                  size="sm"
+                  variant="outline"
                 >
-                  <div className="flex items-center">
-                    <Badge 
-                      variant="default"
-                      className="mr-2"
-                    >
-                      {getDayName(slot.day_of_week)}
-                    </Badge>
-                    <Clock className="mr-1 h-3 w-3 text-muted-foreground" />
-                    <span>
-                      {formatTimeDisplay(slot.start_time)} - {formatTimeDisplay(slot.end_time)}
-                    </span>
-                  </div>
-                  <div className="flex space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => handleEditAvailability(slot)}
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-destructive"
-                      onClick={() => {
-                        setAvailabilityToDelete(slot.id);
-                        setIsDeleteAvailabilityOpen(true);
-                      }}
-                    >
-                      <Trash className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                  <Plus className="mr-1 h-3 w-3" />
+                  {t("availability.addAvailability")}
+                </Button>
+              )}
             </div>
-          ) : (
-            <div className="py-4 text-center text-sm text-muted-foreground">
-              {t("availability.noAvailability")}
-            </div>
+
+            <Separator />
+
+            {isLoading ? (
+              <div className="py-4 text-center text-sm text-muted-foreground">
+                {t("common.loading")}
+              </div>
+            ) : availabilities.length > 0 ? (
+              <div className="space-y-2 mt-2">
+                {availabilities.map((slot) => (
+                  <div
+                    key={slot.id}
+                    className="flex items-center justify-between py-1 text-sm"
+                  >
+                    <div className="flex items-center">
+                      <Badge variant="default" className="mr-2">
+                        {getDayName(slot.day_of_week)}
+                      </Badge>
+                      <Clock className="mr-1 h-3 w-3 text-muted-foreground" />
+                      <span>
+                        {formatTimeDisplay(slot.start_time)} -{" "}
+                        {formatTimeDisplay(slot.end_time)}
+                      </span>
+                    </div>
+                    <div className="flex space-x-1">
+                      {!readOnly && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => handleEditAvailability(slot)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-destructive"
+                            onClick={() => {
+                              setAvailabilityToDelete(slot.id);
+                              setIsDeleteAvailabilityOpen(true);
+                            }}
+                          >
+                            <Trash className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-4 text-center text-sm text-muted-foreground">
+                {t("availability.noAvailability")}
+              </div>
+            )}
+          </div>
+
+          {/* Services Section */}
+          {workspaceProfile && (
+            <TeamMemberServices
+              teamMemberId={teamMember.id}
+              workspaceId={workspaceProfile.id}
+              translationFunc={t}
+              isOwner={!readOnly && teamMember.role !== "owner"}
+              isSelf={session?.user?.id === teamMember.id}
+              onRefresh={() => {}}
+            />
           )}
         </div>
       </CardContent>
 
-      {/* Availability Form Dialog - Keep rendered, control via 'open' prop */}
-      <AvailabilityForm
-        open={isAvailabilityDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsAvailabilityDialogOpen(false);
-            // Keep setTimeout for potential animation cleanup or debouncing
-            setTimeout(() => setSelectedAvailability(undefined), 100); 
-          } else {
-            setIsAvailabilityDialogOpen(true); // Ensure state is true if opened externally
-          }
-        }}
-        onSuccess={() => {
-          fetchAvailabilities();
-          setIsAvailabilityDialogOpen(false); // Close form on success
-        }}
-        teamMemberId={teamMember.id}
-        availability={selectedAvailability}
-        translationFunc={t}
-      />
+      {/* Only render forms and dialogs if not in readOnly mode */}
+      {!readOnly && (
+        <>
+          {/* Availability Form Dialog */}
+          <AvailabilityForm
+            open={isAvailabilityDialogOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                setIsAvailabilityDialogOpen(false);
+                setTimeout(() => setSelectedAvailability(undefined), 100);
+              } else {
+                setIsAvailabilityDialogOpen(true);
+              }
+            }}
+            onSuccess={() => {
+              fetchAvailabilities();
+              setIsAvailabilityDialogOpen(false);
+            }}
+            teamMemberId={teamMember.id}
+            availability={selectedAvailability}
+            translationFunc={t}
+          />
 
-      {/* Delete Availability Confirmation - Keep rendered, control via 'open' prop */}
-      <DeleteConfirmationDialog
-        open={isDeleteAvailabilityOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsDeleteAvailabilityOpen(false);
-             // Keep setTimeout for potential animation cleanup or debouncing
-            setTimeout(() => setAvailabilityToDelete(null), 100); 
-          } else {
-            setIsDeleteAvailabilityOpen(true); // Ensure state is true if opened externally
-          }
-        }}
-        onConfirm={() => {
-          if (availabilityToDelete) {
-            handleDeleteAvailability(availabilityToDelete);
-            setIsDeleteAvailabilityOpen(false); // Close dialog on confirm
-            setAvailabilityToDelete(null); // Reset state
-          }
-        }}
-        title={t("availability.delete")}
-        description={t("deleteConfirmation.message")}
-        confirmText={t("deleteConfirmation.confirm")}
-        cancelText={t("deleteConfirmation.cancel")}
-      />
+          {/* Delete Availability Confirmation */}
+          <DeleteConfirmationDialog
+            open={isDeleteAvailabilityOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                setIsDeleteAvailabilityOpen(false);
+                setTimeout(() => setAvailabilityToDelete(null), 100);
+              } else {
+                setIsDeleteAvailabilityOpen(true);
+              }
+            }}
+            onConfirm={() => {
+              if (availabilityToDelete) {
+                handleDeleteAvailability(availabilityToDelete);
+                setIsDeleteAvailabilityOpen(false);
+                setAvailabilityToDelete(null);
+              }
+            }}
+            title={t("availability.delete")}
+            description={t("deleteConfirmation.message")}
+            confirmText={t("deleteConfirmation.confirm")}
+            cancelText={t("deleteConfirmation.cancel")}
+          />
+        </>
+      )}
     </Card>
   );
-} 
+}

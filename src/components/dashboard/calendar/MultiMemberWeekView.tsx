@@ -42,8 +42,9 @@ export function MultiMemberWeekView({
     return day;
   });
 
-  // Group time slots by hour for main display
-  const hourlyTimeSlots = timeSlots.filter((slot) => slot.endsWith("00"));
+  // Use all time slots including half-hour slots for more precise operating hours
+  // For a less crowded view, you could filter to hourly slots with: timeSlots.filter((slot) => slot.endsWith("00"))
+  const displayTimeSlots = timeSlots;
 
   // Process all appointments to determine their position in the grid
   const processedAppointmentsByDay = weekDates.map((day) => {
@@ -109,7 +110,7 @@ export function MultiMemberWeekView({
         <div className="overflow-y-auto flex-1">
           {/* Time slots rows */}
           <div className="relative">
-            {hourlyTimeSlots.map((timeSlot) => {
+            {displayTimeSlots.map((timeSlot: string) => {
               // Calculate hour boundaries in minutes
               const [hourStr] = timeSlot.split(":");
               const hour = parseInt(hourStr, 10);
@@ -143,22 +144,81 @@ export function MultiMemberWeekView({
                       };
                     });
 
-                    // Check if any team member is working at this hour
+                    // Check if any team member is working at this hour based on workspace operating hours
                     const hasWorkingMember = teamMembers.some((member) => {
-                      const [startHourStr] =
-                        member.workingHours.start.split(":");
-                      const [endHourStr] = member.workingHours.end.split(":");
-                      const startHour = parseInt(startHourStr, 10);
-                      const endHour = parseInt(endHourStr, 10);
-                      return hour >= startHour && hour < endHour;
+                      // Get the day of week for the current day in the loop
+                      const dayOfWeek = day.getDay();
+
+                      // Map day of week number to day name (0 = Sunday, 1 = Monday, etc.)
+                      const dayMap: Record<number, string> = {
+                        0: "sunday",
+                        1: "monday",
+                        2: "tuesday",
+                        3: "wednesday",
+                        4: "thursday",
+                        5: "friday",
+                        6: "saturday",
+                      };
+
+                      // For week view, we need to check each day's operating hours
+                      // This is different from day view where we only use the current day's hours
+                      const dayKey = dayMap[
+                        dayOfWeek
+                      ] as keyof typeof member.operatingHours;
+
+                      // Get operating hours for this day
+                      const dayOperatingHours = member.operatingHours?.[dayKey];
+
+                      // Default to not working if no operating hours are set
+                      if (
+                        !dayOperatingHours ||
+                        !Array.isArray(dayOperatingHours) ||
+                        dayOperatingHours.length === 0
+                      ) {
+                        return false;
+                      }
+
+                      // Check if this hour is within any of the operating hours slots for this day
+                      return dayOperatingHours.some((slot) => {
+                        if (!slot.open || !slot.close) return false;
+
+                        // Parse start and end times to minutes for more precise comparison
+                        const [startHourStr, startMinStr] =
+                          slot.open.split(":");
+                        const [endHourStr, endMinStr] = slot.close.split(":");
+                        const startHour = parseInt(startHourStr, 10);
+                        const startMin = parseInt(startMinStr, 10);
+                        const endHour = parseInt(endHourStr, 10);
+                        const endMin = parseInt(endMinStr, 10);
+
+                        // Convert to minutes since midnight
+                        const startMinutes = startHour * 60 + startMin;
+                        const endMinutes = endHour * 60 + endMin;
+
+                        // Get the current time slot in minutes
+                        const [timeSlotHourStr, timeSlotMinStr] =
+                          timeSlot.split(":");
+                        const timeSlotHour = parseInt(timeSlotHourStr, 10);
+                        const timeSlotMin = parseInt(timeSlotMinStr, 10);
+                        const timeSlotMinutes = timeSlotHour * 60 + timeSlotMin;
+
+                        // Check if this time slot is within working hours
+                        return (
+                          timeSlotMinutes >= startMinutes &&
+                          timeSlotMinutes < endMinutes
+                        );
+                      });
                     });
 
                     return (
                       <div
                         key={`${day.toISOString()}-${timeSlot}`}
                         className={`border-r relative h-38 ${
-                          !hasWorkingMember ? "bg-muted/30" : "bg-card"
+                          !hasWorkingMember
+                            ? "bg-muted/30 unavailable-time-slot"
+                            : "bg-card"
                         }`}
+                        data-unavailable={!hasWorkingMember ? "true" : "false"}
                       >
                         {/* Render appointments for each team member */}
                         {appointmentsByMember.map(({ member, appointments }) =>

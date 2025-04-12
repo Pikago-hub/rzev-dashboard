@@ -97,7 +97,8 @@
 }
 
 /* Fix for mobile viewport issues */
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
   max-width: 100vw;
@@ -111,4 +112,27 @@ html, body {
   .min-h-screen {
     min-height: -webkit-fill-available;
   }
+}
+
+/* Calendar unavailable time slot styling */
+.unavailable-time-slot {
+  position: relative;
+}
+
+.unavailable-time-slot::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 15px,
+    rgba(0, 0, 0, 0.05) 15px,
+    rgba(0, 0, 0, 0.05) 16px
+  );
+  pointer-events: none;
+  z-index: 1;
 }

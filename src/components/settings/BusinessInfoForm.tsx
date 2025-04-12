@@ -1,11 +1,12 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import PhoneNumberInput from "@/components/phone-number-input";
 import { LogoUploader } from "./LogoUploader";
-import { WorkspaceProfile } from "@/types/workspace";
+import { OperatingHoursForm } from "./OperatingHoursForm";
+import { WorkspaceProfile, OperatingHours } from "@/types/workspace";
 
 interface BusinessInfoFormProps {
   workspaceProfile: WorkspaceProfile | null;
@@ -19,6 +20,7 @@ interface BusinessInfoFormProps {
   setLogoFile: (file: File | null) => void;
   onSave?: () => Promise<void>; // Make onSave optional since we're not using it in the component
   isSaving?: boolean; // Make isSaving optional
+  onOperatingHoursChange?: (hours: OperatingHours) => void;
 }
 
 export const BusinessInfoForm = ({
@@ -29,6 +31,7 @@ export const BusinessInfoForm = ({
   setPhoneNumber,
   setLogoUrl,
   setLogoFile,
+  onOperatingHoursChange,
 }: BusinessInfoFormProps) => {
   // Refs for form inputs
   const businessNameRef = useRef<HTMLInputElement>(null);
@@ -36,10 +39,23 @@ export const BusinessInfoForm = ({
   const businessWebsiteRef = useRef<HTMLInputElement>(null);
   const businessDescriptionRef = useRef<HTMLTextAreaElement>(null);
 
+  // State for operating hours
+  const [operatingHours, setOperatingHours] = useState<OperatingHours | null>(
+    workspaceProfile?.operating_hours || null
+  );
+
   // Handle logo change
   const handleLogoChange = (url: string | null, file: File | null) => {
     setLogoUrl(url);
     setLogoFile(file);
+  };
+
+  // Handle operating hours change
+  const handleOperatingHoursChange = (hours: OperatingHours) => {
+    setOperatingHours(hours);
+    if (onOperatingHoursChange) {
+      onOperatingHoursChange(hours);
+    }
   };
 
   return (
@@ -110,6 +126,15 @@ export const BusinessInfoForm = ({
           ref={businessDescriptionRef}
         />
       </div>
+
+      <Separator className="my-4" />
+
+      {/* Operating Hours */}
+      <OperatingHoursForm
+        operatingHours={operatingHours}
+        translationFunc={t}
+        onOperatingHoursChange={handleOperatingHoursChange}
+      />
     </div>
   );
 };

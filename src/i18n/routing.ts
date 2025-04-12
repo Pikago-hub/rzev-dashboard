@@ -19,6 +19,8 @@ export const routing = defineRouting({
     "/onboarding/current-software": "/onboarding/current-software",
     "/onboarding/heard-about-us": "/onboarding/heard-about-us",
     "/dashboard": "/dashboard",
+    "/dashboard/staff": "/dashboard/staff",
+    "/dashboard/admin": "/dashboard/admin",
     "/dashboard/calendar": "/dashboard/calendar",
     "/dashboard/clients": "/dashboard/clients",
     "/dashboard/team": "/dashboard/team",

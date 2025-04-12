@@ -28,20 +28,25 @@ import {
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/components/ui/use-toast";
-import { getAuthToken } from "@/lib/auth";
+import { getAuthToken } from "@/lib/auth-context";
 
 // Define the form schema
-const availabilitySchema = z.object({
-  day_of_week: z.string().min(1, { message: "Day is required" }),
-  start_time: z.string().min(1, { message: "Start time is required" }),
-  end_time: z.string().min(1, { message: "End time is required" }),
-}).refine((data) => {
-  // Check if end time is after start time
-  return data.start_time < data.end_time;
-}, {
-  message: "End time must be after start time",
-  path: ["end_time"],
-});
+const availabilitySchema = z
+  .object({
+    day_of_week: z.string().min(1, { message: "Day is required" }),
+    start_time: z.string().min(1, { message: "Start time is required" }),
+    end_time: z.string().min(1, { message: "End time is required" }),
+  })
+  .refine(
+    (data) => {
+      // Check if end time is after start time
+      return data.start_time < data.end_time;
+    },
+    {
+      message: "End time must be after start time",
+      path: ["end_time"],
+    }
+  );
 
 type AvailabilityFormValues = z.infer<typeof availabilitySchema>;
 
@@ -69,9 +74,9 @@ export function AvailabilityForm({
 }: AvailabilityFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  
+
   // Debug incoming props
-  console.log('Availability props:', availability);
+  console.log("Availability props:", availability);
 
   // Generate array of available times in 30-minute increments
   const timeOptions = Array.from({ length: 48 }, (_, i) => {
@@ -82,30 +87,34 @@ export function AvailabilityForm({
   });
 
   // Debug time options format
-  console.log('Time options format (first few):', timeOptions.slice(0, 5));
-  
+  console.log("Time options format (first few):", timeOptions.slice(0, 5));
+
   // Check if incoming time format matches dropdown format
   if (availability?.start_time) {
-    console.log('Does start_time exist in options?', 
+    console.log(
+      "Does start_time exist in options?",
       timeOptions.includes(availability.start_time),
-      'Value:', availability.start_time
+      "Value:",
+      availability.start_time
     );
   }
 
   // Format time value to ensure it's in HH:MM format
   const formatTimeValue = (timeValue: string | null | undefined): string => {
     if (!timeValue) return "";
-    
+
     // If time has seconds (HH:MM:SS), remove them
     if (timeValue.length > 5 && /^\d{2}:\d{2}:\d{2}$/.test(timeValue)) {
       return timeValue.substring(0, 5);
     }
-    
+
     return timeValue;
   };
 
   const form = useForm<AvailabilityFormValues>({
-    resolver: zodResolver(availabilitySchema) as Resolver<AvailabilityFormValues>,
+    resolver: zodResolver(
+      availabilitySchema
+    ) as Resolver<AvailabilityFormValues>,
     defaultValues: {
       day_of_week: availability ? availability.day_of_week.toString() : "",
       start_time: availability ? formatTimeValue(availability.start_time) : "",
@@ -114,7 +123,7 @@ export function AvailabilityForm({
   });
 
   // Debug form values
-  console.log('Form default values:', {
+  console.log("Form default values:", {
     day_of_week: availability ? availability.day_of_week.toString() : "",
     start_time: availability ? availability.start_time : "",
     end_time: availability ? availability.end_time : "",
@@ -124,24 +133,24 @@ export function AvailabilityForm({
   useEffect(() => {
     if (open && availability) {
       // Debug time format from database
-      console.log('Original times from DB:', { 
+      console.log("Original times from DB:", {
         startTime: availability.start_time,
         endTime: availability.end_time,
         startTimeType: typeof availability.start_time,
-        startTimeLength: availability.start_time?.length
+        startTimeLength: availability.start_time?.length,
       });
-      
+
       const resetValues = {
         day_of_week: availability.day_of_week.toString(),
         start_time: formatTimeValue(availability.start_time),
         end_time: formatTimeValue(availability.end_time),
       };
-      console.log('Resetting form with values:', resetValues);
+      console.log("Resetting form with values:", resetValues);
       form.reset(resetValues);
-      
+
       // Debug form state after reset
       setTimeout(() => {
-        console.log('Form values after reset:', form.getValues());
+        console.log("Form values after reset:", form.getValues());
       }, 0);
     }
   }, [availability, form, open]);
@@ -158,35 +167,35 @@ export function AvailabilityForm({
       // Format time values for database storage
       const formattedStartTime = formatTimeValue(data.start_time);
       const formattedEndTime = formatTimeValue(data.end_time);
-      
+
       const token = await getAuthToken();
-      
+
       const requestBody = {
         id: availability?.id,
         teamMemberId,
         dayOfWeek: parseInt(data.day_of_week),
         startTime: formattedStartTime,
-        endTime: formattedEndTime
+        endTime: formattedEndTime,
       };
 
-      const response = await fetch('/api/team/member/availability', {
-        method: 'POST',
+      const response = await fetch("/api/team/member/availability", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(requestBody),
       });
-      
+
       const result = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to save availability');
+        throw new Error(result.error || "Failed to save availability");
       }
 
       toast({
         title: t("common.success"),
-        description: availability?.id 
+        description: availability?.id
           ? t("notifications.availabilityUpdateSuccess")
           : t("notifications.availabilityAddSuccess"),
       });
@@ -224,23 +233,34 @@ export function AvailabilityForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t("availability.dayOfWeek")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select day" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="0">{t("availability.days.sunday")}</SelectItem>
-                      <SelectItem value="1">{t("availability.days.monday")}</SelectItem>
-                      <SelectItem value="2">{t("availability.days.tuesday")}</SelectItem>
-                      <SelectItem value="3">{t("availability.days.wednesday")}</SelectItem>
-                      <SelectItem value="4">{t("availability.days.thursday")}</SelectItem>
-                      <SelectItem value="5">{t("availability.days.friday")}</SelectItem>
-                      <SelectItem value="6">{t("availability.days.saturday")}</SelectItem>
+                      <SelectItem value="0">
+                        {t("availability.days.sunday")}
+                      </SelectItem>
+                      <SelectItem value="1">
+                        {t("availability.days.monday")}
+                      </SelectItem>
+                      <SelectItem value="2">
+                        {t("availability.days.tuesday")}
+                      </SelectItem>
+                      <SelectItem value="3">
+                        {t("availability.days.wednesday")}
+                      </SelectItem>
+                      <SelectItem value="4">
+                        {t("availability.days.thursday")}
+                      </SelectItem>
+                      <SelectItem value="5">
+                        {t("availability.days.friday")}
+                      </SelectItem>
+                      <SelectItem value="6">
+                        {t("availability.days.saturday")}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -252,60 +272,56 @@ export function AvailabilityForm({
               control={form.control}
               name="start_time"
               render={({ field }) => {
-                console.log('start_time field value:', field.value);
+                console.log("start_time field value:", field.value);
                 return (
-                <FormItem>
-                  <FormLabel>{t("availability.startTime")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select start time" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {timeOptions.map((time) => (
-                        <SelectItem key={`start-${time}`} value={time}>
-                          {time}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}}
+                  <FormItem>
+                    <FormLabel>{t("availability.startTime")}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select start time" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {timeOptions.map((time) => (
+                          <SelectItem key={`start-${time}`} value={time}>
+                            {time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <FormField
               control={form.control}
               name="end_time"
               render={({ field }) => {
-                console.log('end_time field value:', field.value);
+                console.log("end_time field value:", field.value);
                 return (
-                <FormItem>
-                  <FormLabel>{t("availability.endTime")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select end time" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {timeOptions.map((time) => (
-                        <SelectItem key={`end-${time}`} value={time}>
-                          {time}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}}
+                  <FormItem>
+                    <FormLabel>{t("availability.endTime")}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select end time" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {timeOptions.map((time) => (
+                          <SelectItem key={`end-${time}`} value={time}>
+                            {time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <DialogFooter>
@@ -320,8 +336,8 @@ export function AvailabilityForm({
                 {isSubmitting
                   ? t("common.loading")
                   : availability?.id
-                  ? t("availability.update")
-                  : t("availability.add")}
+                    ? t("availability.update")
+                    : t("availability.add")}
               </Button>
             </DialogFooter>
           </form>
@@ -329,4 +345,4 @@ export function AvailabilityForm({
       </DialogContent>
     </Dialog>
   );
-} 
+}

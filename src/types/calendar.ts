@@ -1,3 +1,10 @@
+export interface Availability {
+  id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+}
+
 export interface TeamMember {
   id: string;
   name: string;
@@ -6,6 +13,8 @@ export interface TeamMember {
     start: string;
     end: string;
   };
+  availabilities?: Availability[];
+  operatingHours?: Record<string, { open: string; close: string }[]>;
 }
 
 export interface Appointment {

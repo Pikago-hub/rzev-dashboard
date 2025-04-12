@@ -1,3 +1,5 @@
+import { OperatingHours } from "@/types/workspace";
+
 /**
  * Format time slot for display (e.g., "09:00" to "9 AM")
  * Supports localization based on the current locale
@@ -206,6 +208,100 @@ export const generateTimeSlots = (): string[] => {
     const minute = i % 2 === 0 ? "00" : "30";
     return `${hour.toString().padStart(2, "0")}:${minute}`;
   });
+};
+
+/**
+ * Generate time slots for a specific time range
+ * @param startTime - Start time in format "HH:MM"
+ * @param endTime - End time in format "HH:MM"
+ * @param buffer - Optional buffer in hours to add before and after (default: 1)
+ */
+export const generateTimeSlotsRange = (
+  startTime: string = "09:00",
+  endTime: string = "17:00",
+  buffer: number = 1
+): string[] => {
+  // Convert start and end times to minutes
+  const [startHourStr, startMinStr] = startTime.split(":");
+  const [endHourStr, endMinStr] = endTime.split(":");
+
+  let startHour = parseInt(startHourStr, 10);
+  const startMin = parseInt(startMinStr, 10);
+  let endHour = parseInt(endHourStr, 10);
+  const endMin = parseInt(endMinStr, 10);
+
+  // Apply buffer (subtract from start, add to end)
+  startHour = Math.max(0, startHour - buffer);
+  endHour = Math.min(23, endHour + buffer);
+
+  // Calculate start and end in 30-minute slots
+  const startSlot = startHour * 2 + (startMin >= 30 ? 1 : 0);
+  const endSlot = endHour * 2 + (endMin > 0 ? 1 : 0) + 1; // +1 to include the end hour
+
+  // Generate time slots within the range
+  return Array.from({ length: endSlot - startSlot }, (_, i) => {
+    const slotIndex = startSlot + i;
+    const hour = Math.floor(slotIndex / 2);
+    const minute = slotIndex % 2 === 0 ? "00" : "30";
+    return `${hour.toString().padStart(2, "0")}:${minute}`;
+  });
+};
+
+/**
+ * Find the earliest and latest operating hours from workspace operating hours
+ * @param operatingHours - The workspace operating hours object
+ * @returns An object with earliest and latest times in "HH:MM" format
+ */
+export const findOperatingHoursRange = (
+  operatingHours: OperatingHours | null | undefined
+) => {
+  if (!operatingHours) {
+    return { earliest: "09:00", latest: "17:00" }; // Default business hours
+  }
+
+  let earliestMinutes = 24 * 60; // Start with end of day
+  let latestMinutes = 0; // Start with beginning of day
+
+  // Check each day's operating hours
+  Object.values(operatingHours).forEach((dayHours) => {
+    if (Array.isArray(dayHours) && dayHours.length > 0) {
+      dayHours.forEach((slot) => {
+        if (slot.open && slot.close) {
+          // Convert open time to minutes
+          const [openHourStr, openMinStr] = slot.open.split(":");
+          const openHour = parseInt(openHourStr, 10);
+          const openMin = parseInt(openMinStr, 10);
+          const openMinutes = openHour * 60 + openMin;
+
+          // Convert close time to minutes
+          const [closeHourStr, closeMinStr] = slot.close.split(":");
+          const closeHour = parseInt(closeHourStr, 10);
+          const closeMin = parseInt(closeMinStr, 10);
+          const closeMinutes = closeHour * 60 + closeMin;
+
+          // Update earliest and latest
+          earliestMinutes = Math.min(earliestMinutes, openMinutes);
+          latestMinutes = Math.max(latestMinutes, closeMinutes);
+        }
+      });
+    }
+  });
+
+  // If no valid hours found, return default
+  if (earliestMinutes === 24 * 60 && latestMinutes === 0) {
+    return { earliest: "09:00", latest: "17:00" }; // Default business hours
+  }
+
+  // Convert back to HH:MM format
+  const earliestHour = Math.floor(earliestMinutes / 60);
+  const earliestMin = earliestMinutes % 60;
+  const latestHour = Math.floor(latestMinutes / 60);
+  const latestMin = latestMinutes % 60;
+
+  const earliest = `${earliestHour.toString().padStart(2, "0")}:${earliestMin.toString().padStart(2, "0")}`;
+  const latest = `${latestHour.toString().padStart(2, "0")}:${latestMin.toString().padStart(2, "0")}`;
+
+  return { earliest, latest };
 };
 
 /**
