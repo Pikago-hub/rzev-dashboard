@@ -8,12 +8,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface MerchantProfile {
+interface WorkspaceTimeZone {
   timezone?: string;
 }
 
 interface TimeZoneFormProps {
-  merchantProfile: MerchantProfile;
+  workspaceProfile: WorkspaceTimeZone;
   translationFunc: (key: string) => string;
   onTimeZoneChange: (timezone: string) => void;
 }
@@ -39,19 +39,19 @@ const TIMEZONES = [
 ];
 
 export const TimeZoneForm = ({
-  merchantProfile,
+  workspaceProfile,
   translationFunc: t,
   onTimeZoneChange,
 }: TimeZoneFormProps) => {
   const [selectedTimeZone, setSelectedTimeZone] = useState<string>(
-    merchantProfile?.timezone || "UTC"
+    workspaceProfile?.timezone || "UTC"
   );
 
   useEffect(() => {
-    if (merchantProfile?.timezone) {
-      setSelectedTimeZone(merchantProfile.timezone);
+    if (workspaceProfile?.timezone) {
+      setSelectedTimeZone(workspaceProfile.timezone);
     }
-  }, [merchantProfile]);
+  }, [workspaceProfile]);
 
   const handleTimeZoneChange = (value: string) => {
     setSelectedTimeZone(value);
@@ -61,13 +61,8 @@ export const TimeZoneForm = ({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="timezone-select">
-          {t("business.timezone")}
-        </Label>
-        <Select
-          value={selectedTimeZone}
-          onValueChange={handleTimeZoneChange}
-        >
+        <Label htmlFor="timezone-select">{t("business.timezone")}</Label>
+        <Select value={selectedTimeZone} onValueChange={handleTimeZoneChange}>
           <SelectTrigger id="timezone-select" className="w-full">
             <SelectValue placeholder={t("business.selectTimezone")} />
           </SelectTrigger>
@@ -85,4 +80,4 @@ export const TimeZoneForm = ({
       </div>
     </div>
   );
-}; 
+};

@@ -21,10 +21,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { createBrowserClient } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { AvailabilityForm } from "./AvailabilityForm";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
+import { getAuthToken } from "@/lib/auth";
 
 interface TeamMemberCardProps {
   teamMember: {
@@ -44,7 +44,6 @@ interface Availability {
   day_of_week: number;
   start_time: string;
   end_time: string;
-  is_available: boolean;
 }
 
 export function TeamMemberCard({
@@ -60,27 +59,39 @@ export function TeamMemberCard({
   const [isDeleteAvailabilityOpen, setIsDeleteAvailabilityOpen] = useState(false);
   const [availabilityToDelete, setAvailabilityToDelete] = useState<string | null>(null);
   const { toast } = useToast();
-  const supabase = createBrowserClient();
+
 
   // Fetch availabilities for this team member
   const fetchAvailabilities = useCallback(async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from("team_member_availabilities")
-        .select("*")
-        .eq("team_member_id", teamMember.id)
-        .order("day_of_week");
-
-      if (error) throw error;
+      const token = await getAuthToken();
       
-      if (data) {
-        const typedData = data.map(item => ({
+      const response = await fetch(`/api/team/member/availability?teamMemberId=${teamMember.id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch availabilities');
+      }
+      
+      if (result.availabilities) {
+        const typedData = result.availabilities.map((item: { 
+          id: string; 
+          day_of_week: number; 
+          start_time: string; 
+          end_time: string;
+        }) => ({
           id: item.id as string,
           day_of_week: item.day_of_week as number,
           start_time: item.start_time as string,
-          end_time: item.end_time as string,
-          is_available: item.is_available as boolean
+          end_time: item.end_time as string
         }));
         setAvailabilities(typedData);
       } else {
@@ -96,7 +107,7 @@ export function TeamMemberCard({
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, teamMember.id, toast, t]);
+  }, [teamMember.id, toast, t]);
 
   useEffect(() => {
     fetchAvailabilities();
@@ -114,12 +125,21 @@ export function TeamMemberCard({
 
   const handleDeleteAvailability = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("team_member_availabilities")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
+      const token = await getAuthToken();
+      
+      const response = await fetch(`/api/team/member/availability?id=${id}&teamMemberId=${teamMember.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete availability');
+      }
 
       toast({
         title: t("common.success"),
@@ -230,7 +250,7 @@ export function TeamMemberCard({
                 >
                   <div className="flex items-center">
                     <Badge 
-                      variant={slot.is_available ? "default" : "outline"}
+                      variant="default"
                       className="mr-2"
                     >
                       {getDayName(slot.day_of_week)}

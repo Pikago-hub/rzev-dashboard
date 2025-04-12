@@ -34,6 +34,8 @@
     "firstName": "First Name",
     "lastName": "Last Name",
     "phone": "Phone",
+    "phoneRequired": "Phone is required",
+    "enterValidPhone": "Please enter a valid phone number",
     "orContinueWith": "or continue with",
     "googleSignIn": "Sign in with Google",
     "termsText": "By signing in, you agree to our",
@@ -51,6 +53,7 @@
     "emailVerificationRequired": "Please check your email for a verification link.",
     "signInError": "Sign in error",
     "checkCredentials": "Please check your credentials and try again.",
+    "role": "Role",
     "callback": {
       "title": "Confirmation",
       "confirming": "Confirming your third party login account...",
@@ -58,7 +61,9 @@
       "error": "❌ Something went wrong confirming your account.",
       "missingToken": "Missing token information from confirmation link.",
       "sessionError": "Session Error",
-      "redirecting": "Redirecting to your profile..."
+      "redirecting": "Redirecting to your profile...",
+      "unexpectedError": "An unexpected error occurred. Please try again.",
+      "noSession": "No active session found. Please try logging in again."
     },
     "confirmEmail": {
       "title": "Confirmation",
@@ -68,7 +73,23 @@
       "missingToken": "Missing token information from confirmation link.",
       "sessionError": "Session Error",
       "redirecting": "Redirecting to your profile..."
-    }
+    },
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "passwordMismatch": "Passwords do not match",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signInHere": "Sign in here",
+    "confirmPassword": "Confirm Password",
+    "validatingInvitation": "Validating Invitation",
+    "pleaseWait": "Please wait while we validate your invitation",
+    "teamInvitation": "Team Invitation",
+    "invitedToJoin": "You've been invited to join {workspace}",
+    "invitationError": "Invitation Error",
+    "accept": "Accept Invitation",
+    "accepting": "Accepting...",
+    "decline": "Decline",
+    "goToSignIn": "Go to Sign In"
   },
   "common": {
     "loading": "Loading...",
@@ -97,7 +118,86 @@
       "isRequired": "is required",
       "enterValidUrl": "Please enter a valid URL"
     },
+    "workspaceChoice": {
+      "title": "Choose Your Path",
+      "subtitle": "Would you like to create a new workspace or join an existing one?",
+      "createOption": {
+        "title": "Create a Workspace",
+        "description": "Start fresh with your own workspace for your business"
+      },
+      "joinOption": {
+        "title": "Join a Workspace",
+        "description": "Join an existing workspace as a team member"
+      },
+      "infoMessage": "You can always create additional workspaces or join other workspaces later from your dashboard.",
+      "errorTitle": "Error",
+      "errorMessage": "Something went wrong. Please try again.",
+      "selectOption": "Please select an option to continue."
+    },
+    "createWorkspace": {
+      "title": "Create Your Workspace",
+      "subtitle": "Set up your business workspace",
+      "updateTitle": "Update Your Workspace",
+      "updateSubtitle": "Update your business workspace information",
+      "existingWorkspaceTitle": "Existing Workspace Found",
+      "existingWorkspaceDescription": "You already have a workspace. You can update its information below.",
+      "nameLabel": "Workspace Name",
+      "namePlaceholder": "Enter your business name",
+      "nameRequired": "Workspace name is required",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://yourbusiness.com",
+      "websiteDescription": "Your business website URL",
+      "validWebsite": "Please enter a valid website URL",
+      "extractButton": "Extract Information with AI",
+      "manualEntryTitle": "Manual Entry Needed",
+      "extractButtonUpdate": "Update Information with AI",
+      "manualEntryButton": "Enter Information Manually",
+      "orLabel": "or",
+      "manualEntryDescription": "If you want to manually input business information, click Next Step.",
+      "manualUpdateDescription": "If you want to manually update business information, click Next Step.",
+      "extractionSuccessTitle": "Information Extracted",
+      "extractionSuccessMessage": "We've successfully extracted your business information. You can review and edit it in your dashboard.",
+      "extractionFailedTitle": "Extraction Incomplete",
+      "extractionFailedMessage": "We couldn't extract all the information from your website. Please enter the details manually.",
+      "websiteRequired": "Please enter your website URL to extract information.",
+      "emailLabel": "Contact Email (Optional)",
+      "emailPlaceholder": "contact@yourbusiness.com",
+      "validEmail": "Please enter a valid email address",
+      "phoneLabel": "Contact Phone (Optional)",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "createButton": "Create Workspace",
+      "successTitle": "Workspace Created",
+      "successMessage": "Your workspace has been created successfully",
+      "updateMessage": "Your workspace has been updated successfully",
+      "errorFetchingWorkspace": "Failed to fetch your workspace information. Please try again.",
+      "errorTitle": "Error",
+      "errorMessage": "Failed to create workspace. Please try again.",
+      "notAuthenticated": "You must be logged in to create a workspace."
+    },
+    "joinWorkspace": {
+      "title": "Join a Workspace",
+      "subtitle": "Search for and join an existing workspace",
+      "searchLabel": "Search for a workspace",
+      "searchPlaceholder": "Enter business name, email, or website",
+      "searching": "Searching...",
+      "resultsLabel": "Search Results",
+      "noResults": "No workspaces found. Try a different search term.",
+      "messageLabel": "Message (Optional)",
+      "messagePlaceholder": "Introduce yourself to the workspace owner",
+      "messageDescription": "This message will be sent to the workspace owner with your join request",
+      "workspaceRequired": "Please select a workspace to join",
+      "sendRequestButton": "Send Join Request",
+      "successTitle": "Request Sent",
+      "successMessage": "Your request to join the workspace has been sent. You'll be notified when it's approved.",
+      "errorTitle": "Error",
+      "errorMessage": "Failed to send join request. Please try again.",
+      "searchError": "Failed to search workspaces. Please try again.",
+      "notAuthenticated": "You must be logged in to join a workspace."
+    },
     "steps": {
+      "workspaceChoice": "Workspace Choice",
+      "createWorkspace": "Create Workspace",
+      "joinWorkspace": "Join Workspace",
       "businessInfo": "Business Info",
       "servicesOffer": "Services",
       "teamSize": "Team",
@@ -199,7 +299,8 @@
       "countryLabel": "Country",
       "countryPlaceholder": "Select country",
       "validationError": "Please enter a valid address",
-      "addressNotFound": "Address not found. Please try again."
+      "addressNotFound": "Address not found. Please try again.",
+      "errorFetching": "Error fetching business location information"
     },
     "currentSoftware": {
       "title": "Which software are you currently using?",
@@ -315,11 +416,29 @@
       "searchPlaceholder": "Search team...",
       "addTeamMember": "Add Team Member",
       "noTeamMembers": "No team members found",
+      "pendingInvitations": "Pending Invitations",
+      "email": "Email",
+      "role": "Role",
+      "invitedOn": "Invited on",
+      "actions": "Actions",
+      "cancelInvitation": "Cancel Invitation",
+      "success": "Success",
+      "invitationCancelled": "Invitation cancelled",
+      "invitationSent": "Invitation sent",
+      "noActiveTeamMembers": "No active team members found",
+      "noSearchResults": "No team members found matching your search",
+      "workspaceRestriction": "This user is already a member of a different workspace and cannot be added to your workspace.",
+      "selfInvitation": "You cannot invite yourself to this workspace. You are already a member.",
+      "alreadyMember": "This user is already a member of this workspace.",
       "common": {
         "loading": "Loading...",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving...",
         "success": "Success",
         "error": "Error",
         "edit": "Edit",
+        "update": "Update",
         "delete": "Delete",
         "noEmail": "No email"
       },
@@ -333,8 +452,7 @@
         "role": "Role",
         "rolePlaceholder": "Select role",
         "roles": {
-          "admin": "Admin",
-          "manager": "Manager",
+          "owner": "Owner",
           "staff": "Staff"
         },
         "active": "Active",
@@ -376,9 +494,11 @@
         "updateSuccess": "Team member updated successfully",
         "deleteSuccess": "Team member deleted successfully",
         "error": "An error occurred",
+        "invitationSent": "Invitation sent successfully",
         "availabilityAddSuccess": "Availability added successfully",
         "availabilityUpdateSuccess": "Availability updated successfully",
-        "availabilityDeleteSuccess": "Availability deleted successfully"
+        "availabilityDeleteSuccess": "Availability deleted successfully",
+        "unauthorized": "You are not authorized for this action"
       }
     },
     "subscriptions": {
@@ -536,7 +656,8 @@
       "common": {
         "loading": "Loading...",
         "success": "Success",
-        "error": "Error"
+        "error": "Error",
+        "uploading": "Uploading logo..."
       },
       "profile": {
         "title": "Profile Information",

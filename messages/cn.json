@@ -51,6 +51,18 @@
     "emailVerificationRequired": "请查看您的电子邮箱获取验证链接。",
     "signInError": "登录错误",
     "checkCredentials": "请检查您的凭据并重试。",
+    "validatingInvitation": "验证邀请中",
+    "pleaseWait": "请稍候，我们正在验证您的邀请",
+    "teamInvitation": "团队邀请",
+    "invitedToJoin": "您已被邀请加入{workspace}",
+    "invitationError": "邀请错误",
+    "accept": "接受邀请",
+    "accepting": "接受中...",
+    "decline": "拒绝",
+    "role": "角色",
+    "phoneRequired": "电话是必填项",
+    "enterValidPhone": "请输入有效的电话号码",
+    "goToSignIn": "前往登录",
     "callback": {
       "title": "确认",
       "confirming": "正在确认您的第三方登录账户...",
@@ -58,7 +70,9 @@
       "error": "❌ 确认您的账户时出现问题。",
       "missingToken": "确认链接中缺少令牌信息。",
       "sessionError": "会话错误",
-      "redirecting": "正在重定向到您的个人资料..."
+      "redirecting": "正在重定向到您的个人资料...",
+      "unexpectedError": "发生意外错误。请重试。",
+      "noSession": "未找到活动会话。请重新登录。"
     },
     "confirmEmail": {
       "title": "确认",
@@ -97,7 +111,86 @@
       "isRequired": "必填项",
       "enterValidUrl": "请输入有效的网址"
     },
+    "workspaceChoice": {
+      "title": "选择您的模式",
+      "subtitle": "您是否希望创建一个新工作区或加入一个现有的工作区？",
+      "createOption": {
+        "title": "创建工作区",
+        "description": "从头开始为您的商业创建自己的工作区"
+      },
+      "joinOption": {
+        "title": "加入工作区",
+        "description": "作为团队成员加入现有的工作区"
+      },
+      "infoMessage": "您始终可以从仪表板创建额外的工作区或加入其他工作区。",
+      "errorTitle": "错误",
+      "errorMessage": "出了点问题。请再试一次。",
+      "selectOption": "请选择一个选项继续。"
+    },
+    "createWorkspace": {
+      "title": "创建您的工作区",
+      "subtitle": "设置您的商业工作区",
+      "updateTitle": "更新您的工作区",
+      "updateSubtitle": "更新您的商业工作区信息",
+      "existingWorkspaceTitle": "找到现有工作区",
+      "existingWorkspaceDescription": "您已经有一个工作区。您可以在下面更新其信息。",
+      "nameLabel": "工作区名称",
+      "manualEntryTitle": "需要手动输入",
+      "namePlaceholder": "输入您的商业名称",
+      "nameRequired": "工作区名称是必填项",
+      "websiteLabel": "网站",
+      "websitePlaceholder": "https://yourbusiness.com",
+      "websiteDescription": "您的商业网站网址",
+      "validWebsite": "请输入有效的网站网址",
+      "extractButton": "使用AI提取信息",
+      "extractButtonUpdate": "使用AI更新信息",
+      "manualEntryButton": "手动输入信息",
+      "orLabel": "或",
+      "manualEntryDescription": "如果您想手动输入商业信息，请点击下一步。",
+      "manualUpdateDescription": "如果您想手动更新商业信息，请点击下一步。",
+      "extractionSuccessTitle": "信息提取成功",
+      "extractionSuccessMessage": "我们已成功提取您的商业信息。您可以在仪表板中查看和编辑。",
+      "extractionFailedTitle": "提取不完整",
+      "extractionFailedMessage": "我们无法从您的网站提取所有信息。请手动输入详细信息。",
+      "websiteRequired": "请输入您的网站URL以提取信息。",
+      "emailLabel": "联系电子邮件（可选）",
+      "emailPlaceholder": "contact@yourbusiness.com",
+      "validEmail": "请输入有效的电子邮件地址",
+      "phoneLabel": "联系电话（可选）",
+      "updateMessage": "您的工作区已成功更新",
+      "errorFetchingWorkspace": "获取您的工作区信息失败。请重试。",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "createButton": "创建工作区",
+      "successTitle": "工作区已创建",
+      "successMessage": "您的工作区已成功创建",
+      "errorTitle": "错误",
+      "errorMessage": "创建工作区失败。请重试。",
+      "notAuthenticated": "您必须登录才能创建工作区。"
+    },
+    "joinWorkspace": {
+      "title": "加入工作区",
+      "subtitle": "搜索并加入现有工作区",
+      "searchLabel": "搜索工作区",
+      "searchPlaceholder": "输入商家名称、电子邮件或网站",
+      "searching": "搜索中...",
+      "resultsLabel": "搜索结果",
+      "noResults": "未找到工作区。请尝试其他搜索词。",
+      "messageLabel": "消息（可选）",
+      "messagePlaceholder": "向工作区所有者介绍自己",
+      "messageDescription": "此消息将与您的加入请求一起发送给工作区所有者",
+      "workspaceRequired": "请选择要加入的工作区",
+      "sendRequestButton": "发送加入请求",
+      "successTitle": "请求已发送",
+      "successMessage": "您加入工作区的请求已发送。批准后您将收到通知。",
+      "errorTitle": "错误",
+      "errorMessage": "发送加入请求失败。请重试。",
+      "searchError": "搜索工作区失败。请重试。",
+      "notAuthenticated": "您必须登录才能加入工作区。"
+    },
     "steps": {
+      "workspaceChoice": "工作区选择",
+      "createWorkspace": "创建工作区",
+      "joinWorkspace": "加入工作区",
       "businessInfo": "商家信息",
       "servicesOffer": "服务项目",
       "teamSize": "团队规模",
@@ -169,7 +262,7 @@
     },
     "serviceLocations": {
       "title": "服务地点",
-      "description": "您在哪里提供服务？",  
+      "description": "您在哪里提供服务？",
       "selectionRequired": "请选择至少一个服务地点选项",
       "options": {
         "inStore": "店内服务",
@@ -199,7 +292,8 @@
       "countryLabel": "国家",
       "countryPlaceholder": "选择国家",
       "validationError": "请输入有效地址",
-      "addressNotFound": "未找到地址。请重试。"
+      "addressNotFound": "未找到地址。请重试。",
+      "errorFetching": "获取商家地址信息时出错"
     },
     "currentSoftware": {
       "title": "您目前使用的是哪款软件？",
@@ -315,10 +409,26 @@
       "searchPlaceholder": "搜索团队...",
       "addTeamMember": "添加团队成员",
       "noTeamMembers": "未找到团队成员",
+      "pendingInvitations": "待定邀请",
+      "email": "电子邮件",
+      "role": "角色",
+      "invitedOn": "邀请时间",
+      "actions": "操作",
+      "cancelInvitation": "取消邀请",
+      "success": "成功",
+      "invitationCancelled": "邀请已取消",
+      "invitationSent": "邀请已发送",
+      "noActiveTeamMembers": "未找到活跃的团队成员",
+      "noSearchResults": "未找到匹配您搜索的团队成员",
+      "workspaceRestriction": "此用户已经是其他工作区的成员，无法添加到您的工作区。",
       "common": {
         "loading": "加载中...",
         "success": "成功",
         "error": "错误",
+        "cancel": "取消",
+        "saving": "保存中...",
+        "update": "更新",
+        "save": "保存",
         "edit": "编辑",
         "delete": "删除",
         "noEmail": "没有电子邮件"
@@ -333,8 +443,7 @@
         "role": "角色",
         "rolePlaceholder": "选择角色",
         "roles": {
-          "admin": "管理员",
-          "manager": "经理",
+          "owner": "所有者",
           "staff": "员工"
         },
         "active": "活跃",
@@ -375,6 +484,7 @@
         "addSuccess": "团队成员添加成功",
         "updateSuccess": "团队成员更新成功",
         "deleteSuccess": "团队成员删除成功",
+        "invitationSent": "邀请已发送",
         "error": "发生错误",
         "availabilityAddSuccess": "可用时间添加成功",
         "availabilityUpdateSuccess": "可用时间更新成功",
@@ -530,7 +640,8 @@
       "common": {
         "loading": "加载中...",
         "success": "成功",
-        "error": "错误"
+        "error": "错误",
+        "uploading": "正在上传标志..."
       },
       "tabs": {
         "profile": "个人资料",

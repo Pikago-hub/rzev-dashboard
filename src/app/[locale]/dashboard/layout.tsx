@@ -2,9 +2,10 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "@/i18n/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
-import { createBrowserClient } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
+import { WorkspaceProvider } from "@/lib/workspace-context";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,7 @@ export default function DashboardLayout({
 }) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -22,20 +24,33 @@ export default function DashboardLayout({
           return;
         }
 
-        // Check if the user has completed onboarding
-        const supabase = createBrowserClient();
+        // Check workspace status using server-side API
+        setIsCheckingStatus(true);
         try {
-          const { data: profileData } = await supabase
-            .from("merchant_profiles")
-            .select("onboarding_complete")
-            .eq("id", user.id)
-            .single();
+          const response = await fetch("/api/auth/check-workspace-status", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userId: user.id }),
+          });
 
-          if (!profileData?.onboarding_complete) {
-            router.push("/onboarding/business-info");
+          const data = await response.json();
+
+          if (data.status !== "success") {
+            console.log(
+              "Redirecting to:",
+              data.redirectUrl,
+              "Reason:",
+              data.message
+            );
+            router.push(data.redirectUrl);
           }
         } catch (err) {
-          console.error("Error checking onboarding status:", err);
+          console.error("Error checking workspace status:", err);
+          router.push("/onboarding/workspace-choice");
+        } finally {
+          setIsCheckingStatus(false);
         }
       }
     };
@@ -43,10 +58,10 @@ export default function DashboardLayout({
     checkAuth();
   }, [user, isLoading, router]);
 
-  if (isLoading) {
+  if (isLoading || isCheckingStatus) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -56,9 +71,11 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-screen">
-      {children}
-      <Toaster position="top-right" />
-    </div>
+    <WorkspaceProvider>
+      <div className="flex flex-col flex-1 h-full min-h-screen">
+        {children}
+        <Toaster position="top-right" />
+      </div>
+    </WorkspaceProvider>
   );
 }

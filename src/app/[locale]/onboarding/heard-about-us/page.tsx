@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { createBrowserClient } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 import { useOnboarding } from "@/lib/onboarding-context";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -45,7 +44,6 @@ export default function HeardAboutUsPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { setSubmitHandler } = useOnboarding();
-  const supabase = createBrowserClient();
   const [selectedSource, setSelectedSource] = useState<string>("");
   const [otherSource, setOtherSource] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -59,23 +57,25 @@ export default function HeardAboutUsPage() {
       }
 
       try {
-        const { data, error } = await supabase
-          .from("merchant_profiles")
-          .select("heard_about_us")
-          .eq("id", user.id)
-          .single();
+        // Fetch heard about us data from the API
+        const response = await fetch(
+          `/api/workspace/heard-about-us?userId=${user.id}`
+        );
 
-        if (error) {
-          console.error("Error fetching heard_about_us data:", error);
-          setIsLoading(false);
-          return;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || "Failed to fetch heard about us data"
+          );
         }
 
+        const data = await response.json();
+
         // If we have existing data, parse it and set selected source
-        if (data && data.heard_about_us) {
+        if (data.success && data.heardAboutUs) {
           try {
             // Handle both string and object formats
-            let heardAboutUs = data.heard_about_us;
+            let heardAboutUs = data.heardAboutUs;
 
             // If it's a string that starts with "other:", extract the value
             if (typeof heardAboutUs === "string") {
@@ -127,7 +127,7 @@ export default function HeardAboutUsPage() {
     };
 
     fetchHeardAboutUs();
-  }, [user, supabase]);
+  }, [user]);
 
   // Handle source selection change
   const handleSourceChange = (value: string) => {
@@ -165,27 +165,27 @@ export default function HeardAboutUsPage() {
         return false;
       }
 
-      // Prepare data to save
-      let heardAboutUsValue;
+      // Save data via API
+      const response = await fetch("/api/workspace/heard-about-us", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          source: selectedSource,
+          otherSource: selectedSource === "other" ? otherSource : null,
+        }),
+      });
 
-      if (selectedSource === "other") {
-        // Format as "other: [value]" for "other" selection
-        heardAboutUsValue = `other: ${otherSource.trim()}`;
-      } else {
-        // Just use the selected source for other options
-        heardAboutUsValue = selectedSource;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || "Failed to update heard about us data"
+        );
       }
 
-      // Update merchant profile with heard_about_us data and mark onboarding as complete
-      const { error } = await supabase
-        .from("merchant_profiles")
-        .update({
-          heard_about_us: heardAboutUsValue,
-          onboarding_complete: true,
-        })
-        .eq("id", user.id);
-
-      if (error) throw error;
+      await response.json();
 
       toast({
         title: t("successTitle"),
@@ -207,7 +207,7 @@ export default function HeardAboutUsPage() {
       });
       return false; // Return failure status
     }
-  }, [user, supabase, selectedSource, otherSource, t, router]);
+  }, [user, selectedSource, otherSource, t, router]);
 
   // Register the submit handler with the context
   useEffect(() => {

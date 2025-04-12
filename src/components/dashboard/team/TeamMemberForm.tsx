@@ -29,12 +29,20 @@ import {
 import { Switch } from "@/components/ui/switch";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createBrowserClient } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { Resolver } from "react-hook-form";
+import { useAuth } from "@/lib/auth-context";
 
 // Define the form schema
 const teamMemberSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  role: z.string().min(1, { message: "Role is required" }),
+  active: z.boolean().default(true),
+});
+
+// For edit mode, email can be optional
+const editTeamMemberSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
   email: z.string().email({ message: "Invalid email address" }).optional().or(z.literal('')),
   role: z.string().min(1, { message: "Role is required" }),
@@ -57,7 +65,7 @@ interface TeamMemberFormProps {
     role: string;
     active: boolean;
   };
-  merchantId: string;
+  workspaceId: string;
   translationFunc: TranslationFunction;
 }
 
@@ -66,14 +74,18 @@ export function TeamMemberForm({
   onOpenChange,
   onSuccess,
   teamMember,
-  merchantId,
+  workspaceId,
   translationFunc: t,
 }: TeamMemberFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { session } = useAuth();
+
+  // Use the appropriate schema based on whether we're editing or adding
+  const schema = teamMember?.id ? editTeamMemberSchema : teamMemberSchema;
 
   const form = useForm<TeamMemberFormValues>({
-    resolver: zodResolver(teamMemberSchema) as Resolver<TeamMemberFormValues>,
+    resolver: zodResolver(schema) as Resolver<TeamMemberFormValues>,
     defaultValues: {
       name: teamMember?.name || "",
       email: teamMember?.email || "",
@@ -100,45 +112,89 @@ export function TeamMemberForm({
   };
 
   const onSubmit = async (data: TeamMemberFormValues) => {
+    if (!session) {
+      toast({
+        title: t("common.error"),
+        description: t("notifications.unauthorized"),
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      const supabase = createBrowserClient();
 
+      // If this is an existing team member, update their information
       if (teamMember?.id) {
-        // Update existing team member
-        const { error } = await supabase
-          .from("team_members")
-          .update({
-            name: data.name,
-            email: data.email || null,
-            role: data.role,
-            active: data.active,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", teamMember.id);
+        // Prepare payload for API request to update existing member
+        const payload = {
+          teamMemberId: teamMember.id,
+          name: data.name,
+          email: data.email || null,
+          role: data.role,
+          active: data.active,
+          workspaceId: workspaceId,
+        };
 
-        if (error) throw error;
+        // Send request to the API with auth token
+        const response = await fetch('/api/team/member', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to update team member");
+        }
 
         toast({
           title: t("common.success"),
           description: t("notifications.updateSuccess"),
         });
-      } else {
-        // Add new team member
-        const { error } = await supabase.from("team_members").insert({
-          merchant_id: merchantId,
-          name: data.name,
-          email: data.email || null,
+      } 
+      // If this is a new team member and email is provided, send an invitation
+      else if (data.email) {
+        // Send invitation
+        const invitePayload = {
+          email: data.email,
           role: data.role,
-          active: data.active,
+          workspaceId: workspaceId,
+        };
+
+        const inviteResponse = await fetch('/api/team/invite', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify(invitePayload),
         });
 
-        if (error) throw error;
+        if (!inviteResponse.ok) {
+          const errorData = await inviteResponse.json();
+          if (errorData.error && errorData.error.includes("already associated with another workspace")) {
+            throw new Error(t("workspaceRestriction"));
+          } else if (errorData.error && errorData.error.includes("cannot invite yourself")) {
+            throw new Error(t("selfInvitation"));
+          } else if (errorData.error && errorData.error.includes("already a member of this workspace")) {
+            throw new Error(t("alreadyMember"));
+          } else {
+            throw new Error(errorData.error || "Failed to send invitation");
+          }
+        }
 
         toast({
           title: t("common.success"),
-          description: t("notifications.addSuccess"),
+          description: t("invitationSent"),
         });
+      }
+      // If no email is provided, we can't send an invitation
+      else {
+        throw new Error("Email is required to invite a team member");
       }
 
       onSuccess();
@@ -147,7 +203,7 @@ export function TeamMemberForm({
       console.error("Error saving team member:", error);
       toast({
         title: t("common.error"),
-        description: t("notifications.error"),
+        description: error instanceof Error ? error.message : t("notifications.error"),
         variant: "destructive",
       });
     } finally {
@@ -190,7 +246,10 @@ export function TeamMemberForm({
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("addTeamMemberForm.email")} (Optional)</FormLabel>
+                  <FormLabel>
+                    {t("addTeamMemberForm.email")}
+                    {!teamMember?.id && <span className="text-destructive"> *</span>}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t("addTeamMemberForm.emailPlaceholder")}
@@ -223,11 +282,8 @@ export function TeamMemberForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="admin">
-                        {t("addTeamMemberForm.roles.admin")}
-                      </SelectItem>
-                      <SelectItem value="manager">
-                        {t("addTeamMemberForm.roles.manager")}
+                      <SelectItem value="owner">
+                        {t("addTeamMemberForm.roles.owner")}
                       </SelectItem>
                       <SelectItem value="staff">
                         {t("addTeamMemberForm.roles.staff")}
@@ -259,20 +315,21 @@ export function TeamMemberForm({
               )}
             />
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
+            <DialogFooter className="pt-4">
+              <Button 
+                variant="outline" 
+                type="button" 
                 onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
               >
-                {t("addTeamMemberForm.cancel")}
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? t("common.loading")
-                  : teamMember?.id
-                  ? t("addTeamMemberForm.update")
-                  : t("addTeamMemberForm.add")}
+                {isSubmitting 
+                  ? t("common.saving") 
+                  : teamMember?.id 
+                    ? t("common.update") 
+                    : t("common.save")}
               </Button>
             </DialogFooter>
           </form>

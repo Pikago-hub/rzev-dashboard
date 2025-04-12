@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
-import { createBrowserClient } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 import { useOnboarding } from "@/lib/onboarding-context";
 import {
@@ -47,7 +46,7 @@ export default function CurrentSoftwarePage() {
   const t = useTranslations("onboarding");
   const { user } = useAuth();
   const { setSubmitHandler } = useOnboarding();
-  const supabase = createBrowserClient();
+
   const [currentSoftware, setCurrentSoftware] = useState<string | null>(null);
   const [otherSoftware, setOtherSoftware] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +57,7 @@ export default function CurrentSoftwarePage() {
     setCurrentSoftware(value);
   };
 
-  // Load existing current_software from Supabase
+  // Load existing current_software from API
   useEffect(() => {
     const fetchCurrentSoftware = async () => {
       if (!user) {
@@ -67,46 +66,51 @@ export default function CurrentSoftwarePage() {
       }
 
       try {
-        const { data, error } = await supabase
-          .from("merchant_profiles")
-          .select("current_software")
-          .eq("id", user.id)
-          .single();
+        const response = await fetch(
+          `/api/workspace/current-software?userId=${user.id}`
+        );
+        const data = await response.json();
 
-        if (error) {
-          console.error("Error fetching current software:", error);
-          setIsLoading(false);
-          return;
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch current software");
         }
 
         // Update state with existing data if available
-        if (data && data.current_software) {
-          console.log("Loaded current software from DB:", data.current_software);
+        if (data.success && data.currentSoftware) {
+          console.log(
+            "Loaded current software from API:",
+            data.currentSoftware
+          );
 
           // Check if the current_software contains the 'other:' prefix
           if (
-            typeof data.current_software === "string" &&
-            data.current_software.startsWith("other: ")
+            typeof data.currentSoftware === "string" &&
+            data.currentSoftware.startsWith("other: ")
           ) {
             // Extract the other software value
-            const otherValue = data.current_software.substring(7); // 'other: '.length === 7
+            const otherValue = data.currentSoftware.substring(7); // 'other: '.length === 7
             setCurrentSoftware("other");
             setOtherSoftware(otherValue);
             console.log("Extracted other software value:", otherValue);
           } else {
             // Regular software selection
-            setCurrentSoftware(data.current_software as string || null);
+            setCurrentSoftware((data.currentSoftware as string) || null);
           }
         }
       } catch (err) {
         console.error("Error in fetchCurrentSoftware:", err);
+        toast({
+          title: t("errorTitle"),
+          description: t("errorFetchingData"),
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchCurrentSoftware();
-  }, [user, supabase]);
+  }, [user, t]);
 
   // Handle form submission
   const handleComplete = useCallback(async () => {
@@ -136,19 +140,25 @@ export default function CurrentSoftwarePage() {
     }
 
     try {
-      // Store both 'other' and the specific software in one field if 'other' is selected
-      const softwareValue = currentSoftware === "other" 
-        ? `other: ${otherSoftware}` 
-        : currentSoftware;
-        
-      const { error } = await supabase
-        .from("merchant_profiles")
-        .update({
-          current_software: softwareValue,
-        })
-        .eq("id", user.id);
+      // Save data via API
+      const response = await fetch("/api/workspace/current-software", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          software: currentSoftware,
+          otherSoftware: currentSoftware === "other" ? otherSoftware : null,
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update current software");
+      }
+
+      await response.json();
 
       toast({
         title: t("successTitle"),
@@ -165,7 +175,7 @@ export default function CurrentSoftwarePage() {
       });
       return false; // Return failure status
     }
-  }, [user, supabase, currentSoftware, otherSoftware, t]);
+  }, [user, currentSoftware, otherSoftware, t]);
 
   // Register the submit handler with the onboarding context
   useEffect(() => {

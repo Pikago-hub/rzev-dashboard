@@ -25,18 +25,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createBrowserClient } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { getAuthToken } from "@/lib/auth";
 
 // Define the form schema
 const availabilitySchema = z.object({
   day_of_week: z.string().min(1, { message: "Day is required" }),
   start_time: z.string().min(1, { message: "Start time is required" }),
   end_time: z.string().min(1, { message: "End time is required" }),
-  is_available: z.boolean().default(true),
 }).refine((data) => {
   // Check if end time is after start time
   return data.start_time < data.end_time;
@@ -57,7 +55,6 @@ interface AvailabilityFormProps {
     day_of_week: number;
     start_time: string;
     end_time: string;
-    is_available: boolean;
   };
   translationFunc: (key: string) => string;
 }
@@ -72,8 +69,7 @@ export function AvailabilityForm({
 }: AvailabilityFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const supabase = createBrowserClient();
-
+  
   // Debug incoming props
   console.log('Availability props:', availability);
 
@@ -114,7 +110,6 @@ export function AvailabilityForm({
       day_of_week: availability ? availability.day_of_week.toString() : "",
       start_time: availability ? formatTimeValue(availability.start_time) : "",
       end_time: availability ? formatTimeValue(availability.end_time) : "",
-      is_available: availability ? availability.is_available : true,
     },
   });
 
@@ -140,7 +135,6 @@ export function AvailabilityForm({
         day_of_week: availability.day_of_week.toString(),
         start_time: formatTimeValue(availability.start_time),
         end_time: formatTimeValue(availability.end_time),
-        is_available: availability.is_available,
       };
       console.log('Resetting form with values:', resetValues);
       form.reset(resetValues);
@@ -164,43 +158,38 @@ export function AvailabilityForm({
       // Format time values for database storage
       const formattedStartTime = formatTimeValue(data.start_time);
       const formattedEndTime = formatTimeValue(data.end_time);
+      
+      const token = await getAuthToken();
+      
+      const requestBody = {
+        id: availability?.id,
+        teamMemberId,
+        dayOfWeek: parseInt(data.day_of_week),
+        startTime: formattedStartTime,
+        endTime: formattedEndTime
+      };
 
-      if (availability?.id) {
-        // Update existing availability
-        const { error } = await supabase
-          .from("team_member_availabilities")
-          .update({
-            day_of_week: parseInt(data.day_of_week),
-            start_time: formattedStartTime,
-            end_time: formattedEndTime,
-            is_available: data.is_available,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", availability.id);
-
-        if (error) throw error;
-
-        toast({
-          title: t("common.success"),
-          description: t("notifications.availabilityUpdateSuccess"),
-        });
-      } else {
-        // Add new availability
-        const { error } = await supabase.from("team_member_availabilities").insert({
-          team_member_id: teamMemberId,
-          day_of_week: parseInt(data.day_of_week),
-          start_time: formattedStartTime,
-          end_time: formattedEndTime,
-          is_available: data.is_available,
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: t("common.success"),
-          description: t("notifications.availabilityAddSuccess"),
-        });
+      const response = await fetch('/api/team/member/availability', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to save availability');
       }
+
+      toast({
+        title: t("common.success"),
+        description: availability?.id 
+          ? t("notifications.availabilityUpdateSuccess")
+          : t("notifications.availabilityAddSuccess"),
+      });
 
       onSuccess();
       onOpenChange(false);
@@ -317,26 +306,6 @@ export function AvailabilityForm({
                   <FormMessage />
                 </FormItem>
               )}}
-            />
-
-            <FormField
-              control={form.control}
-              name="is_available"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <FormLabel>
-                      {t("availability.available")}
-                    </FormLabel>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
             />
 
             <DialogFooter>

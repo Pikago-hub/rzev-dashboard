@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
-import { createBrowserClient } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 import { useOnboarding } from "@/lib/onboarding-context";
 import {
@@ -45,7 +44,6 @@ export default function ServicesOfferPage() {
   const t = useTranslations("onboarding");
   const { user } = useAuth();
   const { setSubmitHandler } = useOnboarding();
-  const supabase = createBrowserClient();
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [otherServiceValue, setOtherServiceValue] = useState("");
@@ -59,46 +57,50 @@ export default function ServicesOfferPage() {
       }
 
       try {
-        const { data, error } = await supabase
-          .from("merchant_profiles")
-          .select("business_type")
-          .eq("id", user.id)
-          .single();
+        // Fetch services from the API
+        const response = await fetch(
+          `/api/workspace/services?userId=${user.id}`
+        );
+        const data = await response.json();
 
-        if (error) {
-          console.error("Error fetching business type:", error);
-          setIsLoading(false);
-          return;
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch services");
         }
 
-        // If we have existing data, parse it and set selected services
-        if (data && data.business_type) {
-          try {
-            const businessType =
-              typeof data.business_type === "string"
-                ? JSON.parse(data.business_type)
-                : data.business_type;
+        // If we have existing data, set selected services
+        if (data.success && data.businessType) {
+          const businessType = data.businessType;
 
-            if (businessType.services && Array.isArray(businessType.services)) {
-              setSelectedServices(businessType.services);
-            }
+          // Handle both formats: {services: [...]} and direct array for backward compatibility
+          if (Array.isArray(businessType)) {
+            // Old format: direct array
+            setSelectedServices(businessType);
+          } else if (
+            businessType.services &&
+            Array.isArray(businessType.services)
+          ) {
+            // New format: {services: [...], otherService: "..."}
+            setSelectedServices(businessType.services);
 
             if (businessType.otherService) {
               setOtherServiceValue(businessType.otherService);
             }
-          } catch (parseError) {
-            console.error("Error parsing business_type JSON:", parseError);
           }
         }
       } catch (err) {
         console.error("Error in fetchBusinessType:", err);
+        toast({
+          title: t("errorTitle"),
+          description: t("errorMessage"),
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchBusinessType();
-  }, [user, supabase]);
+  }, [user, t]);
 
   // Toggle service selection
   const toggleService = (serviceId: string) => {
@@ -136,22 +138,26 @@ export default function ServicesOfferPage() {
     }
 
     try {
-      // Save selected services to merchant_profile business_type field as JSON
-      const updatedBusinessTypeData = {
-        services: selectedServices,
-        ...(selectedServices.includes("other") && otherServiceValue
-          ? { otherService: otherServiceValue }
-          : {}),
-      };
+      // Save selected services via API
+      const response = await fetch("/api/workspace/services", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          services: selectedServices,
+          otherService: selectedServices.includes("other")
+            ? otherServiceValue
+            : null,
+        }),
+      });
 
-      const { error } = await supabase
-        .from("merchant_profiles")
-        .update({
-          business_type: updatedBusinessTypeData,
-        })
-        .eq("id", user.id);
+      const data = await response.json();
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update services");
+      }
 
       toast({
         title: t("successTitle"),
@@ -168,7 +174,7 @@ export default function ServicesOfferPage() {
       });
       return false; // Return failure status
     }
-  }, [user, supabase, selectedServices, otherServiceValue, t]);
+  }, [user, selectedServices, otherServiceValue, t]);
 
   // Register the submit handler with the context
   useEffect(() => {

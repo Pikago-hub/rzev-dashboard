@@ -14,7 +14,7 @@ export default function OnboardingPage() {
       if (!user) {
         router.push("/auth");
       } else {
-        router.replace("/onboarding/business-info");
+        router.replace("/onboarding/workspace-choice");
       }
     }
   }, [router, user, isLoading]);

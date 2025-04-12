@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
-import { createBrowserClient } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 import { useOnboarding } from "@/lib/onboarding-context";
 import { GoogleMapsAddressInput } from "@/components/GoogleMapsAddressInput";
@@ -51,7 +50,6 @@ export default function BusinessLocationPage() {
   const t = useTranslations("onboarding");
   const { user } = useAuth();
   const { setSubmitHandler } = useOnboarding();
-  const supabase = createBrowserClient();
   const [isLoading, setIsLoading] = useState(true);
   const [isValidating, setIsValidating] = useState(false);
 
@@ -75,7 +73,7 @@ export default function BusinessLocationPage() {
   // Handle address change from Google Maps component
   const handleAddressChange = (data: AddressData) => {
     console.log("Address changed:", data);
-    
+
     // Update form values with data from the address input
     form.setValue("address", data.formatted || "");
     form.setValue("street", data.street);
@@ -83,7 +81,7 @@ export default function BusinessLocationPage() {
     form.setValue("state", data.state);
     form.setValue("postalCode", data.postalCode);
     form.setValue("country", data.country);
-    
+
     if (data.lat) {
       form.setValue("lat", data.lat);
     }
@@ -93,7 +91,7 @@ export default function BusinessLocationPage() {
     form.setValue("place_id", data.place_id || "");
   };
 
-  // Load existing business location from Supabase
+  // Load existing business location from API
   useEffect(() => {
     const fetchBusinessLocation = async () => {
       if (!user) {
@@ -102,26 +100,30 @@ export default function BusinessLocationPage() {
       }
 
       try {
-        // Get address data from merchant_profile
-        const { data: profileData, error: profileError } = await supabase
-          .from("merchant_profiles")
-          .select("address, lat, lng")
-          .eq("id", user.id)
-          .single();
+        // Get address data from workspace via API
+        const response = await fetch(
+          `/api/workspace/business-location?userId=${user.id}`
+        );
 
-        if (profileError) {
-          console.error("Error fetching merchant profile:", profileError);
-          setIsLoading(false);
-          return;
+        if (!response.ok) {
+          throw new Error(
+            `Error fetching business location: ${response.statusText}`
+          );
         }
 
-        if (profileData && profileData.address) {
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || "Failed to fetch business location");
+        }
+
+        if (data.address) {
           try {
-            // Parse the address JSON
+            // Parse the address JSON if needed
             const addressData =
-              typeof profileData.address === "string"
-                ? JSON.parse(profileData.address)
-                : profileData.address;
+              typeof data.address === "string"
+                ? JSON.parse(data.address)
+                : data.address;
 
             // Set the full address for display
             form.setValue("address", addressData.formatted || "");
@@ -136,11 +138,11 @@ export default function BusinessLocationPage() {
               form.setValue("country", addressData.country);
 
             // Set lat/lng if available
-            if (profileData.lat) {
-              form.setValue("lat", Number(profileData.lat));
+            if (data.lat) {
+              form.setValue("lat", Number(data.lat));
             }
-            if (profileData.lng) {
-              form.setValue("lng", Number(profileData.lng));
+            if (data.lng) {
+              form.setValue("lng", Number(data.lng));
             }
             if (addressData.place_id) {
               form.setValue("place_id", addressData.place_id);
@@ -151,13 +153,18 @@ export default function BusinessLocationPage() {
         }
       } catch (err) {
         console.error("Error fetching business location:", err);
+        toast({
+          title: t("errorTitle"),
+          description: t("businessLocation.errorFetching"),
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchBusinessLocation();
-  }, [user, supabase, form]);
+  }, [user, form, t]);
 
   // Handle form submission
   const onSubmit = useCallback(
@@ -210,7 +217,7 @@ export default function BusinessLocationPage() {
           }
         }
 
-        // Create address object to store in merchant_profile
+        // Create address object to store in workspace
         // If we have a formatted address but no street/city/etc., use the formatted address for all fields
         // This ensures we always store something in the address components
         const addressObject = {
@@ -226,17 +233,31 @@ export default function BusinessLocationPage() {
         // Log the address object for debugging
         console.log("Saving address object:", addressObject);
 
-        // Update merchant profile with address data
-        const { error: profileError } = await supabase
-          .from("merchant_profiles")
-          .update({
+        // Update workspace with address data via API
+        const response = await fetch("/api/workspace/business-location", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: user.id,
             address: addressObject,
             lat: values.lat || null,
             lng: values.lng || null,
-          })
-          .eq("id", user.id);
+          }),
+        });
 
-        if (profileError) throw profileError;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || "Failed to update business location"
+          );
+        }
+
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.error || "Failed to update business location");
+        }
 
         toast({
           title: t("successTitle"),
@@ -256,7 +277,7 @@ export default function BusinessLocationPage() {
         setIsValidating(false);
       }
     },
-    [user, supabase, t]
+    [user, t]
   );
 
   // Create a stable reference to the submit handler function
@@ -356,7 +377,7 @@ export default function BusinessLocationPage() {
                         {t("businessLocation.addressLabel")}
                       </FormLabel>
                       <FormControl>
-                        <GoogleMapsAddressInput 
+                        <GoogleMapsAddressInput
                           id="address-input"
                           value={field.value}
                           placeholder={t("businessLocation.addressPlaceholder")}

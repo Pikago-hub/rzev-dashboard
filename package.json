@@ -50,6 +50,7 @@
     "react-phone-number-input": "^3.4.12",
     "react-remove-scroll-bar": "^2.3.8",
     "react-world-flags": "^1.6.0",
+    "resend": "^4.2.0",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.2.0",
     "tw-animate-css": "^1.2.5",

@@ -17,143 +17,120 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
-      const { data } = await supabase.auth.getSession();
+      try {
+        // Handle hash fragment for OAuth providers
+        if (window.location.hash.includes("access_token")) {
+          const hash = window.location.hash;
+          const params = new URLSearchParams(hash.substring(1));
+          const access_token = params.get("access_token");
+          const refresh_token = params.get("refresh_token");
 
-      if (!data.session && window.location.hash.includes("access_token")) {
-        const hash = window.location.hash;
-        const params = new URLSearchParams(hash.substring(1));
-        const access_token = params.get("access_token");
-        const refresh_token = params.get("refresh_token");
+          if (access_token && refresh_token) {
+            // First set the session client-side
+            const { error: setError } = await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            });
 
-        if (access_token && refresh_token) {
-          const { error: setError } = await supabase.auth.setSession({
-            access_token,
-            refresh_token,
+            if (setError) {
+              setStatus("error");
+              toast({
+                title: t("sessionError"),
+                description: setError.message,
+                variant: "destructive",
+              });
+              return;
+            }
+
+            // Then call the server-side API to handle the rest of the auth flow
+            const response = await fetch("/api/auth/callback", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                accessToken: access_token,
+                refreshToken: refresh_token,
+              }),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              console.error("Error in auth callback API:", errorData);
+              setStatus("error");
+              toast({
+                title: t("error"),
+                description: errorData.error || t("unexpectedError"),
+                variant: "destructive",
+              });
+              return;
+            }
+
+            const data = await response.json();
+            setStatus(data.status);
+
+            // Redirect based on the server's response
+            setTimeout(() => {
+              router.push(data.redirectUrl || "/dashboard");
+            }, 1500);
+            return;
+          }
+        }
+
+        // If we get here, check if we already have a session
+        const { data: sessionData } = await supabase.auth.getSession();
+
+        if (sessionData.session) {
+          // We have a session, call the server API to handle the rest
+          const response = await fetch("/api/auth/callback", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              accessToken: sessionData.session.access_token,
+              refreshToken: sessionData.session.refresh_token,
+            }),
           });
 
-          if (setError) {
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Error in auth callback API:", errorData);
             setStatus("error");
             toast({
-              title: t("sessionError"),
-              description: setError.message,
+              title: t("error"),
+              description: errorData.error || t("unexpectedError"),
               variant: "destructive",
             });
             return;
           }
-        }
-      }
 
-      // Get the current session after it's been set
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData.session?.user;
+          const data = await response.json();
+          setStatus(data.status);
 
-      // Check if user exists and if is_merchant flag is not set, update it
-      if (user) {
-        // For Google OAuth users, we need to ensure they have is_merchant flag set
-        // and also ensure they have a merchant_profiles record
-        const isGoogleUser = user.app_metadata?.provider === "google";
-        const needsMerchantFlagUpdate = !user.user_metadata.is_merchant;
-
-        if (needsMerchantFlagUpdate || isGoogleUser) {
-          console.log("Setting user as merchant for OAuth user");
-          // Update user metadata to include is_merchant flag
-          const { error: updateError } = await supabase.auth.updateUser({
-            data: {
-              is_merchant: true,
-              // Preserve existing metadata
-              ...user.user_metadata,
-            },
-          });
-
-          if (updateError) {
-            console.error("Error updating user metadata:", updateError);
-          } else {
-            console.log("User metadata updated successfully");
-
-            // For Google users, we also need to ensure they have a profile record
-            // This will be handled by our database trigger, but we'll check anyway
-            if (isGoogleUser) {
-              try {
-                // Check if the user has a merchant_profiles record
-                const { data: profileData, error: profileError } =
-                  await supabase
-                    .from("merchant_profiles")
-                    .select("id")
-                    .eq("id", user.id)
-                    .single();
-
-                if (profileError || !profileData) {
-                  console.log("Creating merchant profile for Google user");
-                  // Create a merchant_profiles record for this user
-                  const { error: insertError } = await supabase
-                    .from("merchant_profiles")
-                    .insert({
-                      id: user.id,
-                      display_name:
-                        user.user_metadata.full_name ||
-                        user.user_metadata.name ||
-                        user.email,
-                      first_name:
-                        user.user_metadata.given_name ||
-                        user.user_metadata.first_name,
-                      last_name:
-                        user.user_metadata.family_name ||
-                        user.user_metadata.last_name,
-                      avatar_url:
-                        user.user_metadata.picture ||
-                        user.user_metadata.avatar_url,
-                      onboarding_complete: false, // Set onboarding status to false for new users
-                    });
-
-                  if (insertError) {
-                    console.error(
-                      "Error creating merchant profile:",
-                      insertError
-                    );
-                  }
-                }
-              } catch (err) {
-                console.error("Error checking/creating merchant profile:", err);
-              }
-            }
-          }
-        }
-
-        // Check if the user has completed onboarding
-        try {
-          const { data: profileData } = await supabase
-            .from("merchant_profiles")
-            .select("onboarding_complete")
-            .eq("id", user.id)
-            .single();
-
-          setStatus("success");
-
-          // Redirect based on onboarding status
+          // Redirect based on the server's response
           setTimeout(() => {
-            if (profileData && profileData.onboarding_complete) {
-              router.push("/dashboard");
-            } else {
-              router.push("/onboarding/business-info");
-            }
+            router.push(data.redirectUrl || "/dashboard");
           }, 1500);
-
           return;
-        } catch (err) {
-          console.error("Error checking onboarding status:", err);
-          // Default to onboarding if we can't determine status
-          setStatus("success");
-          setTimeout(() => {
-            router.push("/onboarding/business-info");
-          }, 1500);
         }
-      }
 
-      // Fallback if no user found
-      setStatus("success");
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
+        // Fallback if no session or tokens found
+        setStatus("error");
+        toast({
+          title: t("error"),
+          description: t("noSession"),
+          variant: "destructive",
+        });
+      } catch (error) {
+        console.error("Unexpected error during auth callback:", error);
+        setStatus("error");
+        toast({
+          title: t("error"),
+          description: t("unexpectedError"),
+          variant: "destructive",
+        });
+      }
     };
 
     handleOAuthCallback();

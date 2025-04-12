@@ -9,9 +9,11 @@ export const routing = defineRouting({
     "/auth/callback": "/auth/callback",
     "/auth/confirm-email": "/auth/confirm-email",
     "/onboarding": "/onboarding",
-    "/onboarding/business-info": "/onboarding/business-info",
+    "/onboarding/workspace-choice": "/onboarding/workspace-choice",
+    "/onboarding/create-workspace": "/onboarding/create-workspace",
+    "/onboarding/join-workspace": "/onboarding/join-workspace",
+
     "/onboarding/services-offer": "/onboarding/services-offer",
-    "/onboarding/team-size": "/onboarding/team-size",
     "/onboarding/service-locations": "/onboarding/service-locations",
     "/onboarding/business-location": "/onboarding/business-location",
     "/onboarding/current-software": "/onboarding/current-software",

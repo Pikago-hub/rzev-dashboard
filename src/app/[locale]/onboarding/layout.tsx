@@ -36,7 +36,7 @@ export default function OnboardingLayout({
   useEffect(() => {
     if (pathname === "/onboarding") {
       // Redirect to first step if on the base onboarding path
-      const firstStepPath = "/onboarding/business-info" as OnboardingPath;
+      const firstStepPath = "/onboarding/workspace-choice" as OnboardingPath;
       router.replace(firstStepPath);
       return;
     }
@@ -59,14 +59,64 @@ export default function OnboardingLayout({
   }, [user, authLoading, router]);
 
   const handleBack = useCallback(async () => {
-    console.log(
-      "Back button clicked from step:",
-      ONBOARDING_STEPS[currentStepIndex].key
-    );
-
     if (currentStepIndex > 0) {
+      // Special case for join-workspace - always go back to workspace-choice
+      if (ONBOARDING_STEPS[currentStepIndex].key === "joinWorkspace") {
+        const workspaceChoiceIndex = ONBOARDING_STEPS.findIndex(
+          (step) => step.key === "workspaceChoice"
+        );
+        if (workspaceChoiceIndex !== -1) {
+          router.push(ONBOARDING_STEPS[workspaceChoiceIndex].path);
+          return;
+        }
+      }
+      // Special case for services-offer - always go back to create-workspace or join-workspace
+      else if (ONBOARDING_STEPS[currentStepIndex].key === "servicesOffer") {
+        // Check if the user came from create-workspace or join-workspace
+        try {
+          if (user) {
+            const supabase = createBrowserClient();
+            const { data: joinRequestData } = await supabase
+              .from("workspace_join_requests")
+              .select("id")
+              .eq("team_member_id", user.id)
+              .order("created_at", { ascending: false })
+              .limit(1);
+
+            // If there's a recent join request, go back to join-workspace
+            if (joinRequestData && joinRequestData.length > 0) {
+              const joinWorkspaceIndex = ONBOARDING_STEPS.findIndex(
+                (step) => step.key === "joinWorkspace"
+              );
+              if (joinWorkspaceIndex !== -1) {
+                router.push(ONBOARDING_STEPS[joinWorkspaceIndex].path);
+                return;
+              }
+            } else {
+              // Otherwise go back to create-workspace
+              const createWorkspaceIndex = ONBOARDING_STEPS.findIndex(
+                (step) => step.key === "createWorkspace"
+              );
+              if (createWorkspaceIndex !== -1) {
+                router.push(ONBOARDING_STEPS[createWorkspaceIndex].path);
+                return;
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error checking workspace history:", error);
+          // Default to workspace-choice if there's an error
+          const workspaceChoiceIndex = ONBOARDING_STEPS.findIndex(
+            (step) => step.key === "workspaceChoice"
+          );
+          if (workspaceChoiceIndex !== -1) {
+            router.push(ONBOARDING_STEPS[workspaceChoiceIndex].path);
+            return;
+          }
+        }
+      }
       // Special cases for navigation
-      if (
+      else if (
         ONBOARDING_STEPS[currentStepIndex].key === "currentSoftware" ||
         ONBOARDING_STEPS[currentStepIndex].key === "businessLocation"
       ) {
@@ -74,10 +124,36 @@ export default function OnboardingLayout({
         try {
           if (user) {
             const supabase = createBrowserClient();
+            const { data: workspaceMemberData, error: workspaceMemberError } =
+              await supabase
+                .from("workspace_members")
+                .select("workspace_id")
+                .eq("team_member_id", user.id)
+                .single();
+
+            if (workspaceMemberError) {
+              console.error(
+                "Error fetching workspace member:",
+                workspaceMemberError
+              );
+              // Default to previous step if there's an error
+              const prevPath = ONBOARDING_STEPS[currentStepIndex - 1].path;
+              router.push(prevPath);
+              return;
+            }
+
+            if (!workspaceMemberData?.workspace_id) {
+              console.error("No workspace found for user");
+              // Default to previous step if no workspace found
+              const prevPath = ONBOARDING_STEPS[currentStepIndex - 1].path;
+              router.push(prevPath);
+              return;
+            }
+
             const { data, error } = await supabase
-              .from("merchant_profiles")
+              .from("workspaces")
               .select("service_locations")
-              .eq("id", user.id)
+              .eq("id", workspaceMemberData.workspace_id)
               .single();
 
             if (!error && data && data.service_locations) {
@@ -96,9 +172,6 @@ export default function OnboardingLayout({
                 serviceLocations.length === 1 &&
                 serviceLocations[0] === "clientLocation"
               ) {
-                console.log(
-                  "Client location only, skipping business location page"
-                );
                 const serviceLocationsIndex = ONBOARDING_STEPS.findIndex(
                   (step) => step.key === "serviceLocations"
                 );
@@ -124,7 +197,7 @@ export default function OnboardingLayout({
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

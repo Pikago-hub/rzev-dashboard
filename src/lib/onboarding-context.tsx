@@ -29,21 +29,32 @@ export const useOnboarding = () => useContext(OnboardingContext);
 
 // Define the onboarding steps with typed paths
 export type OnboardingPath =
-  | "/onboarding/business-info"
+  | "/onboarding/workspace-choice"
+  | "/onboarding/create-workspace"
+  | "/onboarding/join-workspace"
   | "/onboarding/services-offer"
-  | "/onboarding/team-size"
   | "/onboarding/service-locations"
   | "/onboarding/business-location"
   | "/onboarding/current-software"
   | "/onboarding/heard-about-us";
 
 export const ONBOARDING_STEPS = [
-  { path: "/onboarding/business-info" as OnboardingPath, key: "businessInfo" },
+  {
+    path: "/onboarding/workspace-choice" as OnboardingPath,
+    key: "workspaceChoice",
+  },
+  {
+    path: "/onboarding/create-workspace" as OnboardingPath,
+    key: "createWorkspace",
+  },
+  {
+    path: "/onboarding/join-workspace" as OnboardingPath,
+    key: "joinWorkspace",
+  },
   {
     path: "/onboarding/services-offer" as OnboardingPath,
     key: "servicesOffer",
   },
-  { path: "/onboarding/team-size" as OnboardingPath, key: "teamSize" },
   {
     path: "/onboarding/service-locations" as OnboardingPath,
     key: "serviceLocations",
@@ -74,7 +85,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (pathname === "/onboarding") {
       // Redirect to first step if on the base onboarding path
-      const firstStepPath = "/onboarding/business-info" as OnboardingPath;
+      const firstStepPath = "/onboarding/workspace-choice" as OnboardingPath;
       router.replace(firstStepPath);
       return;
     }
@@ -95,22 +106,28 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // Handle navigation after form submission
   const handleNavigation = useCallback(
     async (success: boolean) => {
-      console.log(
-        "Current step:",
-        currentStepIndex >= 0 && currentStepIndex < ONBOARDING_STEPS.length
-          ? ONBOARDING_STEPS[currentStepIndex].key
-          : "unknown",
-        "Success:",
-        success
-      );
-
       if (success && currentStepIndex < ONBOARDING_STEPS.length - 1) {
-        // Special case for service locations page - we'll handle navigation there
-        if (ONBOARDING_STEPS[currentStepIndex].key === "serviceLocations") {
-          // Navigation is handled in the service locations page
-          console.log(
-            "Navigation from service locations is handled in the page component"
+        // Special case for workspace choice page - we'll let it handle its own navigation
+        if (ONBOARDING_STEPS[currentStepIndex].key === "workspaceChoice") {
+          // We don't navigate here - the workspace choice page will handle it
+          return;
+        }
+        // Special case for create workspace page - go directly to services-offer
+        else if (ONBOARDING_STEPS[currentStepIndex].key === "createWorkspace") {
+          // Go directly to services-offer
+          const servicesOfferIndex = ONBOARDING_STEPS.findIndex(
+            (step) => step.key === "servicesOffer"
           );
+          if (servicesOfferIndex !== -1) {
+            const servicesOfferPath = ONBOARDING_STEPS[servicesOfferIndex].path;
+            router.push(servicesOfferPath);
+          }
+          return;
+        }
+        // Special case for service locations page - we'll handle navigation there
+        else if (
+          ONBOARDING_STEPS[currentStepIndex].key === "serviceLocations"
+        ) {
           // We don't navigate here - the service locations page will handle it
           return;
         } else if (
@@ -122,18 +139,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           );
           if (softwareIndex !== -1) {
             const nextPath = ONBOARDING_STEPS[softwareIndex].path;
-            console.log("Navigating from business location to:", nextPath);
             router.push(nextPath);
           }
         } else {
           // Normal navigation to the next step
           const nextPath = ONBOARDING_STEPS[currentStepIndex + 1].path;
-          console.log("Navigating to next step:", nextPath);
           router.push(nextPath);
         }
       } else if (success && currentStepIndex === ONBOARDING_STEPS.length - 1) {
         // If this is the last step and successful, redirect to dashboard
-        console.log("Navigating to dashboard");
         router.push("/dashboard");
       }
     },
@@ -143,7 +157,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const triggerSubmit = useCallback(async () => {
     if (isSubmitting) return;
 
-    console.log("Triggering submit handler from context");
     setIsSubmitting(true);
     try {
       const handler = submitHandlerRef.current;
@@ -154,9 +167,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      console.log("Calling submit handler from context");
       const success = await handler();
-      console.log("Submit handler result from context:", success);
 
       // Handle navigation based on the result
       await handleNavigation(success);

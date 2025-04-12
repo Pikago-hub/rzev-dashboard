@@ -53,32 +53,55 @@ export default function AuthPage() {
   // Redirect if user is already logged in
   useEffect(() => {
     if (!authLoading && user) {
-      // Check if the user has completed onboarding
-      const checkOnboarding = async () => {
-        const supabase = createBrowserClient();
-
+      // Check if the user has completed onboarding using server-side API
+      const checkWorkspaceStatus = async () => {
         try {
-          const { data: profileData } = await supabase
-            .from("merchant_profiles")
-            .select("onboarding_complete")
-            .eq("id", user.id)
-            .single();
+          const response = await fetch("/api/auth/check-workspace-status", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userId: user.id }),
+          });
 
-          if (profileData && profileData.onboarding_complete) {
-            router.push("/dashboard");
+          const data = await response.json();
+
+          if (response.ok) {
+            console.log(
+              "Redirecting to:",
+              data.redirectUrl,
+              "Reason:",
+              data.message
+            );
+            
+            // Handle pending invitation case
+            if (data.status === "invitation_pending") {
+              console.log("Pending invitation found, redirecting to accept page");
+              toast({
+                title: t("invitationFound"),
+                description: t("redirectingToInvitation"),
+              });
+              
+              // Force a hard navigation to the invitation page
+              window.location.href = data.redirectUrl;
+              return; // Stop execution to prevent double navigation
+            }
+            
+            router.push(data.redirectUrl);
           } else {
-            router.push("/onboarding/business-info");
+            console.error("Error checking workspace status:", data.error);
+            router.push("/onboarding/workspace-choice");
           }
         } catch (err) {
-          console.error("Error checking onboarding status:", err);
-          // Default to dashboard if we can't determine status
-          router.push("/dashboard");
+          console.error("Error checking workspace status:", err);
+          // Default to workspace choice if we can't determine status
+          router.push("/onboarding/workspace-choice");
         }
       };
 
-      checkOnboarding();
+      checkWorkspaceStatus();
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, t]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,22 +165,53 @@ export default function AuthPage() {
     try {
       await signIn(email, password);
 
-      // Check if the user has completed onboarding
+      // Get the current user after sign in
       const supabase = createBrowserClient();
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData.session?.user;
 
       if (user) {
-        const { data: profileData } = await supabase
-          .from("merchant_profiles")
-          .select("onboarding_complete")
-          .eq("id", user.id)
-          .single();
+        // Check workspace status using server-side API
+        try {
+          const response = await fetch("/api/auth/check-workspace-status", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userId: user.id }),
+          });
 
-        if (profileData && profileData.onboarding_complete) {
-          router.push("/dashboard");
-        } else {
-          router.push("/onboarding/business-info");
+          const data = await response.json();
+
+          if (response.ok) {
+            console.log(
+              "Redirecting to:",
+              data.redirectUrl,
+              "Reason:",
+              data.message
+            );
+            
+            // Handle pending invitation case
+            if (data.status === "invitation_pending") {
+              console.log("Pending invitation found, redirecting to accept page");
+              toast({
+                title: t("invitationFound"),
+                description: t("redirectingToInvitation"),
+              });
+              
+              // Force a hard navigation to the invitation page
+              window.location.href = data.redirectUrl;
+              return; // Stop execution to prevent double navigation
+            }
+            
+            router.push(data.redirectUrl);
+          } else {
+            console.error("Error checking workspace status:", data.error);
+            router.push("/onboarding/workspace-choice");
+          }
+        } catch (err) {
+          console.error("Error checking workspace status:", err);
+          router.push("/onboarding/workspace-choice");
         }
       } else {
         // Fallback if no user found

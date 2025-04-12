@@ -17,7 +17,10 @@ type AuthContextType = {
     options?: { data?: Record<string, unknown> }
   ) => Promise<void>;
   signOut: () => Promise<void>;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,19 +73,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       if (error) throw error;
 
-      // After successful sign-in, check if the user has the is_merchant flag
+      // After successful sign-in, check if the user has the is_professional flag
       // This handles the case where a user previously registered as a customer
-      // but is now signing in as a merchant
+      // but is now signing in as a professional
       const user = data.user;
       if (user) {
-        const needsMerchantFlagUpdate = !user.user_metadata?.is_merchant;
+        const needsProfessionalFlagUpdate =
+          !user.user_metadata?.is_professional;
 
-        if (needsMerchantFlagUpdate) {
-          console.log("Updating user as merchant during sign-in");
-          // Update user metadata to include is_merchant flag
+        if (needsProfessionalFlagUpdate) {
+          console.log("Updating user as professional during sign-in");
+          // Update user metadata to include is_professional flag
           const { error: updateError } = await supabase.auth.updateUser({
             data: {
-              is_merchant: true,
+              is_professional: true,
               // Preserve existing metadata
               ...user.user_metadata,
             },
@@ -93,16 +97,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             console.log("User metadata updated successfully");
 
-            // Check if the user has a merchant_profiles record
+            // Check if the user has a team_members record
             try {
-              const { data: profileData, error: profileError } = await supabase
-                .from("merchant_profiles")
-                .select("id")
-                .eq("id", user.id)
-                .single();
+              const { data: teamMemberData, error: teamMemberError } =
+                await supabase
+                  .from("team_members")
+                  .select("id")
+                  .eq("id", user.id)
+                  .single();
 
-              if (profileError || !profileData) {
-                console.log("Creating merchant profile for existing user");
+              if (teamMemberError || !teamMemberData) {
+                console.log("Creating team member record for existing user");
                 // Extract name parts from display_name or email
                 const displayName =
                   user.user_metadata?.display_name || user.email;
@@ -120,9 +125,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   lastName = lastName || nameParts.slice(1).join(" ");
                 }
 
-                // Create a merchant_profiles record for this user
+                // Create a team_members record for this user
                 const { error: insertError } = await supabase
-                  .from("merchant_profiles")
+                  .from("team_members")
                   .insert({
                     id: user.id,
                     display_name: displayName,
@@ -132,18 +137,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     avatar_url:
                       user.user_metadata?.picture ||
                       user.user_metadata?.avatar_url,
-                    onboarding_complete: false, // Set onboarding status to false for new users
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
                   });
 
                 if (insertError) {
                   console.error(
-                    "Error creating merchant profile:",
+                    "Error creating team member record:",
                     insertError
                   );
                 }
               }
             } catch (err) {
-              console.error("Error checking/creating merchant profile:", err);
+              console.error("Error checking/creating team member record:", err);
             }
           }
         }
@@ -162,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
           queryParams: {
-            is_merchant: "true",
+            is_professional: "true", // Mark all users from this app as professionals
           },
         },
       });
@@ -181,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
           data: {
-            is_merchant: true,
+            is_professional: true, // Mark all users from this app as professionals
           },
         },
       });
@@ -199,9 +205,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     options?: { data?: Record<string, unknown> }
   ) => {
     try {
-      // Always include is_merchant flag when signing up from the main app
+      // Include is_professional flag when signing up
       const userData = {
-        is_merchant: true,
+        is_professional: true, // Mark all users from this app as professionals
         ...options?.data,
       };
 
@@ -258,43 +264,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Change password
-  const changePassword = async (currentPassword: string, newPassword: string) => {
+  const changePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
     try {
       if (!user) {
         throw new Error("User not found");
       }
-      
+
       // Check if the user is using email/password authentication
       const provider = user.app_metadata?.provider;
-      if (provider && provider !== 'email') {
-        throw new Error(`You cannot change your password here because you're using ${provider} authentication.`);
+      if (provider && provider !== "email") {
+        throw new Error(
+          `You cannot change your password here because you're using ${provider} authentication.`
+        );
       }
-      
+
       // Verify current password by attempting to sign in
       if (!user.email) {
         throw new Error("User email not found");
       }
-      
+
       // Attempt sign in to verify current password
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: currentPassword,
       });
-      
+
       if (signInError) {
         throw new Error("Current password is incorrect");
       }
-      
+
       // Change password
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
-      
+
       if (error) throw error;
-      
+
       // Sign out the user after successful password change
       await signOut();
-      
     } catch (error) {
       console.error("Error changing password:", error);
       throw error;

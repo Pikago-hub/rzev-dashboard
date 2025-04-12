@@ -13,81 +13,113 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, Users } from "lucide-react";
-import { createBrowserClient } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { useToast } from "@/components/ui/use-toast";
 import { TeamMemberForm } from "@/components/dashboard/team/TeamMemberForm";
 import { TeamMemberCard } from "@/components/dashboard/team/TeamMemberCard";
 import { DeleteConfirmationDialog } from "@/components/dashboard/team/DeleteConfirmationDialog";
+import { createBrowserClient } from "@/lib/supabase";
 
 interface TeamMember {
   id: string;
-  name: string;
+  display_name: string;
   email: string | null;
   role: string;
-  merchant_id: string;
   active: boolean;
+}
+
+interface Invitation {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  created_at: string;
 }
 
 export default function TeamPage() {
   const t = useTranslations("dashboard.team");
-  const { user } = useAuth();
+  const { session } = useAuth();
+  const { workspaceProfile } = useWorkspace();
   const { toast } = useToast();
   const supabase = createBrowserClient();
-  
+
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [filteredTeamMembers, setFilteredTeamMembers] = useState<TeamMember[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Form dialog states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
-  
+
   // Delete confirmation dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [teamMemberIdToDelete, setTeamMemberIdToDelete] = useState<string | null>(null);
 
-  // Fetch team members
-  const fetchTeamMembers = useCallback(async () => {
-    if (!user) return;
-    
+  // Fetch team members and invitations
+  const fetchTeamData = useCallback(async () => {
+    if (!workspaceProfile || !workspaceProfile.id || !session) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from("team_members")
-        .select("*")
-        .eq("merchant_id", user.id)
-        .order("name");
+      
+      // Make a proper request with the auth token for team members
+      const response = await fetch(`/api/team?workspaceId=${workspaceProfile.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch team members");
+      }
+      
+      const { teamMembers: data } = await response.json();
+      
+      if (data && data.length > 0) {
+        setTeamMembers(data);
+        setFilteredTeamMembers(data);
+      } else {
+        setTeamMembers([]);
+        setFilteredTeamMembers([]);
+      }
 
-      if (error) throw error;
-      
-      const typedData = data?.map(item => ({
-        id: item.id as string,
-        name: item.name as string,
-        email: item.email as string | null,
-        role: item.role as string,
-        merchant_id: item.merchant_id as string,
-        active: item.active as boolean
-      })) || [];
-      
-      setTeamMembers(typedData);
-      setFilteredTeamMembers(typedData);
+      // Fetch pending invitations
+      const { data: invitationData, error: invitationError } = await supabase
+        .from('workspace_invitations')
+        .select('id, email, role, status, created_at')
+        .eq('workspace_id', workspaceProfile.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (invitationError) {
+        console.error("Error fetching invitations:", invitationError);
+      } else {
+        setPendingInvitations(invitationData as Invitation[] || []);
+      }
     } catch (error) {
-      console.error("Error fetching team members:", error);
+      console.error("Error fetching team data:", error);
       toast({
-        title: t("common.error"),
+        title: t("error"),
         description: t("notifications.error"),
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  }, [user, supabase, toast, t]);
+  }, [workspaceProfile, session, toast, t, supabase]);
 
   useEffect(() => {
-    fetchTeamMembers();
-  }, [fetchTeamMembers]);
+    fetchTeamData();
+  }, [fetchTeamData]);
 
   // Filter team members when search query changes
   useEffect(() => {
@@ -95,10 +127,12 @@ export default function TeamPage() {
       setFilteredTeamMembers(teamMembers);
     } else {
       const lowercasedQuery = searchQuery.toLowerCase();
-      const filtered = teamMembers.filter((member) => 
-        member.name.toLowerCase().includes(lowercasedQuery) ||
-        (member.email && member.email.toLowerCase().includes(lowercasedQuery)) ||
-        member.role.toLowerCase().includes(lowercasedQuery)
+      const filtered = teamMembers.filter(
+        (member) =>
+          member.display_name.toLowerCase().includes(lowercasedQuery) ||
+          (member.email &&
+            member.email.toLowerCase().includes(lowercasedQuery)) ||
+          member.role.toLowerCase().includes(lowercasedQuery)
       );
       setFilteredTeamMembers(filtered);
     }
@@ -116,8 +150,11 @@ export default function TeamPage() {
     role: string;
     active: boolean;
   }) => {
-    // Find the full team member data including merchant_id
-    const fullTeamMember = teamMembers.find(member => member.id === teamMember.id);
+    // Find the full team member data
+    const fullTeamMember = teamMembers.find(
+      (member) => member.id === teamMember.id
+    );
+    
     if (fullTeamMember) {
       setSelectedTeamMember(fullTeamMember);
       setIsFormOpen(true);
@@ -130,26 +167,35 @@ export default function TeamPage() {
   };
 
   const confirmDeleteTeamMember = async () => {
-    if (!teamMemberIdToDelete) return;
-    
-    try {
-      const { error } = await supabase
-        .from("team_members")
-        .delete()
-        .eq("id", teamMemberIdToDelete);
+    if (!teamMemberIdToDelete || !workspaceProfile?.id || !session) return;
 
-      if (error) throw error;
+    try {
+      const response = await fetch(
+        `/api/team/member?workspaceId=${workspaceProfile.id}&teamMemberId=${teamMemberIdToDelete}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete team member");
+      }
 
       toast({
-        title: t("common.success"),
+        title: t("success"),
         description: t("notifications.deleteSuccess"),
       });
-      
-      fetchTeamMembers();
+
+      fetchTeamData();
     } catch (error) {
       console.error("Error deleting team member:", error);
       toast({
-        title: t("common.error"),
+        title: t("error"),
         description: t("notifications.error"),
         variant: "destructive",
       });
@@ -157,6 +203,43 @@ export default function TeamPage() {
       setIsDeleteDialogOpen(false);
       setTeamMemberIdToDelete(null);
     }
+  };
+
+  // Cancel an invitation
+  const handleCancelInvitation = async (invitationId: string) => {
+    if (!workspaceProfile?.id || !session) return;
+
+    try {
+      const { error } = await supabase
+        .from('workspace_invitations')
+        .update({ status: 'expired' })
+        .eq('id', invitationId)
+        .eq('workspace_id', workspaceProfile.id);
+
+      if (error) {
+        throw new Error(error.message || "Failed to cancel invitation");
+      }
+
+      toast({
+        title: t("success"),
+        description: t("invitationCancelled"),
+      });
+
+      fetchTeamData();
+    } catch (error) {
+      console.error("Error cancelling invitation:", error);
+      toast({
+        title: t("error"),
+        description: t("notifications.error"),
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Helper function to format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   };
 
   return (
@@ -197,79 +280,128 @@ export default function TeamPage() {
               <div className="h-[200px] flex items-center justify-center">
                 <p className="text-muted-foreground">{t("common.loading")}</p>
               </div>
-            ) : filteredTeamMembers.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredTeamMembers.map((member) => (
-                  <TeamMemberCard
-                    key={member.id}
-                    teamMember={member}
-                    onEdit={handleEditTeamMember}
-                    onDelete={handleDeleteTeamMember}
-                    translationFunc={t}
-                  />
-                ))}
-              </div>
             ) : (
-              <div className="h-[200px] flex flex-col items-center justify-center text-center">
-                <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  {searchQuery ? t("noTeamMembers") : t("noTeamMembers")}
-                </p>
-                {!searchQuery && (
-                  <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={handleAddTeamMember}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t("addTeamMember")}
-                  </Button>
+              <>
+                {/* Pending Invitations Section */}
+                {pendingInvitations.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-medium mb-4">{t("pendingInvitations")}</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2 px-4">{t("email")}</th>
+                            <th className="text-left py-2 px-4">{t("role")}</th>
+                            <th className="text-left py-2 px-4">{t("invitedOn")}</th>
+                            <th className="text-left py-2 px-4">{t("actions")}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pendingInvitations.map((invitation) => (
+                            <tr key={invitation.id} className="border-b hover:bg-muted/50">
+                              <td className="py-2 px-4">{invitation.email}</td>
+                              <td className="py-2 px-4 capitalize">{invitation.role}</td>
+                              <td className="py-2 px-4">{formatDate(invitation.created_at)}</td>
+                              <td className="py-2 px-4">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleCancelInvitation(invitation.id)}
+                                >
+                                  {t("cancelInvitation")}
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 )}
-              </div>
+
+                {/* Team Members Section */}
+                {filteredTeamMembers.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredTeamMembers.map((member) => (
+                      <TeamMemberCard
+                        key={member.id}
+                        teamMember={{
+                          id: member.id,
+                          name: member.display_name,
+                          email: member.email,
+                          role: member.role,
+                          active: member.active
+                        }}
+                        onEdit={handleEditTeamMember}
+                        onDelete={handleDeleteTeamMember}
+                        translationFunc={t}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-[200px] flex flex-col items-center justify-center text-center">
+                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">
+                      {searchQuery ? t("noSearchResults") : 
+                        pendingInvitations.length > 0 ? t("noActiveTeamMembers") : t("noTeamMembers")}
+                    </p>
+                    {!searchQuery && pendingInvitations.length === 0 && (
+                      <Button
+                        variant="outline"
+                        className="mt-4"
+                        onClick={handleAddTeamMember}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        {t("addTeamMember")}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Team Member Form Dialog - Keep rendered, control via 'open' prop */}
+      {/* Team Member Form Dialog */}
       <TeamMemberForm
         open={isFormOpen}
         onOpenChange={(open) => {
           if (!open) {
             setIsFormOpen(false);
-            // Reset selected team member after the dialog is closed
-            // Keep setTimeout for potential animation cleanup or debouncing
-            setTimeout(() => setSelectedTeamMember(null), 100); 
+            setTimeout(() => setSelectedTeamMember(null), 100);
           } else {
-             setIsFormOpen(true); // Ensure state is true if opened externally
+            setIsFormOpen(true);
           }
         }}
         onSuccess={() => {
-          fetchTeamMembers();
-          setIsFormOpen(false); // Close form on success
+          fetchTeamData();
+          setIsFormOpen(false);
         }}
-        teamMember={selectedTeamMember ? {
-          id: selectedTeamMember.id,
-          name: selectedTeamMember.name,
-          email: selectedTeamMember.email || '',
-          role: selectedTeamMember.role,
-          active: selectedTeamMember.active
-        } : undefined}
-        merchantId={user?.id || ''} // Handle potential null user during initial render
+        teamMember={
+          selectedTeamMember
+            ? {
+                id: selectedTeamMember.id,
+                name: selectedTeamMember.display_name,
+                email: selectedTeamMember.email || "",
+                role: selectedTeamMember.role,
+                active: selectedTeamMember.active,
+              }
+            : undefined
+        }
+        workspaceId={workspaceProfile?.id || ""}
         translationFunc={t}
       />
 
-      {/* Delete Confirmation Dialog - Keep rendered, control via 'open' prop */}
+      {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         open={isDeleteDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
             setIsDeleteDialogOpen(false);
-            // Reset team member ID to delete after the dialog is closed
-            // Keep setTimeout for potential animation cleanup or debouncing
-            setTimeout(() => setTeamMemberIdToDelete(null), 100); 
+            setTimeout(() => setTeamMemberIdToDelete(null), 100);
           } else {
-            setIsDeleteDialogOpen(true); // Ensure state is true if opened externally
+            setIsDeleteDialogOpen(true);
           }
         }}
         onConfirm={confirmDeleteTeamMember}

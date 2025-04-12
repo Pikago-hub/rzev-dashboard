@@ -11,9 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { useMerchantProfile } from "@/hooks/useMerchantProfile";
+import { useWorkspaceProfile } from "@/hooks/useWorkspaceProfile";
 import { useState, useEffect } from "react";
-import { createBrowserClient } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/use-toast";
 import { AddressData } from "@/types/addressData";
@@ -28,124 +27,145 @@ import { uploadLogo } from "@/components/settings/LogoUploader";
 export default function SettingsPage() {
   const { user, changePassword } = useAuth();
   const { toast } = useToast();
-  const { merchantProfile, isLoading } = useMerchantProfile();
+  const { workspaceProfile, isLoading, refreshProfile } = useWorkspaceProfile();
   const [isSaving, setIsSaving] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [timezone, setTimezone] = useState<string>("");
   const t = useTranslations("dashboard.settings");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  
+
   // State for address data from Google Maps
   const [addressData, setAddressData] = useState<AddressData>({
-    lat: merchantProfile?.lat || null,
-    lng: merchantProfile?.lng || null,
-    place_id: merchantProfile?.address?.place_id || "",
-    formatted: merchantProfile?.address?.formatted || "",
-    street: merchantProfile?.address?.street || "",
-    city: merchantProfile?.address?.city || "",
-    state: merchantProfile?.address?.state || "",
-    postalCode: merchantProfile?.address?.postalCode || "",
-    country: merchantProfile?.address?.country || "US",
+    lat: workspaceProfile?.lat || null,
+    lng: workspaceProfile?.lng || null,
+    place_id: workspaceProfile?.address?.place_id || "",
+    formatted: workspaceProfile?.address?.formatted || "",
+    street: workspaceProfile?.address?.street || "",
+    city: workspaceProfile?.address?.city || "",
+    state: workspaceProfile?.address?.state || "",
+    postalCode: workspaceProfile?.address?.postalCode || "",
+    country: workspaceProfile?.address?.country || "US",
   });
 
   // Check if user uses social login
-  const isEmailPasswordUser = user?.app_metadata?.provider === 'email' || !user?.app_metadata?.provider;
+  const isEmailPasswordUser =
+    user?.app_metadata?.provider === "email" || !user?.app_metadata?.provider;
 
-  // Set initial data from merchant profile when loaded
+  // Set initial data from workspace profile when loaded
   useEffect(() => {
-    if (merchantProfile?.contact_phone) {
-      setPhoneNumber(merchantProfile.contact_phone);
-    }
-    
-    if (merchantProfile?.logo_url) {
-      setLogoUrl(merchantProfile.logo_url);
+    if (workspaceProfile?.contact_phone) {
+      setPhoneNumber(workspaceProfile.contact_phone);
     }
 
-    if (merchantProfile?.timezone) {
-      setTimezone(merchantProfile.timezone);
+    if (workspaceProfile?.logo_url) {
+      setLogoUrl(workspaceProfile.logo_url);
     }
-    
-    // Reset addressData when merchantProfile is loaded or changed
-    if (merchantProfile) {
+
+    if (workspaceProfile?.timezone) {
+      setTimezone(workspaceProfile.timezone);
+    }
+
+    // Reset addressData when workspaceProfile is loaded or changed
+    if (workspaceProfile) {
       setAddressData({
-        lat: merchantProfile.lat || null,
-        lng: merchantProfile.lng || null,
-        place_id: merchantProfile?.address?.place_id || "",
-        formatted: merchantProfile?.address?.formatted || "",
-        street: merchantProfile?.address?.street || "",
-        city: merchantProfile?.address?.city || "",
-        state: merchantProfile?.address?.state || "",
-        postalCode: merchantProfile?.address?.postalCode || "",
-        country: merchantProfile?.address?.country || "US",
+        lat: workspaceProfile.lat || null,
+        lng: workspaceProfile.lng || null,
+        place_id: workspaceProfile?.address?.place_id || "",
+        formatted: workspaceProfile?.address?.formatted || "",
+        street: workspaceProfile?.address?.street || "",
+        city: workspaceProfile?.address?.city || "",
+        state: workspaceProfile?.address?.state || "",
+        postalCode: workspaceProfile?.address?.postalCode || "",
+        country: workspaceProfile?.address?.country || "US",
       });
     }
-  }, [merchantProfile]);
+  }, [workspaceProfile]);
 
   const handleSaveBusinessInfo = async () => {
     if (!user) return;
 
     try {
       setIsSaving(true);
-      const supabase = createBrowserClient();
-
+      
       // Get form refs from the BusinessInfoForm component
-      const businessNameInput = document.getElementById("business-name") as HTMLInputElement;
-      const businessEmailInput = document.getElementById("business-email") as HTMLInputElement;
-      const businessWebsiteInput = document.getElementById("business-website") as HTMLInputElement;
-      const businessDescriptionInput = document.getElementById("business-description") as HTMLTextAreaElement;
+      const businessNameInput = document.getElementById(
+        "business-name"
+      ) as HTMLInputElement;
+      const businessEmailInput = document.getElementById(
+        "business-email"
+      ) as HTMLInputElement;
+      const businessWebsiteInput = document.getElementById(
+        "business-website"
+      ) as HTMLInputElement;
+      const businessDescriptionInput = document.getElementById(
+        "business-description"
+      ) as HTMLTextAreaElement;
 
       // Upload logo if a new file was selected
-      let logo_url = merchantProfile?.logo_url;
+      let logo_url = workspaceProfile?.logo_url;
       if (logoFile) {
         const uploadedUrl = await uploadLogo(logoFile, user.id);
         if (uploadedUrl) {
           logo_url = uploadedUrl;
         }
-      } else if (logoUrl === null && merchantProfile?.logo_url) {
+      } else if (logoUrl === null && workspaceProfile?.logo_url) {
         // Logo was removed
         logo_url = null;
       }
 
-      // Update merchant profile
-      const { error: profileError } = await supabase
-        .from("merchant_profiles")
-        .update({
-          business_name: businessNameInput?.value,
-          contact_email: businessEmailInput?.value,
-          contact_phone: phoneNumber,
-          website: businessWebsiteInput?.value,
-          description: businessDescriptionInput?.value,
-          logo_url: logo_url,
-          timezone: timezone || null,
-        })
-        .eq("id", user.id);
+      // Get workspace ID from workspace profile
+      const workspaceId = workspaceProfile?.id;
+      if (!workspaceId) {
+        throw new Error("Workspace ID not found");
+      }
 
-      if (profileError) throw profileError;
-
-      // Update address in merchant_profile
-      if (addressData.street) {
-        // Create address object to store in merchant_profile
-        const addressObject = {
-          formatted: addressData.formatted || `${addressData.street}, ${addressData.city}, ${addressData.state} ${addressData.postalCode}`,
+      // Prepare workspace data to update
+      const workspaceData = {
+        name: businessNameInput?.value,
+        contact_email: businessEmailInput?.value,
+        contact_phone: phoneNumber,
+        website: businessWebsiteInput?.value,
+        description: businessDescriptionInput?.value,
+        logo_url: logo_url,
+        timezone: timezone || null,
+        address: addressData?.street ? {
+          formatted:
+            addressData.formatted ||
+            `${addressData.street}, ${addressData.city}, ${addressData.state} ${addressData.postalCode}`,
           street: addressData.street,
           city: addressData.city,
           state: addressData.state,
           postalCode: addressData.postalCode,
           country: addressData.country || "US",
           place_id: addressData.place_id || "",
-        };
+        } : null,
+        lat: addressData.lat,
+        lng: addressData.lng,
+      };
 
-        const { error: addressError } = await supabase
-          .from("merchant_profiles")
-          .update({
-            address: addressObject,
-            lat: addressData.lat,
-            lng: addressData.lng,
-          })
-          .eq("id", user.id);
+      // Call the server-side update endpoint
+      const response = await fetch('/api/workspace/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          workspaceId,
+          workspaceData,
+        }),
+      });
 
-        if (addressError) throw addressError;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update workspace');
+      }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update workspace');
       }
 
       toast({
@@ -153,8 +173,10 @@ export default function SettingsPage() {
         description: t("business.saveSuccess"),
       });
 
-      // Refresh the page to show updated data
-      window.location.reload();
+      // Use the context's refresh function instead of reloading the page
+      if (refreshProfile) {
+        await refreshProfile();
+      }
     } catch (error) {
       console.error("Error saving business information:", error);
       toast({
@@ -195,7 +217,7 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                   {/* Business Info Form */}
                   <BusinessInfoForm
-                    merchantProfile={merchantProfile}
+                    workspaceProfile={workspaceProfile}
                     translationFunc={t}
                     userId={user?.id || ""}
                     phoneNumber={phoneNumber}
@@ -205,29 +227,29 @@ export default function SettingsPage() {
                     setLogoUrl={setLogoUrl}
                     setLogoFile={setLogoFile}
                   />
-                  
+
                   <Separator className="my-4" />
-                  
+
                   {/* Timezone Form */}
-                  {merchantProfile && (
+                  {workspaceProfile && (
                     <TimeZoneForm
-                      merchantProfile={{
-                        timezone: merchantProfile.timezone || undefined
+                      workspaceProfile={{
+                        timezone: workspaceProfile.timezone || undefined,
                       }}
                       translationFunc={t}
                       onTimeZoneChange={setTimezone}
                     />
                   )}
-                  
+
                   <Separator className="my-4" />
-                  
+
                   {/* Address Form */}
                   <AddressForm
                     addressData={addressData}
                     onAddressChange={setAddressData}
                     translationFunc={t}
                   />
-                  
+
                   <div className="flex justify-end">
                     <button
                       className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
@@ -243,10 +265,7 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent
-              value="security"
-              className="space-y-4"
-            >
+            <TabsContent value="security" className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>{t("security.title")}</CardTitle>

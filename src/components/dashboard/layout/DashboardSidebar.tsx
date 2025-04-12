@@ -139,7 +139,12 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
       <ScrollArea className="flex-1 px-4 py-6">
         <nav className="flex flex-col gap-2">
           {routes.map((route) => (
-            <Link key={route.href} href={route.href}>
+            <Link 
+              key={route.href} 
+              href={route.href}
+              prefetch={false} 
+              shallow={true}
+            >
               <Button
                 variant={route.active ? "default" : "ghost"}
                 className={cn(

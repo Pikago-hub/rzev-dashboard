@@ -35,16 +35,19 @@ export default function AuthCallbackPage() {
 
           const user = data.session.user;
 
-          // Check if user exists and if is_merchant flag is not set, update it
+          // Check if user exists and if is_professional flag is not set, update it
           if (user) {
-            const needsMerchantFlagUpdate = !user.user_metadata.is_merchant;
+            const needsProfessionalFlagUpdate =
+              !user.user_metadata.is_professional;
 
-            if (needsMerchantFlagUpdate) {
-              console.log("Merchant flag not set, updating user as merchant");
-              // Update user metadata to include is_merchant flag
+            if (needsProfessionalFlagUpdate) {
+              console.log(
+                "Professional flag not set, updating user as professional"
+              );
+              // Update user metadata to include is_professional flag
               const { error: updateError } = await supabase.auth.updateUser({
                 data: {
-                  is_merchant: true,
+                  is_professional: true,
                   // Preserve existing metadata
                   ...user.user_metadata,
                 },
@@ -57,63 +60,100 @@ export default function AuthCallbackPage() {
               }
             }
 
-            // Ensure the user has a merchant_profiles record
+            // Ensure the user has a team_member record
             try {
-              // Check if the user has a merchant_profiles record
-              const { data: profileData, error: profileError } = await supabase
-                .from("merchant_profiles")
-                .select("id")
-                .eq("id", user.id)
-                .single();
+              // Call our API endpoint to populate the team member
+              if (user?.id) {
+                const response = await fetch("/api/team-member/populate", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ userId: user.id }),
+                });
 
-              if (profileError || !profileData) {
-                console.log("Creating merchant profile for user");
-                // Extract name parts from display_name or email
-                const displayName =
-                  user.user_metadata.display_name || user.email;
-                let firstName = user.user_metadata.first_name;
-                let lastName = user.user_metadata.last_name;
-
-                // If we have a display_name but no first/last name, try to split it
-                if (
-                  displayName &&
-                  (!firstName || !lastName) &&
-                  displayName.includes(" ")
-                ) {
-                  const nameParts = displayName.split(" ");
-                  firstName = firstName || nameParts[0];
-                  lastName = lastName || nameParts.slice(1).join(" ");
-                }
-
-                // Create a merchant_profiles record for this user
-                const { error: insertError } = await supabase
-                  .from("merchant_profiles")
-                  .insert({
-                    id: user.id,
-                    display_name: displayName,
-                    first_name: firstName,
-                    last_name: lastName,
-                    phone_number: user.user_metadata.phone,
-                  });
-
-                if (insertError) {
-                  console.error(
-                    "Error creating merchant profile:",
-                    insertError
-                  );
+                if (!response.ok) {
+                  const errorData = await response.json();
+                  console.error("Error populating team member:", errorData);
+                } else {
+                  console.log("Team member populated successfully");
                 }
               }
             } catch (err) {
-              console.error("Error checking/creating merchant profile:", err);
+              console.error("Error populating team member:", err);
             }
           }
 
-          setStatus("success");
-          // Redirect to dashboard after a short delay to show success message
-          setTimeout(() => {
-            router.push("/dashboard");
-          }, 1500);
-          return;
+          // Check if the user is associated with any workspace
+          try {
+            // First check if there are any pending invitations
+            try {
+              // Use our API to check workspace status (which now checks for invitations)
+              if (user?.id) {
+                const response = await fetch("/api/auth/check-workspace-status", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ userId: user.id }),
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                  console.log("Redirecting to:", data.redirectUrl, "Reason:", data.message);
+                  setStatus("success");
+                  
+                  // Redirect to the URL provided by the API
+                  setTimeout(() => {
+                    router.push(data.redirectUrl);
+                  }, 1500);
+                  return;
+                }
+              }
+            } catch (apiErr) {
+              console.error("Error checking workspace status:", apiErr);
+              // Continue with fallback logic if API call fails
+            }
+
+            // Fallback to direct database check if API call fails
+            if (user?.id) {
+              const { data: workspaceData } = await supabase
+                .from("workspace_members")
+                .select("workspace_id")
+                .eq("team_member_id", user.id)
+                .single();
+
+              setStatus("success");
+
+              // Redirect based on workspace association
+              setTimeout(() => {
+                if (workspaceData && workspaceData.workspace_id) {
+                  // User is already associated with a workspace, go to dashboard
+                  router.push("/dashboard");
+                } else {
+                  // User needs to create or join a workspace
+                  router.push("/onboarding/workspace-choice");
+                }
+              }, 1500);
+              return;
+            } else {
+              // No user id, redirect to onboarding
+              setStatus("success");
+              setTimeout(() => {
+                router.push("/onboarding/workspace-choice");
+              }, 1500);
+              return;
+            }
+          } catch (err) {
+            console.error("Error checking workspace association:", err);
+            // Default to onboarding if we can't determine status
+            setStatus("success");
+            setTimeout(() => {
+              router.push("/onboarding/workspace-choice");
+            }, 1500);
+            return;
+          }
         }
 
         const hash = window.location.hash;
@@ -167,16 +207,19 @@ export default function AuthCallbackPage() {
             const { data: sessionData } = await supabase.auth.getSession();
             const user = sessionData.session?.user;
 
-            // Check if user exists and if is_merchant flag is not set, update it
+            // Check if user exists and if is_professional flag is not set, update it
             if (user) {
-              const needsMerchantFlagUpdate = !user.user_metadata.is_merchant;
+              const needsProfessionalFlagUpdate =
+                !user.user_metadata.is_professional;
 
-              if (needsMerchantFlagUpdate) {
-                console.log("Merchant flag not set, updating user as merchant");
-                // Update user metadata to include is_merchant flag
+              if (needsProfessionalFlagUpdate) {
+                console.log(
+                  "Professional flag not set, updating user as professional"
+                );
+                // Update user metadata to include is_professional flag
                 const { error: updateError } = await supabase.auth.updateUser({
                   data: {
-                    is_merchant: true,
+                    is_professional: true,
                     // Preserve existing metadata
                     ...user.user_metadata,
                   },
@@ -189,87 +232,97 @@ export default function AuthCallbackPage() {
                 }
               }
 
-              // Ensure the user has a merchant_profiles record
+              // Ensure the user has a team_member record
               try {
-                // Check if the user has a merchant_profiles record
-                const { data: profileData, error: profileError } =
-                  await supabase
-                    .from("merchant_profiles")
-                    .select("id")
-                    .eq("id", user.id)
-                    .single();
+                // Call our API endpoint to populate the team member
+                if (user?.id) {
+                  const response = await fetch("/api/team-member/populate", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ userId: user.id }),
+                  });
 
-                if (profileError || !profileData) {
-                  console.log("Creating merchant profile for user");
-                  // Extract name parts from display_name or email
-                  const displayName =
-                    user.user_metadata.display_name || user.email;
-                  let firstName = user.user_metadata.first_name;
-                  let lastName = user.user_metadata.last_name;
-
-                  // If we have a display_name but no first/last name, try to split it
-                  if (
-                    displayName &&
-                    (!firstName || !lastName) &&
-                    displayName.includes(" ")
-                  ) {
-                    const nameParts = displayName.split(" ");
-                    firstName = firstName || nameParts[0];
-                    lastName = lastName || nameParts.slice(1).join(" ");
-                  }
-
-                  // Create a merchant_profiles record for this user
-                  const { error: insertError } = await supabase
-                    .from("merchant_profiles")
-                    .insert({
-                      id: user.id,
-                      display_name: displayName,
-                      first_name: firstName,
-                      last_name: lastName,
-                      phone_number: user.user_metadata.phone,
-                      onboarding_complete: false, // Set onboarding status to false for new users
-                    });
-
-                  if (insertError) {
-                    console.error(
-                      "Error creating merchant profile:",
-                      insertError
-                    );
+                  if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Error populating team member:", errorData);
+                  } else {
+                    console.log("Team member populated successfully");
                   }
                 }
               } catch (err) {
-                console.error("Error checking/creating merchant profile:", err);
+                console.error("Error populating team member:", err);
               }
             }
 
-            // Check if the user has completed onboarding
+            // Check if the user is associated with any workspace
             try {
-              // Make sure user is defined before proceeding
-              if (user) {
-                const { data: profileData } = await supabase
-                  .from("merchant_profiles")
-                  .select("onboarding_complete")
-                  .eq("id", user.id)
+              // First check if there are any pending invitations
+              try {
+                // Use our API to check workspace status (which now checks for invitations)
+                if (user?.id) {
+                  const response = await fetch("/api/auth/check-workspace-status", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ userId: user.id }),
+                  });
+
+                  const data = await response.json();
+                  
+                  if (response.ok) {
+                    console.log("Redirecting to:", data.redirectUrl, "Reason:", data.message);
+                    setStatus("success");
+                    
+                    // Redirect to the URL provided by the API
+                    setTimeout(() => {
+                      router.push(data.redirectUrl);
+                    }, 1500);
+                    return;
+                  }
+                }
+              } catch (apiErr) {
+                console.error("Error checking workspace status:", apiErr);
+                // Continue with fallback logic if API call fails
+              }
+
+              // Fallback to direct database check if API call fails
+              if (user?.id) {
+                const { data: workspaceData } = await supabase
+                  .from("workspace_members")
+                  .select("workspace_id")
+                  .eq("team_member_id", user.id)
                   .single();
 
                 setStatus("success");
 
-                // Redirect based on onboarding status
+                // Redirect based on workspace association
                 setTimeout(() => {
-                  if (profileData && profileData.onboarding_complete) {
+                  if (workspaceData && workspaceData.workspace_id) {
+                    // User is already associated with a workspace, go to dashboard
                     router.push("/dashboard");
                   } else {
-                    router.push("/onboarding/business-info");
+                    // User needs to create or join a workspace
+                    router.push("/onboarding/workspace-choice");
                   }
+                }, 1500);
+                return;
+              } else {
+                // No user id, redirect to onboarding
+                setStatus("success");
+                setTimeout(() => {
+                  router.push("/onboarding/workspace-choice");
                 }, 1500);
                 return;
               }
             } catch (err) {
-              console.error("Error checking onboarding status:", err);
+              console.error("Error checking workspace association:", err);
               // Default to onboarding if we can't determine status
               setStatus("success");
               setTimeout(() => {
-                router.push("/onboarding/business-info");
+                router.push("/onboarding/workspace-choice");
               }, 1500);
               return;
             }
@@ -309,16 +362,19 @@ export default function AuthCallbackPage() {
         const { data: sessionData } = await supabase.auth.getSession();
         const user = sessionData.session?.user;
 
-        // Check if user exists and if is_merchant flag is not set, update it
+        // Check if user exists and if is_professional flag is not set, update it
         if (user) {
-          const needsMerchantFlagUpdate = !user.user_metadata.is_merchant;
+          const needsProfessionalFlagUpdate =
+            !user.user_metadata.is_professional;
 
-          if (needsMerchantFlagUpdate) {
-            console.log("Merchant flag not set, updating user as merchant");
-            // Update user metadata to include is_merchant flag
+          if (needsProfessionalFlagUpdate) {
+            console.log(
+              "Professional flag not set, updating user as professional"
+            );
+            // Update user metadata to include is_professional flag
             const { error: updateError } = await supabase.auth.updateUser({
               data: {
-                is_merchant: true,
+                is_professional: true,
                 // Preserve existing metadata
                 ...user.user_metadata,
               },
@@ -331,83 +387,99 @@ export default function AuthCallbackPage() {
             }
           }
 
-          // Ensure the user has a merchant_profiles record
+          // Ensure the user has a team_member record
           try {
-            // Check if the user has a merchant_profiles record
-            const { data: profileData, error: profileError } = await supabase
-              .from("merchant_profiles")
-              .select("id")
-              .eq("id", user.id)
-              .single();
+            // Call our API endpoint to populate the team member
+            if (user?.id) {
+              const response = await fetch("/api/team-member/populate", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ userId: user.id }),
+              });
 
-            if (profileError || !profileData) {
-              console.log("Creating merchant profile for user");
-              // Extract name parts from display_name or email
-              const displayName = user.user_metadata.display_name || user.email;
-              let firstName = user.user_metadata.first_name;
-              let lastName = user.user_metadata.last_name;
-
-              // If we have a display_name but no first/last name, try to split it
-              if (
-                displayName &&
-                (!firstName || !lastName) &&
-                displayName.includes(" ")
-              ) {
-                const nameParts = displayName.split(" ");
-                firstName = firstName || nameParts[0];
-                lastName = lastName || nameParts.slice(1).join(" ");
-              }
-
-              // Create a merchant_profiles record for this user
-              const { error: insertError } = await supabase
-                .from("merchant_profiles")
-                .insert({
-                  id: user.id,
-                  display_name: displayName,
-                  first_name: firstName,
-                  last_name: lastName,
-                  phone_number: user.user_metadata.phone,
-                  avatar_url:
-                    user.user_metadata.picture || user.user_metadata.avatar_url,
-                  onboarding_complete: false, // Set onboarding status to false for new users
-                });
-
-              if (insertError) {
-                console.error("Error creating merchant profile:", insertError);
+              if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Error populating team member:", errorData);
+              } else {
+                console.log("Team member populated successfully");
               }
             }
           } catch (err) {
-            console.error("Error checking/creating merchant profile:", err);
+            console.error("Error populating team member:", err);
           }
         }
 
-        // Check if the user has completed onboarding
+        // Check if the user is associated with any workspace
         try {
           if (user) {
-            const { data: profileData } = await supabase
-              .from("merchant_profiles")
-              .select("onboarding_complete")
-              .eq("id", user.id)
-              .single();
+            // First check if there are any pending invitations
+            try {
+              // Use our API to check workspace status (which now checks for invitations)
+              if (user?.id) {
+                const response = await fetch("/api/auth/check-workspace-status", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ userId: user.id }),
+                });
 
-            setStatus("success");
-
-            // Redirect based on onboarding status
-            setTimeout(() => {
-              if (profileData && profileData.onboarding_complete) {
-                router.push("/dashboard");
-              } else {
-                router.push("/onboarding");
+                const data = await response.json();
+                
+                if (response.ok) {
+                  console.log("Redirecting to:", data.redirectUrl, "Reason:", data.message);
+                  setStatus("success");
+                  
+                  // Redirect to the URL provided by the API
+                  setTimeout(() => {
+                    router.push(data.redirectUrl);
+                  }, 1500);
+                  return;
+                }
               }
-            }, 1500);
-            return;
+            } catch (apiErr) {
+              console.error("Error checking workspace status:", apiErr);
+              // Continue with fallback logic if API call fails
+            }
+
+            // Fallback to direct database check if API call fails
+            if (user?.id) {
+              const { data: workspaceData } = await supabase
+                .from("workspace_members")
+                .select("workspace_id")
+                .eq("team_member_id", user.id)
+                .single();
+
+              setStatus("success");
+
+              // Redirect based on workspace association
+              setTimeout(() => {
+                if (workspaceData && workspaceData.workspace_id) {
+                  // User is already associated with a workspace, go to dashboard
+                  router.push("/dashboard");
+                } else {
+                  // User needs to create or join a workspace
+                  router.push("/onboarding/workspace-choice");
+                }
+              }, 1500);
+              return;
+            } else {
+              // No user id, redirect to onboarding
+              setStatus("success");
+              setTimeout(() => {
+                router.push("/onboarding/workspace-choice");
+              }, 1500);
+              return;
+            }
           }
         } catch (err) {
-          console.error("Error checking onboarding status:", err);
+          console.error("Error checking workspace association:", err);
           // Default to onboarding if we can't determine status
           setStatus("success");
           setTimeout(() => {
-            router.push("/onboarding");
+            router.push("/onboarding/workspace-choice");
           }, 1500);
           return;
         }

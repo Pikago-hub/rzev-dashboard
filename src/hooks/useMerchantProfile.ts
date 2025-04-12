@@ -1,48 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createBrowserClient } from "@/lib/supabase";
-import { useAuth } from "@/lib/auth-context";
+// This is a compatibility layer for the new useWorkspaceProfile hook
+// It maps the workspace data to the old merchant profile structure
+
+import { useWorkspaceProfile } from "./useWorkspaceProfile";
 import { MerchantProfile } from "@/types/merchant";
 
 export function useMerchantProfile() {
-  const [merchantProfile, setMerchantProfile] =
-    useState<MerchantProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const { user } = useAuth();
-  const supabase = createBrowserClient();
+  const { workspaceProfile, isLoading, error } = useWorkspaceProfile();
 
-  useEffect(() => {
-    const fetchMerchantProfile = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from("merchant_profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-
-        if (error) {
-          throw error;
-        }
-
-        setMerchantProfile(data as unknown as MerchantProfile);
-      } catch (err) {
-        console.error("Error fetching merchant profile:", err);
-        setError(err instanceof Error ? err : new Error(String(err)));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchMerchantProfile();
-  }, [user, supabase]);
+  // Map the workspace profile to the merchant profile structure
+  const merchantProfile = workspaceProfile
+    ? ({
+        id: workspaceProfile.id,
+        business_name: workspaceProfile.name,
+        display_name: workspaceProfile.name,
+        contact_email: workspaceProfile.contact_email,
+        contact_phone: workspaceProfile.contact_phone,
+        website: workspaceProfile.website,
+        description: workspaceProfile.description,
+        logo_url: workspaceProfile.logo_url,
+        address: workspaceProfile.address,
+        lat: workspaceProfile.lat,
+        lng: workspaceProfile.lng,
+        timezone: workspaceProfile.timezone,
+        created_at: workspaceProfile.created_at,
+        updated_at: workspaceProfile.updated_at,
+      } as MerchantProfile)
+    : null;
 
   return { merchantProfile, isLoading, error };
 }
