@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardHeader } from "./DashboardHeader";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -15,14 +15,32 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
+  // Fix zoom issue on mobile
+  useEffect(() => {
+    // Ensure proper viewport meta tag is set
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) {
+      viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+    }
+    
+    // Fix for Chrome and other browsers
+    document.documentElement.style.height = '100%';
+    document.body.style.height = '100%';
+    
+    return () => {
+      document.documentElement.style.height = '';
+      document.body.style.height = '';
+    };
+  }, []);
+
   return (
-    <div className="flex min-h-screen h-screen w-full bg-background">
+    <div className="flex min-h-screen h-screen w-full bg-background overflow-hidden">
       {/* Desktop Sidebar */}
       <DashboardSidebar className="hidden lg:flex h-screen sticky top-0" />
 
       {/* Mobile Sidebar */}
       <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
-        <SheetContent side="left" className="p-0 w-72 pb-[env(safe-area-inset-bottom)]">
+        <SheetContent side="left" className="p-0 w-72">
           <SheetTitle>
             <VisuallyHidden>Dashboard Navigation</VisuallyHidden>
           </SheetTitle>

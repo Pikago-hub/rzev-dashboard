@@ -84,3 +84,31 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Safe area utilities for mobile devices */
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom, 16px), 16px);
+}
+
+@media (min-width: 768px) {
+  .safe-bottom {
+    padding-bottom: 16px;
+  }
+}
+
+/* Fix for mobile viewport issues */
+html, body {
+  height: 100%;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@supports (-webkit-touch-callout: none) {
+  /* iOS specific fix */
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}

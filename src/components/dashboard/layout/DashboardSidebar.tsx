@@ -175,7 +175,7 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
         </nav>
       </ScrollArea>
       <Separator />
-      <div className="p-4 pb-16 md:pb-6 lg:pb-4 pt-4">
+      <div className="p-4 pt-2 pb-24 sm:pb-20 md:pb-6 lg:pb-4 lg:pt-4 safe-bottom">
         <div className="flex items-center gap-4 mb-4">
           <Avatar>
             <AvatarImage src={user?.user_metadata?.avatar_url} />
@@ -194,7 +194,7 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
         </div>
         <Button
           variant="outline"
-          className="w-full justify-start gap-2 mb-10 md:mb-0"
+          className="w-full justify-start gap-2 relative z-10"
           onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4" />
