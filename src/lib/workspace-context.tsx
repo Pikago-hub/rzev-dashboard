@@ -16,6 +16,7 @@ import { createBrowserClient } from "@/lib/supabase";
 // Context type
 type WorkspaceContextType = {
   workspaceProfile: WorkspaceProfile | null;
+  workspaceId: string | null; // Added workspaceId for easier access
   userRole: string | null;
   isActive: boolean;
   isLoading: boolean;
@@ -27,6 +28,7 @@ type WorkspaceContextType = {
 // Create context with default values
 const WorkspaceContext = createContext<WorkspaceContextType>({
   workspaceProfile: null,
+  workspaceId: null,
   userRole: null,
   isActive: false,
   isLoading: true,
@@ -187,6 +189,7 @@ export function WorkspaceProvider({
     <WorkspaceContext.Provider
       value={{
         workspaceProfile,
+        workspaceId: workspaceProfile?.id || null,
         userRole,
         isActive,
         isLoading,

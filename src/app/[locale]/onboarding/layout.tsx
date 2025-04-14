@@ -27,6 +27,7 @@ export default function OnboardingLayout({
   const pathname = usePathname();
   const { user, isLoading: authLoading } = useAuth();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(false);
 
   // Calculate progress percentage
   const progressPercentage =
@@ -50,12 +51,46 @@ export default function OnboardingLayout({
     }
   }, [pathname, router]);
 
-  // Redirect to auth if not logged in
+  // Redirect to auth if not logged in or to dashboard if onboarding is complete
   useEffect(() => {
-    if (!authLoading && !user) {
-      const authPath = "/auth" as const;
-      router.push(authPath);
-    }
+    const checkAuthAndOnboarding = async () => {
+      if (!authLoading) {
+        if (!user) {
+          const authPath = "/auth" as const;
+          router.push(authPath);
+          return;
+        }
+
+        // Check if onboarding is already complete
+        setIsCheckingOnboarding(true);
+        try {
+          const response = await fetch("/api/auth/check-workspace-status", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userId: user.id }),
+          });
+
+          const data = await response.json();
+
+          // If onboarding is complete, redirect to dashboard
+          if (data.status === "success") {
+            console.log(
+              "Onboarding already complete, redirecting to dashboard"
+            );
+            router.push("/dashboard");
+          }
+        } catch (err) {
+          console.error("Error checking workspace status:", err);
+          // Continue with onboarding if there's an error checking status
+        } finally {
+          setIsCheckingOnboarding(false);
+        }
+      }
+    };
+
+    checkAuthAndOnboarding();
   }, [user, authLoading, router]);
 
   const handleBack = useCallback(async () => {
@@ -163,8 +198,8 @@ export default function OnboardingLayout({
               const serviceLocations = Array.isArray(data.service_locations)
                 ? data.service_locations
                 : typeof data.service_locations === "string"
-                ? JSON.parse(data.service_locations)
-                : data.service_locations;
+                  ? JSON.parse(data.service_locations)
+                  : data.service_locations;
 
               // If client location only, skip business location page
               if (
@@ -193,8 +228,8 @@ export default function OnboardingLayout({
     }
   }, [currentStepIndex, router, user]);
 
-  // Show loading state while checking auth
-  if (authLoading) {
+  // Show loading state while checking auth or onboarding status
+  if (authLoading || isCheckingOnboarding) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

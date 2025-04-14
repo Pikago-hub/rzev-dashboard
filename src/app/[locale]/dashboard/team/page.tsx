@@ -3,23 +3,19 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { DashboardLayout } from "@/components/dashboard/layout/DashboardLayout";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Plus, Users } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
 import { useToast } from "@/components/ui/use-toast";
 import { TeamMemberForm } from "@/components/dashboard/team/TeamMemberForm";
-import { TeamMemberCard } from "@/components/dashboard/team/TeamMemberCard";
 import { DeleteConfirmationDialog } from "@/components/dashboard/team/DeleteConfirmationDialog";
+import { SeatLimitDialog } from "@/components/dashboard/team/SeatLimitDialog";
 import { createBrowserClient } from "@/lib/supabase";
+import { TeamPageHeader } from "@/components/dashboard/team/TeamPageHeader";
+import { PendingInvitationsTable } from "@/components/dashboard/team/PendingInvitationsTable";
+import { TeamMembersGrid } from "@/components/dashboard/team/TeamMembersGrid";
+import { EmptyTeamState } from "@/components/dashboard/team/EmptyTeamState";
+import { LoadingState } from "@/components/dashboard/team/LoadingState";
 
 interface TeamMember {
   id: string;
@@ -37,6 +33,25 @@ interface Invitation {
   created_at: string;
 }
 
+interface SubscriptionUsage {
+  subscription: {
+    id: string;
+    status: string;
+    billing_interval: string | null;
+  };
+  plan: {
+    id: string;
+    name: string;
+    included_seats: number;
+  };
+  limits: {
+    seats: number;
+  };
+  usage: {
+    seats: number;
+  };
+}
+
 export default function TeamPage() {
   const t = useTranslations("dashboard.team");
   const { session } = useAuth();
@@ -52,6 +67,7 @@ export default function TeamPage() {
     []
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isStaff, setIsStaff] = useState(false);
 
@@ -65,6 +81,48 @@ export default function TeamPage() {
   const [teamMemberIdToDelete, setTeamMemberIdToDelete] = useState<
     string | null
   >(null);
+
+  // Seat limit dialog state
+  const [isSeatLimitDialogOpen, setIsSeatLimitDialogOpen] = useState(false);
+  const [subscriptionUsage, setSubscriptionUsage] =
+    useState<SubscriptionUsage | null>(null);
+
+  // Fetch subscription usage data
+  const fetchSubscriptionUsage = useCallback(async () => {
+    if (!workspaceProfile || !workspaceProfile.id || !session) {
+      setIsSubscriptionLoading(false);
+      return null;
+    }
+
+    try {
+      setIsSubscriptionLoading(true);
+      const response = await fetch(
+        `/api/usage/current?workspaceId=${workspaceProfile.id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error fetching usage data:", errorData);
+        return null;
+      }
+
+      const data = await response.json();
+      setSubscriptionUsage(data);
+      return data;
+    } catch (error) {
+      console.error("Error fetching subscription usage:", error);
+      return null;
+    } finally {
+      setIsSubscriptionLoading(false);
+    }
+  }, [workspaceProfile, session, setIsSubscriptionLoading]);
 
   // Fetch team members and invitations
   const fetchTeamData = useCallback(async () => {
@@ -139,7 +197,8 @@ export default function TeamPage() {
 
   useEffect(() => {
     fetchTeamData();
-  }, [fetchTeamData]);
+    fetchSubscriptionUsage();
+  }, [fetchTeamData, fetchSubscriptionUsage]);
 
   // Filter team members when search query changes
   useEffect(() => {
@@ -159,8 +218,23 @@ export default function TeamPage() {
   }, [searchQuery, teamMembers]);
 
   const handleAddTeamMember = () => {
-    setSelectedTeamMember(null);
-    setIsFormOpen(true);
+    // Don't proceed if data is still loading
+    if (isLoading || isSubscriptionLoading) {
+      return;
+    }
+
+    // Check if we've reached the seat limit
+    if (
+      subscriptionUsage &&
+      subscriptionUsage.usage.seats >= subscriptionUsage.limits.seats
+    ) {
+      // Show seat limit dialog
+      setIsSeatLimitDialogOpen(true);
+    } else {
+      // Proceed with adding a team member
+      setSelectedTeamMember(null);
+      setIsFormOpen(true);
+    }
   };
 
   const handleEditTeamMember = (teamMember: {
@@ -265,150 +339,64 @@ export default function TeamPage() {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="text-muted-foreground">
-            {isStaff ? t("subtitleStaff") : t("subtitle")}
-          </p>
-        </div>
+        <TeamPageHeader
+          title={t("title")}
+          subtitle={isStaff ? t("subtitleStaff") : t("subtitle")}
+          teamMembersTitle={t("teamMembers")}
+          teamMembersDescription={
+            isStaff
+              ? t("teamMembersDescriptionStaff")
+              : t("teamMembersDescription")
+          }
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onAddTeamMember={handleAddTeamMember}
+          isLoading={isLoading}
+          isSubscriptionLoading={isSubscriptionLoading}
+          isStaff={isStaff}
+          searchPlaceholder={t("searchPlaceholder")}
+          addTeamMemberText={t("addTeamMember")}
+          loadingText={t("common.loading")}
+        />
 
         <Card>
-          <CardHeader className="pb-3">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <CardTitle>{t("teamMembers")}</CardTitle>
-                <CardDescription>
-                  {isStaff
-                    ? t("teamMembersDescriptionStaff")
-                    : t("teamMembersDescription")}
-                </CardDescription>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                {!isStaff && (
-                  <>
-                    <div className="relative">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="search"
-                        placeholder={t("searchPlaceholder")}
-                        className="pl-8 w-full md:w-[300px]"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </div>
-                    <Button onClick={handleAddTeamMember}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      {t("addTeamMember")}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          </CardHeader>
+          <CardHeader className="pb-3" />
           <CardContent>
             {isLoading ? (
-              <div className="h-[200px] flex items-center justify-center">
-                <p className="text-muted-foreground">{t("common.loading")}</p>
-              </div>
+              <LoadingState loadingText={t("common.loading")} />
             ) : (
               <>
                 {/* Pending Invitations Section - Only shown to admins */}
-                {!isStaff && pendingInvitations.length > 0 && (
-                  <div className="mb-8">
-                    <h3 className="text-lg font-medium mb-4">
-                      {t("pendingInvitations")}
-                    </h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left py-2 px-4">
-                              {t("email")}
-                            </th>
-                            <th className="text-left py-2 px-4">{t("role")}</th>
-                            <th className="text-left py-2 px-4">
-                              {t("invitedOn")}
-                            </th>
-                            <th className="text-left py-2 px-4">
-                              {t("actions")}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pendingInvitations.map((invitation) => (
-                            <tr
-                              key={invitation.id}
-                              className="border-b hover:bg-muted/50"
-                            >
-                              <td className="py-2 px-4">{invitation.email}</td>
-                              <td className="py-2 px-4 capitalize">
-                                {invitation.role}
-                              </td>
-                              <td className="py-2 px-4">
-                                {formatDate(invitation.created_at)}
-                              </td>
-                              <td className="py-2 px-4">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleCancelInvitation(invitation.id)
-                                  }
-                                >
-                                  {t("cancelInvitation")}
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                {!isStaff && (
+                  <PendingInvitationsTable
+                    invitations={pendingInvitations}
+                    onCancelInvitation={handleCancelInvitation}
+                    translationFunc={t}
+                    formatDate={formatDate}
+                  />
                 )}
 
                 {/* Team Members Section */}
                 {filteredTeamMembers.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredTeamMembers.map((member) => (
-                      <TeamMemberCard
-                        key={member.id}
-                        teamMember={{
-                          id: member.id,
-                          name: member.display_name,
-                          email: member.email,
-                          role: member.role,
-                          active: member.active,
-                        }}
-                        onEdit={!isStaff ? handleEditTeamMember : undefined}
-                        onDelete={!isStaff ? handleDeleteTeamMember : undefined}
-                        translationFunc={t}
-                        readOnly={isStaff && session?.user?.id !== member.id}
-                      />
-                    ))}
-                  </div>
+                  <TeamMembersGrid
+                    teamMembers={filteredTeamMembers}
+                    onEdit={!isStaff ? handleEditTeamMember : undefined}
+                    onDelete={!isStaff ? handleDeleteTeamMember : undefined}
+                    translationFunc={t}
+                    isStaff={isStaff}
+                    session={session}
+                    workspaceId={workspaceProfile?.id}
+                  />
                 ) : (
-                  <div className="h-[200px] flex flex-col items-center justify-center text-center">
-                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                      {searchQuery
-                        ? t("noSearchResults")
-                        : pendingInvitations.length > 0
-                          ? t("noActiveTeamMembers")
-                          : t("noTeamMembers")}
-                    </p>
-                    {!isStaff &&
-                      !searchQuery &&
-                      pendingInvitations.length === 0 && (
-                        <Button
-                          variant="outline"
-                          className="mt-4"
-                          onClick={handleAddTeamMember}
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          {t("addTeamMember")}
-                        </Button>
-                      )}
-                  </div>
+                  <EmptyTeamState
+                    searchQuery={searchQuery}
+                    pendingInvitationsCount={pendingInvitations.length}
+                    isStaff={isStaff}
+                    isLoading={isLoading}
+                    isSubscriptionLoading={isSubscriptionLoading}
+                    onAddTeamMember={handleAddTeamMember}
+                    translationFunc={t}
+                  />
                 )}
               </>
             )}
@@ -433,6 +421,9 @@ export default function TeamPage() {
             onSuccess={() => {
               fetchTeamData();
               setIsFormOpen(false);
+            }}
+            onSeatLimitReached={() => {
+              setIsSeatLimitDialogOpen(true);
             }}
             teamMember={
               selectedTeamMember
@@ -465,6 +456,21 @@ export default function TeamPage() {
             description={t("deleteConfirmation.message")}
             confirmText={t("deleteConfirmation.confirm")}
             cancelText={t("deleteConfirmation.cancel")}
+          />
+
+          {/* Seat Limit Dialog */}
+          <SeatLimitDialog
+            open={isSeatLimitDialogOpen}
+            onOpenChange={(open) => setIsSeatLimitDialogOpen(open)}
+            translationFunc={t}
+            billingInterval={
+              subscriptionUsage?.subscription.billing_interval || null
+            }
+            onSuccess={() => {
+              // Refresh subscription usage and team data when seats are added
+              fetchSubscriptionUsage();
+              fetchTeamData();
+            }}
           />
         </>
       )}

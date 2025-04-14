@@ -364,6 +364,7 @@
         "analytics": "分析",
         "messages": "消息",
         "services": "服务项目",
+        "usage": "使用情况",
         "settings": "设置"
       }
     },
@@ -446,7 +447,8 @@
         "save": "保存",
         "edit": "编辑",
         "delete": "删除",
-        "noEmail": "没有电子邮件"
+        "noEmail": "没有电子邮件",
+        "processing": "处理中..."
       },
       "addTeamMemberForm": {
         "title": "添加团队成员",
@@ -495,6 +497,15 @@
         "confirm": "删除",
         "cancel": "取消"
       },
+      "seatLimitDialog": {
+        "title": "已达座位限制",
+        "description": "您已达到当前订阅计划允许的最大团队成员数量。",
+        "options": "您有两个选择：",
+        "upgradePlan": "升级到包含更多座位的更高级计划",
+        "addSeat": "添加额外座位，价格为 {price}",
+        "upgradePlanButton": "升级计划",
+        "addSeatButton": "添加座位"
+      },
       "notifications": {
         "addSuccess": "团队成员添加成功",
         "updateSuccess": "团队成员更新成功",
@@ -509,10 +520,73 @@
     "subscriptions": {
       "title": "订阅",
       "subtitle": "管理您的订阅计划和账单",
+      "loading": "正在加载订阅计划...",
+      "noPlans": "没有可用的订阅计划",
+      "common": {
+        "loading": "加载中...",
+        "cancel": "取消",
+        "save": "保存",
+        "saving": "保存中...",
+        "success": "成功",
+        "error": "错误",
+        "edit": "编辑",
+        "update": "更新",
+        "delete": "删除",
+        "noEmail": "没有电子邮件"
+      },
       "tabs": {
         "plans": "订阅计划",
         "billing": "账单历史",
         "settings": "支付设置"
+      },
+      "billingToggle": {
+        "monthly": "月付",
+        "yearly": "年付",
+        "savePercent": "节省20%"
+      },
+      "period": {
+        "monthly": "/月",
+        "yearly": "/年"
+      },
+      "features": {
+        "teamMembers": "团队成员",
+        "messages": "消息",
+        "emails": "电子邮件",
+        "callMinutes": "通话分钟"
+      },
+      "popularBadge": "热门",
+      "upgradeButton": "升级计划",
+      "selectButton": "选择计划",
+      "currentPlanButton": "当前计划",
+      "trialPeriod": "包含{days}天免费试用",
+      "trialTimeLeft": "您的试用期还剩{days}天",
+      "enterprisePlan": {
+        "name": "企业版",
+        "badge": "定制",
+        "description": "适用于有特定需求的大型组织",
+        "price": "定制价格",
+        "feature": "为您的业务需求量身定制的计划",
+        "button": "联系我们"
+      },
+      "error": {
+        "title": "错误",
+        "fetchPlans": "获取订阅计划失败。请重试。",
+        "noWorkspace": "未选择工作区。请先选择工作区。",
+        "checkout": "创建结账会话失败。请重试。",
+        "workspaceRequired": "管理订阅需要工作区。如果此问题仍然存在，请联系支持。",
+        "authRequired": "需要身份验证。请重新登录。"
+      },
+      "success": {
+        "title": "订阅确认",
+        "subtitle": "验证您的订阅状态",
+        "verifying": "验证付款",
+        "verifyingDescription": "请稍候，我们正在验证您的付款并激活您的订阅...",
+        "confirmed": "订阅已确认",
+        "confirmedDescription": "您的订阅已成功激活。您现在可以使用计划的所有功能。",
+        "redirecting": "正在将您重定向回订阅页面...",
+        "error": "验证失败",
+        "errorDescription": "我们无法验证您的订阅。如果您已完成付款，请联系客服。",
+        "backButton": "返回订阅页面"
       },
       "plans": {
         "basic": {
@@ -564,6 +638,16 @@
       "comingSoon": {
         "billing": "账单历史即将推出",
         "settings": "支付设置即将推出"
+      },
+      "cancelSubscription": {
+        "button": "取消订阅",
+        "title": "取消订阅",
+        "description": "您确定要取消您的订阅吗？您的订阅将在当前计费周期结束前保持有效。",
+        "trialDescription": "您确定要取消您的订阅吗？您的试用期将持续到试用期结束，但之后您不会被收费。",
+        "confirm": "是的，取消",
+        "cancel": "否，保留订阅",
+        "success": "订阅已标记为在当前期间结束时取消",
+        "error": "取消订阅失败"
       }
     },
     "analytics": {
@@ -668,6 +752,45 @@
       "deleteServiceDescription": "您确定要删除此服务吗？这也将删除此服务的所有变体。此操作无法撤消。",
       "actions": "操作",
       "error": "错误"
+    },
+    "usage": {
+      "title": "使用情况仪表板",
+      "description": "监控您的订阅使用情况和限制",
+      "subscriptionStatus": "订阅状态",
+      "currentPlan": "当前计划: {planName}",
+      "status": "状态",
+      "trialEnds": "试用结束",
+      "currentPeriodEnds": "当前周期结束",
+      "daysRemaining": "剩余{days}天",
+      "cancelAtTrialEnd": "您的订阅将在试用期结束时取消。",
+      "cancelAtPeriodEnd": "您的订阅将在当前计费周期结束时取消。",
+      "resources": {
+        "seats": "团队成员",
+        "messages": "消息",
+        "emails": "电子邮件",
+        "callMinutes": "通话分钟"
+      },
+      "descriptions": {
+        "seats": "工作区中的活跃团队成员数量",
+        "messages": "当前计费周期内发送的消息总数",
+        "emails": "当前计费周期内发送的电子邮件总数",
+        "callMinutes": "当前计费周期内通话的总分钟数"
+      },
+      "units": {
+        "minutes": "分钟"
+      },
+      "used": "已使用",
+      "trialBadge": "试用",
+      "usageDescription": "您在此计费周期内的当前{resource}使用情况",
+      "usagePolicy": {
+        "title": "使用政策",
+        "duringTrial": "在试用期间，您可以使用所有功能，但不超过计划限制。使用情况会被跟踪但不会计费。",
+        "afterTrial": "试用期结束后，超出计划限制的使用可能会产生额外费用。"
+      },
+      "error": {
+        "title": "加载使用数据错误",
+        "failedToLoadUsage": "无法加载使用数据。请稍后再试。"
+      }
     },
     "settings": {
       "title": "设置",

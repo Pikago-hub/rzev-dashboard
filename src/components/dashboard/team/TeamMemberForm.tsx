@@ -44,7 +44,11 @@ const teamMemberSchema = z.object({
 // For edit mode, email can be optional
 const editTeamMemberSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
-  email: z.string().email({ message: "Invalid email address" }).optional().or(z.literal('')),
+  email: z
+    .string()
+    .email({ message: "Invalid email address" })
+    .optional()
+    .or(z.literal("")),
   role: z.string().min(1, { message: "Role is required" }),
   active: z.boolean().default(true),
 });
@@ -58,6 +62,7 @@ interface TeamMemberFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  onSeatLimitReached?: () => void;
   teamMember?: {
     id: string;
     name: string;
@@ -73,6 +78,7 @@ export function TeamMemberForm({
   open,
   onOpenChange,
   onSuccess,
+  onSeatLimitReached,
   teamMember,
   workspaceId,
   translationFunc: t,
@@ -137,17 +143,27 @@ export function TeamMemberForm({
         };
 
         // Send request to the API with auth token
-        const response = await fetch('/api/team/member', {
-          method: 'POST',
+        const response = await fetch("/api/team/member", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
           const errorData = await response.json();
+
+          // Check if this is a seat limit error
+          if (errorData.seatLimitReached) {
+            if (onSeatLimitReached) {
+              onSeatLimitReached();
+              onOpenChange(false);
+              return;
+            }
+          }
+
           throw new Error(errorData.error || "Failed to update team member");
         }
 
@@ -155,7 +171,7 @@ export function TeamMemberForm({
           title: t("common.success"),
           description: t("notifications.updateSuccess"),
         });
-      } 
+      }
       // If this is a new team member and email is provided, send an invitation
       else if (data.email) {
         // Send invitation
@@ -165,22 +181,43 @@ export function TeamMemberForm({
           workspaceId: workspaceId,
         };
 
-        const inviteResponse = await fetch('/api/team/invite', {
-          method: 'POST',
+        const inviteResponse = await fetch("/api/team/invite", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify(invitePayload),
         });
 
         if (!inviteResponse.ok) {
           const errorData = await inviteResponse.json();
-          if (errorData.error && errorData.error.includes("already associated with another workspace")) {
+
+          // Check if this is a seat limit error
+          if (errorData.seatLimitReached) {
+            if (onSeatLimitReached) {
+              onSeatLimitReached();
+              onOpenChange(false);
+              return;
+            }
+          }
+
+          if (
+            errorData.error &&
+            errorData.error.includes(
+              "already associated with another workspace"
+            )
+          ) {
             throw new Error(t("workspaceRestriction"));
-          } else if (errorData.error && errorData.error.includes("cannot invite yourself")) {
+          } else if (
+            errorData.error &&
+            errorData.error.includes("cannot invite yourself")
+          ) {
             throw new Error(t("selfInvitation"));
-          } else if (errorData.error && errorData.error.includes("already a member of this workspace")) {
+          } else if (
+            errorData.error &&
+            errorData.error.includes("already a member of this workspace")
+          ) {
             throw new Error(t("alreadyMember"));
           } else {
             throw new Error(errorData.error || "Failed to send invitation");
@@ -203,7 +240,8 @@ export function TeamMemberForm({
       console.error("Error saving team member:", error);
       toast({
         title: t("common.error"),
-        description: error instanceof Error ? error.message : t("notifications.error"),
+        description:
+          error instanceof Error ? error.message : t("notifications.error"),
         variant: "destructive",
       });
     } finally {
@@ -248,7 +286,9 @@ export function TeamMemberForm({
                 <FormItem>
                   <FormLabel>
                     {t("addTeamMemberForm.email")}
-                    {!teamMember?.id && <span className="text-destructive"> *</span>}
+                    {!teamMember?.id && (
+                      <span className="text-destructive"> *</span>
+                    )}
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -275,9 +315,7 @@ export function TeamMemberForm({
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder={t(
-                            "addTeamMemberForm.rolePlaceholder"
-                          )}
+                          placeholder={t("addTeamMemberForm.rolePlaceholder")}
                         />
                       </SelectTrigger>
                     </FormControl>
@@ -301,9 +339,7 @@ export function TeamMemberForm({
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel>
-                      {t("addTeamMemberForm.active")}
-                    </FormLabel>
+                    <FormLabel>{t("addTeamMemberForm.active")}</FormLabel>
                   </div>
                   <FormControl>
                     <Switch
@@ -316,19 +352,19 @@ export function TeamMemberForm({
             />
 
             <DialogFooter className="pt-4">
-              <Button 
-                variant="outline" 
-                type="button" 
+              <Button
+                variant="outline"
+                type="button"
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
               >
                 {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting 
-                  ? t("common.saving") 
-                  : teamMember?.id 
-                    ? t("common.update") 
+                {isSubmitting
+                  ? t("common.saving")
+                  : teamMember?.id
+                    ? t("common.update")
                     : t("common.save")}
               </Button>
             </DialogFooter>
@@ -337,4 +373,4 @@ export function TeamMemberForm({
       </DialogContent>
     </Dialog>
   );
-} 
+}

@@ -28,6 +28,7 @@ export const routing = defineRouting({
     "/dashboard/analytics": "/dashboard/analytics",
     "/dashboard/messages": "/dashboard/messages",
     "/dashboard/services": "/dashboard/services",
+    "/dashboard/usage": "/dashboard/usage",
     "/dashboard/settings": "/dashboard/settings",
     "/profile": "/profile",
     "/settings": "/settings",

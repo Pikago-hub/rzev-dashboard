@@ -73,20 +73,22 @@ export default function AuthPage() {
               "Reason:",
               data.message
             );
-            
+
             // Handle pending invitation case
             if (data.status === "invitation_pending") {
-              console.log("Pending invitation found, redirecting to accept page");
+              console.log(
+                "Pending invitation found, redirecting to accept page"
+              );
               toast({
                 title: t("invitationFound"),
                 description: t("redirectingToInvitation"),
               });
-              
+
               // Force a hard navigation to the invitation page
               window.location.href = data.redirectUrl;
               return; // Stop execution to prevent double navigation
             }
-            
+
             router.push(data.redirectUrl);
           } else {
             console.error("Error checking workspace status:", data.error);
@@ -190,20 +192,22 @@ export default function AuthPage() {
               "Reason:",
               data.message
             );
-            
+
             // Handle pending invitation case
             if (data.status === "invitation_pending") {
-              console.log("Pending invitation found, redirecting to accept page");
+              console.log(
+                "Pending invitation found, redirecting to accept page"
+              );
               toast({
                 title: t("invitationFound"),
                 description: t("redirectingToInvitation"),
               });
-              
+
               // Force a hard navigation to the invitation page
               window.location.href = data.redirectUrl;
               return; // Stop execution to prevent double navigation
             }
-            
+
             router.push(data.redirectUrl);
           } else {
             console.error("Error checking workspace status:", data.error);

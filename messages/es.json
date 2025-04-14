@@ -364,6 +364,7 @@
         "analytics": "Análisis",
         "messages": "Mensajes",
         "services": "Servicios",
+        "usage": "Uso",
         "settings": "Configuración"
       }
     },
@@ -446,7 +447,8 @@
         "error": "Error",
         "edit": "Editar",
         "delete": "Eliminar",
-        "noEmail": "No correo electrónico"
+        "noEmail": "No correo electrónico",
+        "processing": "Procesando..."
       },
       "addTeamMemberForm": {
         "title": "Añadir Miembro del Equipo",
@@ -495,6 +497,15 @@
         "confirm": "Eliminar",
         "cancel": "Cancelar"
       },
+      "seatLimitDialog": {
+        "title": "Límite de Asientos Alcanzado",
+        "description": "Has alcanzado el número máximo de miembros del equipo permitidos en tu plan de suscripción actual.",
+        "options": "Tienes dos opciones:",
+        "upgradePlan": "Actualizar a un plan superior con más asientos incluidos",
+        "addSeat": "Añadir un asiento adicional por {price}",
+        "upgradePlanButton": "Actualizar Plan",
+        "addSeatButton": "Añadir Asiento"
+      },
       "notifications": {
         "addSuccess": "Miembro del equipo añadido con éxito",
         "updateSuccess": "Miembro del equipo actualizado con éxito",
@@ -509,10 +520,72 @@
     "subscriptions": {
       "title": "Suscripciones",
       "subtitle": "Gestiona tus planes de suscripción y facturación",
+      "loading": "Cargando planes de suscripción...",
+      "noPlans": "No hay planes de suscripción disponibles",
+      "common": {
+        "loading": "Cargando...",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "saving": "Guardando...",
+        "success": "Éxito",
+        "error": "Error",
+        "edit": "Editar",
+        "update": "Actualizar",
+        "delete": "Eliminar",
+        "noEmail": "Sin correo electrónico"
+      },
       "tabs": {
         "plans": "Planes de Suscripción",
         "billing": "Historial de Facturación",
         "settings": "Configuración de Pago"
+      },
+      "billingToggle": {
+        "monthly": "Mensual",
+        "yearly": "Anual",
+        "savePercent": "Ahorra 20%"
+      },
+      "period": {
+        "monthly": "/mes",
+        "yearly": "/año"
+      },
+      "features": {
+        "teamMembers": "miembros del equipo",
+        "messages": "mensajes",
+        "emails": "correos electrónicos",
+        "callMinutes": "minutos de llamada"
+      },
+      "popularBadge": "Popular",
+      "upgradeButton": "Actualizar Plan",
+      "selectButton": "Seleccionar Plan",
+      "currentPlanButton": "Plan Actual",
+      "trialPeriod": "Incluye {days} días de prueba gratuita",
+      "trialTimeLeft": "{days} días restantes en tu período de prueba",
+      "enterprisePlan": {
+        "name": "Empresarial",
+        "badge": "Personalizado",
+        "description": "Para grandes organizaciones con requisitos específicos",
+        "price": "Personalizado",
+        "feature": "Un plan adaptado a las necesidades de tu negocio",
+        "button": "Contáctanos"
+      },
+      "error": {
+        "title": "Error",
+        "fetchPlans": "Error al cargar los planes de suscripción. Por favor, inténtalo de nuevo.",
+        "noWorkspace": "No hay espacio de trabajo seleccionado. Por favor, selecciona uno primero.",
+        "checkout": "Error al crear la sesión de pago. Por favor, inténtalo de nuevo.",
+        "workspaceRequired": "Se requiere un espacio de trabajo para gestionar las suscripciones. Por favor, contacta con soporte si este problema persiste.",
+        "authRequired": "Autenticación requerida. Por favor, inicia sesión de nuevo."
+      },
+      "success": {
+        "title": "Confirmación de Suscripción",
+        "subtitle": "Verificando el estado de tu suscripción",
+        "verifying": "Verificando Pago",
+        "verifyingDescription": "Por favor, espera mientras verificamos tu pago y activamos tu suscripción...",
+        "confirmed": "Suscripción Confirmada",
+        "confirmedDescription": "Tu suscripción ha sido activada con éxito. Ahora tienes acceso a todas las funciones de tu plan.",
+        "error": "Verificación Fallida",
+        "errorDescription": "No pudimos verificar tu suscripción. Si completaste el pago, por favor contacta con soporte.",
+        "backButton": "Volver a Suscripciones"
       },
       "plans": {
         "basic": {
@@ -564,6 +637,16 @@
       "comingSoon": {
         "billing": "Historial de facturación próximamente",
         "settings": "Configuración de pago próximamente"
+      },
+      "cancelSubscription": {
+        "button": "Cancelar Suscripción",
+        "title": "Cancelar Suscripción",
+        "description": "¿Estás seguro de que deseas cancelar tu suscripción? Tu suscripción permanecerá activa hasta el final de tu período de facturación actual.",
+        "trialDescription": "¿Estás seguro de que deseas cancelar tu suscripción? Tu período de prueba continuará hasta el final, pero no se te cobrará después.",
+        "confirm": "Sí, Cancelar",
+        "cancel": "No, Mantener Suscripción",
+        "success": "Suscripción marcada para cancelación al final del período actual",
+        "error": "Error al cancelar la suscripción"
       }
     },
     "analytics": {
@@ -668,6 +751,45 @@
       "deleteServiceDescription": "¿Estás seguro de que deseas eliminar este servicio? Esto también eliminará todas las variantes de este servicio. Esta acción no se puede deshacer.",
       "actions": "Acciones",
       "error": "Error"
+    },
+    "usage": {
+      "title": "Panel de Uso",
+      "description": "Monitorea el uso y los límites de tu suscripción",
+      "subscriptionStatus": "Estado de Suscripción",
+      "currentPlan": "Plan Actual: {planName}",
+      "status": "Estado",
+      "trialEnds": "Fin del Periodo de Prueba",
+      "currentPeriodEnds": "Fin del Periodo Actual",
+      "daysRemaining": "{days} días restantes",
+      "cancelAtTrialEnd": "Tu suscripción se cancelará al final de tu periodo de prueba.",
+      "cancelAtPeriodEnd": "Tu suscripción se cancelará al final de tu periodo de facturación actual.",
+      "resources": {
+        "seats": "Miembros del Equipo",
+        "messages": "Mensajes",
+        "emails": "Correos Electrónicos",
+        "callMinutes": "Minutos de Llamada"
+      },
+      "descriptions": {
+        "seats": "Número de miembros activos en tu espacio de trabajo",
+        "messages": "Total de mensajes enviados durante el periodo de facturación actual",
+        "emails": "Total de correos enviados durante el periodo de facturación actual",
+        "callMinutes": "Total de minutos de llamadas realizadas durante el periodo de facturación actual"
+      },
+      "units": {
+        "minutes": "min"
+      },
+      "used": "usado",
+      "trialBadge": "Prueba",
+      "usageDescription": "Tu uso actual de {resource} para este periodo de facturación",
+      "usagePolicy": {
+        "title": "Política de Uso",
+        "duringTrial": "Durante tu periodo de prueba, puedes usar todas las funciones hasta los límites del plan. El uso se registra pero no se factura.",
+        "afterTrial": "Después de tu periodo de prueba, el uso que exceda los límites de tu plan puede resultar en cargos adicionales."
+      },
+      "error": {
+        "title": "Error al Cargar Datos de Uso",
+        "failedToLoadUsage": "No se pudieron cargar los datos de uso. Por favor intenta de nuevo más tarde."
+      }
     },
     "settings": {
       "title": "Configuración",

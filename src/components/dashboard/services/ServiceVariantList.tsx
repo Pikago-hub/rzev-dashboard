@@ -54,7 +54,11 @@ export function ServiceVariantList({
               <TableHead>{t("duration")}</TableHead>
               <TableHead>{t("price")}</TableHead>
               <TableHead>{t("status")}</TableHead>
-              {(onEdit || onDelete) && <TableHead className="w-[100px]">{t("common.actions")}</TableHead>}
+              {(onEdit || onDelete) && (
+                <TableHead className="w-[100px]">
+                  {t("common.actions")}
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -64,7 +68,10 @@ export function ServiceVariantList({
                 <TableCell>{formatDuration(variant.duration)}</TableCell>
                 <TableCell>{formatPrice(variant.price)}</TableCell>
                 <TableCell>
-                  <Badge variant={variant.active ? "default" : "outline"} className="whitespace-nowrap">
+                  <Badge
+                    variant={variant.active ? "default" : "outline"}
+                    className="whitespace-nowrap"
+                  >
                     {variant.active ? t("active") : t("inactive")}
                   </Badge>
                 </TableCell>

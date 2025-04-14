@@ -68,29 +68,59 @@ export async function getAuthUser(request: NextRequest): Promise<AuthResponse> {
 
   // Try cookie-based auth as fallback
   const cookieStore = await cookies();
+
+  // Try the standard Supabase cookie name first
+  const supabaseCookie = cookieStore.get("sb-dzqaafvpxtrplgkuxtjo-auth-token");
+
+  if (supabaseCookie?.value) {
+    try {
+      // The cookie value is a JSON string
+      const parsedCookie = JSON.parse(supabaseCookie.value);
+      const token = parsedCookie.access_token;
+
+      // Use the token to get the user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabaseAdmin.auth.getUser(token);
+
+      if (!userError && user) {
+        return {
+          user: {
+            id: user.id,
+            email: user.email || null,
+          },
+          error: null,
+        };
+      }
+    } catch (error) {
+      console.error("Error parsing authentication cookie:", error);
+    }
+  }
+
+  // Try the custom storage key as fallback
   const supabaseAuthCookie = cookieStore.get("supabase-auth");
 
-  if (!supabaseAuthCookie?.value) {
-    return { user: null, error: "Authentication required" };
+  if (supabaseAuthCookie?.value) {
+    // Use the cookie value to get the user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseAdmin.auth.getUser(supabaseAuthCookie.value);
+
+    if (!userError && user) {
+      return {
+        user: {
+          id: user.id,
+          email: user.email || null,
+        },
+        error: null,
+      };
+    }
   }
 
-  // Use the cookie value to get the user
-  const {
-    data: { user },
-    error: userError,
-  } = await supabaseAdmin.auth.getUser(supabaseAuthCookie.value);
-
-  if (userError || !user) {
-    return { user: null, error: "Invalid authentication" };
-  }
-
-  return {
-    user: {
-      id: user.id,
-      email: user.email || null,
-    },
-    error: null,
-  };
+  // If we get here, no valid auth was found
+  return { user: null, error: "Authentication required" };
 }
 
 /**

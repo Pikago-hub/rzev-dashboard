@@ -106,6 +106,72 @@ export async function POST(request: NextRequest) {
         .eq("team_member_id", teamMemberToUpdate)
         .maybeSingle();
 
+    // If creating a new workspace member, check seat limitations
+    if (!existingWorkspaceMember && !teamMemberId) {
+      // Get current active workspace members count
+      const { count: currentMembersCount, error: countError } =
+        await supabaseAdmin
+          .from("workspace_members")
+          .select("id", { count: "exact" })
+          .eq("workspace_id", workspaceId)
+          .eq("active", true);
+
+      if (countError) {
+        console.error("Error counting workspace members:", countError);
+        return NextResponse.json(
+          { error: "Failed to check workspace members count" },
+          { status: 500 }
+        );
+      }
+
+      // Get subscription plan details
+      const { data: subscriptionData, error: subscriptionError } =
+        await supabaseAdmin
+          .from("subscriptions")
+          .select("*, subscription_plans(*)")
+          .eq("workspace_id", workspaceId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+      if (subscriptionError) {
+        console.error("Error fetching subscription:", subscriptionError);
+        return NextResponse.json(
+          { error: "Failed to check subscription limits" },
+          { status: 500 }
+        );
+      }
+
+      if (subscriptionData) {
+        const plan = subscriptionData.subscription_plans;
+        const totalSeats =
+          (plan?.included_seats || 0) +
+          (subscriptionData.additional_seats || 0);
+
+        // Check if adding a new member would exceed the seat limit
+        // This applies to both active and trial subscriptions
+        if (currentMembersCount && currentMembersCount >= totalSeats) {
+          // Get subscription status for better error messaging
+          const isTrialing = subscriptionData.status === "trialing";
+
+          return NextResponse.json(
+            {
+              error: isTrialing
+                ? "Seat limit reached. Your trial plan has a limit of " +
+                  totalSeats +
+                  " seats."
+                : "Seat limit reached",
+              seatLimitReached: true,
+              currentSeats: currentMembersCount,
+              totalSeats: totalSeats,
+              isTrialing: isTrialing,
+            },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
     if (existingError) {
       console.error("Error checking workspace membership:", existingError);
       return NextResponse.json(

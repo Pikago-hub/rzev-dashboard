@@ -18,6 +18,7 @@ import {
   Store,
   LogOut,
   Loader2,
+  LineChart,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
@@ -70,6 +71,7 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
     | "/dashboard/subscriptions"
     | "/dashboard/analytics"
     | "/dashboard/services"
+    | "/dashboard/usage"
     | "/dashboard/settings";
 
   // Determine appropriate dashboard path based on role
@@ -122,6 +124,12 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
       active: pathname?.includes("/dashboard/subscriptions"),
     },
     {
+      label: t("navigation.usage"),
+      icon: LineChart,
+      href: "/dashboard/usage",
+      active: pathname?.includes("/dashboard/usage"),
+    },
+    {
       label: t("navigation.analytics"),
       icon: BarChart3,
       href: "/dashboard/analytics",
@@ -143,7 +151,7 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
   ];
 
   // Only filter routes once role information is loaded
-  // Staff cannot see: clients, subscriptions, analytics
+  // Staff cannot see: clients, subscriptions, analytics, usage
   const routes = isRoleLoading
     ? [] // Show no routes while loading to prevent flashing
     : isStaff
@@ -153,6 +161,7 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
               "/dashboard/clients",
               "/dashboard/subscriptions",
               "/dashboard/analytics",
+              "/dashboard/usage",
             ].includes(route.href)
         )
       : allRoutes;

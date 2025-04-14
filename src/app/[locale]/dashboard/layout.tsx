@@ -32,15 +32,32 @@ function ClientDashboardLayout({
           return;
         }
 
+        // Check if this is a redirect from Stripe checkout
+        const url = new URL(window.location.href);
+        const isCheckoutSuccess =
+          url.searchParams.get("checkout_success") === "true";
+
+        // If this is a redirect from Stripe checkout, skip the workspace check
+        if (isCheckoutSuccess) {
+          setIsCheckingStatus(false);
+          return;
+        }
+
         // Check workspace status using server-side API
         setIsCheckingStatus(true);
         try {
+          // Get the current path to preserve it after the check
+          const currentPath = window.location.pathname;
+
           const response = await fetch("/api/auth/check-workspace-status", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ userId: user.id }),
+            body: JSON.stringify({
+              userId: user.id,
+              originalPath: currentPath,
+            }),
           });
 
           const data = await response.json();
@@ -53,6 +70,13 @@ function ClientDashboardLayout({
               data.message
             );
             router.push(data.redirectUrl);
+          } else if (
+            data.redirectUrl &&
+            data.redirectUrl !== window.location.pathname
+          ) {
+            // Only redirect if the path is different from the current one
+            // This prevents unnecessary redirects to the same page
+            console.log("Preserving current path:", window.location.pathname);
           }
         } catch (err) {
           console.error("Error checking workspace status:", err);
