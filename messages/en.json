@@ -869,6 +869,19 @@
         "fileTooLarge": "File is too large. Maximum size is 2MB.",
         "timezone": "Timezone",
         "selectTimezone": "Select a timezone",
+        "stripeConnect": "Stripe Connect",
+        "stripeConnectDescription": "Connect your business to Stripe to accept payments directly.",
+        "stripeConnectComplete": "Stripe Connect account is active",
+        "stripeConnectCompleteDescription": "Your business is connected to Stripe and ready to accept payments.",
+        "stripeConnectIncomplete": "Stripe Connect onboarding incomplete",
+        "stripeConnectIncompleteDescription": "Please complete the Stripe onboarding process to activate your account.",
+        "updateStripeAccount": "Update Stripe Account",
+        "completeStripeOnboarding": "Complete Stripe Onboarding",
+        "connectToStripe": "Connect to Stripe",
+        "connectToStripeDescription": "Connect your business to Stripe to accept payments directly from customers.",
+        "connectToStripeButton": "Connect to Stripe",
+        "stripeDashboardDescription": "To view billings, payouts, and manage payment settings, go to your Stripe Dashboard.",
+        "goToStripeDashboard": "Go to Stripe Dashboard",
         "timezoneDescription": "This timezone will be used for your business operations and scheduling.",
         "operatingHours": "Operating Hours",
         "addHours": "Add Hours",
@@ -899,7 +912,52 @@
         "zipCode": "ZIP Code",
         "saveChanges": "Save Changes",
         "saveSuccess": "Business information saved successfully",
-        "saveError": "Error saving business information"
+        "saveError": "Error saving business information",
+        "goLive": {
+          "title": "Go Live",
+          "description": "Make your business available for customer bookings",
+          "alreadyLive": "Your business is live and accepting bookings",
+          "goLiveButton": "Go Live",
+          "deactivateButton": "Deactivate",
+          "liveStatus": "Live",
+          "dialog": {
+            "title": "Go Live Confirmation",
+            "description": "Are you sure you want to make your business live? This will allow customers to book appointments with you.",
+            "confirm": "Yes, Go Live",
+            "cancel": "Cancel"
+          },
+          "deactivate": {
+            "dialog": {
+              "title": "Deactivate Confirmation",
+              "description": "Are you sure you want to deactivate your business? This will prevent customers from booking appointments with you.",
+              "confirm": "Yes, Deactivate",
+              "cancel": "Cancel"
+            },
+            "success": {
+              "title": "Success",
+              "description": "Your business has been deactivated and is no longer accepting bookings."
+            },
+            "error": {
+              "title": "Error",
+              "description": "Failed to deactivate your business. Please try again."
+            }
+          },
+          "validation": {
+            "title": "Cannot Go Live",
+            "description": "Please address the following issues before going live:",
+            "issuesFound": "Issues found",
+            "viewAll": "View all {count} more issues",
+            "ok": "OK"
+          },
+          "success": {
+            "title": "Success",
+            "description": "Your business is now live and accepting bookings!"
+          },
+          "error": {
+            "title": "Error",
+            "description": "Failed to make your business live. Please try again."
+          }
+        }
       },
       "notifications": {
         "title": "Notification Preferences",

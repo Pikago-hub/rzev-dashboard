@@ -35,4 +35,9 @@ export interface WorkspaceProfile {
   heard_about_us: string | null;
   created_at: string;
   updated_at: string;
+  // Stripe related fields
+  stripe_customer_id?: string | null;
+  stripe_connect_account_id?: string | null;
+  stripe_connect_onboarding_complete?: boolean;
+  subscription_status?: string | null;
 }

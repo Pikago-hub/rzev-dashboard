@@ -450,6 +450,17 @@
         "noEmail": "没有电子邮件",
         "processing": "处理中..."
       },
+      "addSeatsDialog": {
+        "title": "添加额外座位",
+        "description": "为您的订阅添加更多座位以邀请额外的团队成员。",
+        "seatsLabel": "要添加的座位数",
+        "priceInfo": "每个额外座位的费用为 {price}。",
+        "totalPrice": "总计：{total}",
+        "confirmButton": "添加座位",
+        "successMessage": "成功添加了 {count} 个额外座位",
+        "errorMessage": "添加额外座位失败",
+        "invalidSeats": "请输入有效的座位数"
+      },
       "addTeamMemberForm": {
         "title": "添加团队成员",
         "editTitle": "编辑团队成员",
@@ -522,6 +533,7 @@
       "subtitle": "管理您的订阅计划和账单",
       "loading": "正在加载订阅计划...",
       "noPlans": "没有可用的订阅计划",
+      "manageSubscription": "管理订阅",
       "common": {
         "loading": "加载中...",
         "cancel": "取消",
@@ -800,6 +812,7 @@
         "business": "业务",
         "security": "安全"
       },
+
       "profile": {
         "title": "个人资料信息",
         "subtitle": "管理您的个人信息和偏好设置。",
@@ -838,11 +851,101 @@
         "timezoneDescription": "此时区将用于您的业务运营和调度。",
         "address": "地址",
         "city": "城市",
+        "stripeConnect": "Stripe 连接",
+        "stripeConnectDescription": "将您的业务连接到 Stripe 以直接接受付款。",
+        "stripeConnectComplete": "Stripe Connect 账户已激活",
+        "stripeConnectCompleteDescription": "您的业务已连接到 Stripe 并准备好接受付款。",
+        "stripeConnectIncomplete": "Stripe Connect 注册未完成",
+        "stripeConnectIncompleteDescription": "请完成 Stripe 注册流程以激活您的账户。",
+        "updateStripeAccount": "更新 Stripe 账户",
+        "completeStripeOnboarding": "完成 Stripe 注册",
+        "connectToStripe": "连接到 Stripe",
+        "connectToStripeDescription": "将您的业务连接到 Stripe 以直接从客户接受付款。",
+        "connectToStripeButton": "连接到 Stripe",
+        "stripeDashboardDescription": "要查看账单、付款和管理付款设置，请转到您的Stripe仪表板。",
+        "goToStripeDashboard": "转到Stripe仪表板",
+        "operatingHours": "Operating Hours",
+        "addHours": "Add Hours",
+        "addTimeSlot": "Add Time Slot",
+        "editOperatingHours": "Edit Operating Hours",
+        "addOperatingHours": "Add Operating Hours",
+        "operatingHoursDescription": "Set the hours when your business is open",
+        "noOperatingHours": "No operating hours set",
+        "day": "Day",
+        "selectDay": "Select day",
+        "openTime": "Open Time",
+        "closeTime": "Close Time",
+        "selectTime": "Select time",
+        "operatingHoursSaved": "Operating hours saved successfully",
+        "operatingHoursError": "Failed to update operating hours",
+        "days": {
+          "monday": "Monday",
+          "tuesday": "Tuesday",
+          "wednesday": "Wednesday",
+          "thursday": "Thursday",
+          "friday": "Friday",
+          "saturday": "Saturday",
+          "sunday": "Sunday"
+        },
         "state": "州/省",
         "zipCode": "邮政编码",
         "saveChanges": "保存更改",
         "saveSuccess": "商家信息保存成功",
-        "saveError": "保存商家信息时出错"
+        "saveError": "保存商家信息时出错",
+        "goLive": {
+          "title": "上线",
+          "description": "让您的业务可以接受客户预订",
+          "alreadyLive": "您的业务已上线并接受预订",
+          "goLiveButton": "上线",
+          "deactivateButton": "下线",
+          "liveStatus": "已上线",
+          "dialog": {
+            "title": "上线确认",
+            "description": "您确定要让您的业务上线吗？这将允许客户与您预约。",
+            "confirm": "是的，上线",
+            "cancel": "取消"
+          },
+          "deactivate": {
+            "dialog": {
+              "title": "下线确认",
+              "description": "您确定要让您的业务下线吗？这将阻止客户与您预约。",
+              "confirm": "是的，下线",
+              "cancel": "取消"
+            },
+            "success": {
+              "title": "成功",
+              "description": "您的业务已下线，不再接受预订。"
+            },
+            "error": {
+              "title": "错误",
+              "description": "无法使您的业务下线。请重试。"
+            }
+          },
+          "validation": {
+            "title": "无法上线",
+            "description": "上线前请解决以下问题：",
+            "issuesFound": "发现问题",
+            "viewAll": "查看所有{count}个问题",
+            "ok": "确定"
+          },
+          "success": {
+            "title": "成功",
+            "description": "您的业务现已上线并接受预订！"
+          },
+          "error": {
+            "title": "错误",
+            "description": "无法使您的业务上线。请重试。"
+          }
+        }
+      },
+      "common": {
+        "loading": "加载中...",
+        "success": "成功",
+        "error": "错误",
+        "uploading": "正在上传标志...",
+        "saving": "正在保存...",
+        "cancel": "取消",
+        "save": "保存"
       },
       "security": {
         "title": "安全设置",
@@ -859,13 +962,6 @@
         "passwordsDontMatch": "密码不匹配",
         "comingSoon": "安全设置即将推出",
         "socialLoginMessage": "您使用社交提供商（谷歌）注册。请通过您的社交提供商设置管理您的密码。"
-      },
-      "common": {
-        "loading": "加载中...",
-        "success": "成功",
-        "error": "错误",
-        "uploading": "正在上传标志...",
-        "saving": "正在保存..."
       }
     }
   }

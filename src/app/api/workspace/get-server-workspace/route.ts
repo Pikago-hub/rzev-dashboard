@@ -12,31 +12,34 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRole);
 export async function GET(request: NextRequest) {
   try {
     // Try to get token from Authorization header first
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get("Authorization");
     let token = null;
-    
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.split(' ')[1];
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
     }
-    
+
     // If no token in header, try to get from cookies as fallback
     if (!token) {
       // Get the session cookie directly from the request - async version
       const cookieStore = await cookies();
-      const supabaseAuthCookie = cookieStore.get('supabase-auth');
-      
+      const supabaseAuthCookie = cookieStore.get("supabase-auth");
+
       if (!supabaseAuthCookie?.value) {
         return NextResponse.json(
           { error: "Authentication required" },
           { status: 401 }
         );
       }
-      
+
       token = supabaseAuthCookie.value;
     }
 
     // Use the token to get the user's session
-    const { data: { user }, error: sessionError } = await supabaseAdmin.auth.getUser(token);
+    const {
+      data: { user },
+      error: sessionError,
+    } = await supabaseAdmin.auth.getUser(token);
 
     if (sessionError || !user) {
       console.error("Session error:", sessionError);
@@ -81,7 +84,7 @@ export async function GET(request: NextRequest) {
       success: true,
       workspaceProfile: workspace,
       userRole: workspaceMember.role,
-      isActive: workspaceMember.active
+      isActive: workspaceMember.active,
     });
   } catch (error) {
     console.error("Server error:", error);
@@ -90,4 +93,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

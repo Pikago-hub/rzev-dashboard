@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { DashboardLayout } from "@/components/dashboard/layout/DashboardLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// Removed tabs import
 import { useSubscriptionPlans } from "@/hooks/useSubscriptionPlans";
 import { BillingInterval, Subscription } from "@/types/subscription";
 import { useToast } from "@/components/ui/use-toast";
@@ -256,63 +256,49 @@ export default function SubscriptionsPage() {
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
 
-        <Tabs defaultValue="plans" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="plans">{t("tabs.plans")}</TabsTrigger>
-            <TabsTrigger value="billing">{t("tabs.billing")}</TabsTrigger>{" "}
-          </TabsList>
+        <div className="space-y-4">
+          {/* Billing interval toggle */}
+          <BillingIntervalToggle
+            value={billingInterval}
+            onChange={(value) => setBillingInterval(value)}
+          />
 
-          <TabsContent value="plans" className="space-y-4">
-            {/* Billing interval toggle */}
-            <BillingIntervalToggle
-              value={billingInterval}
-              onChange={(value) => setBillingInterval(value)}
-            />
+          {isLoading || isLoadingSubscription ? (
+            <LoadingState />
+          ) : !workspaceId ? (
+            <ErrorState type="workspace" />
+          ) : plans.length === 0 ? (
+            <div className="text-center py-8">
+              <p>{t("noPlans")}</p>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-3">
+              {/* Dynamic subscription plans from Stripe */}
+              {plans.map((plan, index) => {
+                const isPopular = index === 1; // Mark the middle plan as popular
+                const isCurrentPlan =
+                  currentSubscription?.subscription_plan_id === plan.id;
+                const isCurrentPlanProcessing = isProcessing && isCurrentPlan;
 
-            {isLoading || isLoadingSubscription ? (
-              <LoadingState />
-            ) : !workspaceId ? (
-              <ErrorState type="workspace" />
-            ) : plans.length === 0 ? (
-              <div className="text-center py-8">
-                <p>{t("noPlans")}</p>
-              </div>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-3">
-                {/* Dynamic subscription plans from Stripe */}
-                {plans.map((plan, index) => {
-                  const isPopular = index === 1; // Mark the middle plan as popular
-                  const isCurrentPlan =
-                    currentSubscription?.subscription_plan_id === plan.id;
-                  const isCurrentPlanProcessing = isProcessing && isCurrentPlan;
+                return (
+                  <SubscriptionPlanCard
+                    key={plan.id}
+                    plan={plan}
+                    billingInterval={billingInterval}
+                    isPopular={isPopular}
+                    isCurrentPlan={isCurrentPlan}
+                    isProcessing={isCurrentPlanProcessing}
+                    formatPrice={formatPrice}
+                    onSelectPlan={handleSelectPlan}
+                  />
+                );
+              })}
 
-                  return (
-                    <SubscriptionPlanCard
-                      key={plan.id}
-                      plan={plan}
-                      billingInterval={billingInterval}
-                      isPopular={isPopular}
-                      isCurrentPlan={isCurrentPlan}
-                      isProcessing={isCurrentPlanProcessing}
-                      formatPrice={formatPrice}
-                      onSelectPlan={handleSelectPlan}
-                    />
-                  );
-                })}
-
-                {/* Enterprise Plan - Custom, not from Stripe */}
-                <EnterprisePlanCard calendarUrl="https://cal.com/jerry-wu/30min" />
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent
-            value="billing"
-            className="h-[400px] flex items-center justify-center"
-          >
-            <p className="text-muted-foreground">{t("comingSoon.billing")}</p>
-          </TabsContent>
-        </Tabs>
+              {/* Enterprise Plan - Custom, not from Stripe */}
+              <EnterprisePlanCard calendarUrl="https://cal.com/jerry-wu/30min" />
+            </div>
+          )}
+        </div>
 
         {/* Current Subscription Status */}
         {currentSubscription && (

@@ -437,6 +437,17 @@
         "fetchError": "Error al obtener asignaciones de servicios",
         "selectService": "Por favor selecciona un servicio"
       },
+      "addSeatsDialog": {
+        "title": "Añadir Asientos Adicionales",
+        "description": "Añade más asientos a tu suscripción para invitar a miembros adicionales del equipo.",
+        "seatsLabel": "Número de asientos a añadir",
+        "priceInfo": "Cada asiento adicional cuesta {price}.",
+        "totalPrice": "Total: {total}",
+        "confirmButton": "Añadir Asientos",
+        "successMessage": "Se añadieron con éxito {count} asiento(s) adicional(es)",
+        "errorMessage": "Error al añadir asientos adicionales",
+        "invalidSeats": "Por favor, ingresa un número válido de asientos"
+      },
       "common": {
         "loading": "Cargando...",
         "success": "Éxito",
@@ -522,6 +533,7 @@
       "subtitle": "Gestiona tus planes de suscripción y facturación",
       "loading": "Cargando planes de suscripción...",
       "noPlans": "No hay planes de suscripción disponibles",
+      "manageSubscription": "Administrar Suscripción",
       "common": {
         "loading": "Cargando...",
         "cancel": "Cancelar",
@@ -837,11 +849,92 @@
         "timezoneDescription": "Este timezone será usado para tus operaciones de negocio y programación.",
         "address": "Dirección",
         "city": "Ciudad",
+        "stripeConnect": "Conexión con Stripe",
+        "stripeConnectDescription": "Conecta tu negocio a Stripe para aceptar pagos directamente.",
+        "stripeConnectComplete": "La cuenta de Stripe Connect está activa",
+        "stripeConnectCompleteDescription": "Tu negocio está conectado a Stripe y listo para aceptar pagos.",
+        "stripeConnectIncomplete": "Proceso de incorporación a Stripe Connect incompleto",
+        "stripeConnectIncompleteDescription": "Por favor, completa el proceso de incorporación a Stripe para activar tu cuenta.",
+        "updateStripeAccount": "Actualizar cuenta de Stripe",
+        "completeStripeOnboarding": "Completar incorporación a Stripe",
+        "connectToStripe": "Conectar a Stripe",
+        "connectToStripeDescription": "Conecta tu negocio a Stripe para aceptar pagos directamente de los clientes.",
+        "connectToStripeButton": "Conectar a Stripe",
+        "stripeDashboardDescription": "Para ver facturación, pagos y administrar la configuración de pagos, ve a tu Panel de Stripe.",
+        "goToStripeDashboard": "Ir al Panel de Stripe",
+        "operatingHours": "Horario de Operación",
+        "addHours": "Agregar Horas",
+        "addTimeSlot": "Agregar Franja Horaria",
+        "editOperatingHours": "Editar Horario de Operación",
+        "addOperatingHours": "Agregar Horario de Operación",
+        "operatingHoursDescription": "Establece las horas en las que tu negocio está abierto",
+        "noOperatingHours": "No se ha establecido horario de operación",
+        "day": "Día",
+        "selectDay": "Seleccionar día",
+        "openTime": "Hora de Apertura",
+        "closeTime": "Hora de Cierre",
+        "selectTime": "Seleccionar hora",
+        "operatingHoursSaved": "Horario de operación guardado exitosamente",
+        "operatingHoursError": "Error al actualizar el horario de operación",
+        "days": {
+          "monday": "Lunes",
+          "tuesday": "Martes",
+          "wednesday": "Miércoles",
+          "thursday": "Jueves",
+          "friday": "Viernes",
+          "saturday": "Sábado",
+          "sunday": "Domingo"
+        },
         "state": "Estado/Provincia",
         "zipCode": "Código Postal",
         "saveChanges": "Guardar Cambios",
         "saveSuccess": "Información del negocio guardada correctamente",
-        "saveError": "Error al guardar la información del negocio"
+        "saveError": "Error al guardar la información del negocio",
+        "goLive": {
+          "title": "Activar Negocio",
+          "description": "Haz que tu negocio esté disponible para reservas de clientes",
+          "alreadyLive": "Tu negocio está activo y aceptando reservas",
+          "goLiveButton": "Activar",
+          "deactivateButton": "Desactivar",
+          "liveStatus": "Activo",
+          "dialog": {
+            "title": "Confirmación de Activación",
+            "description": "¿Estás seguro de que quieres activar tu negocio? Esto permitirá a los clientes reservar citas contigo.",
+            "confirm": "Sí, Activar",
+            "cancel": "Cancelar"
+          },
+          "deactivate": {
+            "dialog": {
+              "title": "Confirmación de Desactivación",
+              "description": "¿Estás seguro de que quieres desactivar tu negocio? Esto impedirá que los clientes reserven citas contigo.",
+              "confirm": "Sí, Desactivar",
+              "cancel": "Cancelar"
+            },
+            "success": {
+              "title": "Éxito",
+              "description": "Tu negocio ha sido desactivado y ya no acepta reservas."
+            },
+            "error": {
+              "title": "Error",
+              "description": "No se pudo desactivar tu negocio. Por favor, inténtalo de nuevo."
+            }
+          },
+          "validation": {
+            "title": "No se puede Activar",
+            "description": "Por favor, resuelve los siguientes problemas antes de activar:",
+            "issuesFound": "Problemas encontrados",
+            "viewAll": "Ver todos los {count} problemas restantes",
+            "ok": "Aceptar"
+          },
+          "success": {
+            "title": "Éxito",
+            "description": "¡Tu negocio ahora está activo y aceptando reservas!"
+          },
+          "error": {
+            "title": "Error",
+            "description": "No se pudo activar tu negocio. Por favor, intenta de nuevo."
+          }
+        }
       },
       "security": {
         "title": "Configuración de Seguridad",
@@ -864,7 +957,9 @@
         "success": "Éxito",
         "error": "Error",
         "uploading": "Subiendo logo...",
-        "saving": "Guardando..."
+        "saving": "Guardando...",
+        "cancel": "Cancelar",
+        "save": "Guardar"
       }
     }
   }

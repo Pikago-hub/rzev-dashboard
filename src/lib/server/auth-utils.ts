@@ -220,3 +220,28 @@ export async function validateServiceAccess(
 
 // Note: The convenience functions for combining auth and validation have been moved to workspace-actions.ts
 // as server actions with the 'use server' directive
+
+/**
+ * Get the workspace ID for a user
+ * Used when we need to find which workspace a user belongs to
+ */
+export async function getUserWorkspaceId(
+  userId: string
+): Promise<string | null> {
+  if (!userId) {
+    return null;
+  }
+
+  // Get the user's workspace member record
+  const { data: workspaceMember, error: memberError } = await supabaseAdmin
+    .from("workspace_members")
+    .select("workspace_id")
+    .eq("team_member_id", userId)
+    .single();
+
+  if (memberError || !workspaceMember) {
+    return null;
+  }
+
+  return workspaceMember.workspace_id;
+}

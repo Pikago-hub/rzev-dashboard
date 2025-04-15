@@ -5,6 +5,7 @@ import {
   getAuthUser,
   validateWorkspaceAccess,
   validateServiceAccess,
+  getUserWorkspaceId,
   AuthResponse,
   WorkspaceAccessResponse,
   ServiceAccessResponse,
@@ -67,5 +68,30 @@ export async function getAuthAndValidateServiceAction(
   return {
     ...authResult,
     ...accessResult,
+  };
+}
+
+/**
+ * Server action to get auth user and find their workspace ID
+ */
+export async function getAuthUserWorkspace(
+  request: NextRequest
+): Promise<AuthResponse & { workspaceId: string | null }> {
+  const authResult = await getAuthUser(request);
+
+  if (authResult.error || !authResult.user) {
+    return {
+      ...authResult,
+      error: authResult.error || "Authentication required",
+      status: 401,
+      workspaceId: null,
+    };
+  }
+
+  const workspaceId = await getUserWorkspaceId(authResult.user.id);
+
+  return {
+    ...authResult,
+    workspaceId,
   };
 }
