@@ -62,9 +62,6 @@ export async function POST(request: NextRequest) {
       case "invoice.payment_failed":
         await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
         break;
-      case "account.updated":
-        await handleConnectAccountUpdated(event.data.object as Stripe.Account);
-        break;
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
@@ -604,51 +601,5 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
       );
       throw workspaceError;
     }
-  }
-}
-
-// Handle Connect account updated event
-async function handleConnectAccountUpdated(account: Stripe.Account) {
-  // Find the workspace associated with this Connect account
-  const { data: workspace, error: workspaceError } = await supabaseAdmin
-    .from("workspaces")
-    .select("id, stripe_connect_onboarding_complete")
-    .eq("stripe_connect_account_id", account.id)
-    .single();
-
-  if (workspaceError || !workspace) {
-    console.error(
-      "Error finding workspace for Connect account:",
-      workspaceError
-    );
-    return;
-  }
-
-  console.log(`Processing account.updated event for workspace ${workspace.id}`);
-
-  // Check if the account has completed onboarding
-  // For Standard accounts, we check if charges_enabled is true
-  const onboardingComplete = account.charges_enabled === true;
-
-  // Only update if the onboarding status has changed
-  if (workspace.stripe_connect_onboarding_complete !== onboardingComplete) {
-    console.log(`Updating Connect onboarding status to ${onboardingComplete}`);
-
-    const { error: updateError } = await supabaseAdmin
-      .from("workspaces")
-      .update({
-        stripe_connect_onboarding_complete: onboardingComplete,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", workspace.id);
-
-    if (updateError) {
-      console.error("Error updating workspace Connect status:", updateError);
-      throw updateError;
-    }
-
-    console.log(
-      `Successfully updated Connect onboarding status for workspace ${workspace.id}`
-    );
   }
 }
