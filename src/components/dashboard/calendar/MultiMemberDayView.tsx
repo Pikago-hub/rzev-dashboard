@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Appointment, TeamMember } from "@/types/calendar";
+import { OperatingHours } from "@/types/workspace";
 import {
   formatTimeDisplay,
   timeToMinutes,
@@ -10,17 +11,32 @@ import {
 } from "@/utils/calendar-utils";
 import { AppointmentDetailsDialog } from "./AppointmentDetailsDialog";
 
+// Define the mapping from day number (0=Sunday) to OperatingHours key
+const DAY_OF_WEEK_MAP: Record<number, keyof OperatingHours> = {
+  0: "sunday",
+  1: "monday",
+  2: "tuesday",
+  3: "wednesday",
+  4: "thursday",
+  5: "friday",
+  6: "saturday",
+};
+
 interface MultiMemberDayViewProps {
+  date: Date;
   teamMembers: TeamMember[];
   appointments: Appointment[];
   timeSlots: string[];
-  onAppointmentUpdated?: () => void; // Callback to refresh appointments
+  operatingHours: OperatingHours | null;
+  onAppointmentUpdated?: () => void;
 }
 
 export function MultiMemberDayView({
+  date,
   teamMembers,
   appointments,
   timeSlots,
+  operatingHours,
   onAppointmentUpdated,
 }: MultiMemberDayViewProps) {
   const t = useTranslations("dashboard.calendar");
@@ -29,6 +45,17 @@ export function MultiMemberDayView({
   const [selectedTeamMember, setSelectedTeamMember] =
     useState<TeamMember | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Determine the operating hours for the currently viewed day
+  const dayNumber = date.getDay(); // Get day number (0-6)
+  const currentDayKey = DAY_OF_WEEK_MAP[dayNumber]; // Map number to key ('sunday', 'monday', etc.)
+  const dayOperatingHours = operatingHours?.[currentDayKey] ?? [];
+  // For simplicity, using the first slot if multiple exist for the day.
+  // Adapt this logic if you need to handle multiple open/close intervals per day.
+  const workingHoursToday =
+    dayOperatingHours.length > 0
+      ? { start: dayOperatingHours[0].open, end: dayOperatingHours[0].close }
+      : { start: "00:00", end: "00:00" }; // Default to closed
 
   // Use all time slots including half-hour slots for more precise operating hours
   // For a less crowded view, you could filter to hourly slots with: timeSlots.filter((slot) => slot.endsWith("00"))
@@ -149,15 +176,9 @@ export function MultiMemberDayView({
                   {/* Team member columns */}
                   <div className={`grid ${getGridColumns()}`}>
                     {teamMembers.map((member) => {
-                      // Check if this hour is within workspace operating hours
-                      // We're using the workingHours property which is already set based on the current day
-
-                      // Get operating hours for today from member's workingHours
-                      // Default to not working if no operating hours are set
+                      // Check if this hour is within WORKSPACE operating hours for the CURRENTLY VIEWED DAY
                       let isWorkingHour = false;
-
-                      // Use the member's workingHours which is set from workspace operating hours
-                      const { start, end } = member.workingHours;
+                      const { start, end } = workingHoursToday; // Use workspace hours for the day
 
                       if (
                         start &&

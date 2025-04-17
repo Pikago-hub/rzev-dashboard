@@ -154,6 +154,7 @@ export default function CalendarPage() {
                   />
                 ) : (
                   <MultiMemberDayView
+                    date={date}
                     teamMembers={
                       selectedTeamMember === "all"
                         ? teamMembers
@@ -163,6 +164,7 @@ export default function CalendarPage() {
                     }
                     appointments={appointments}
                     timeSlots={timeSlots}
+                    operatingHours={operatingHours}
                     onAppointmentUpdated={refreshAppointments}
                   />
                 )}
