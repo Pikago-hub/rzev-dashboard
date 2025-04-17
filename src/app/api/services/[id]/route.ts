@@ -65,7 +65,7 @@ export async function PATCH(
     // Await params before accessing properties
     const p = await params;
     const serviceId = p.id;
-    const { name, description, color, active } = await request.json();
+    const { name, description, color, category, active } = await request.json();
 
     // Get authorization and validate service access (owner required for updating services)
     const auth = await getAuthAndValidateServiceAction(
@@ -97,6 +97,7 @@ export async function PATCH(
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (color !== undefined) updateData.color = color;
+    if (category !== undefined) updateData.category = category;
     if (active !== undefined) updateData.active = active;
 
     // Update the service

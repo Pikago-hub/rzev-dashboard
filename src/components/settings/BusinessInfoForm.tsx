@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { CreditCard, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import PhoneNumberInput from "@/components/phone-number-input";
 import { LogoUploader } from "./LogoUploader";
@@ -28,6 +29,8 @@ interface BusinessInfoFormProps {
   onSave?: () => Promise<void>; // Make onSave optional since we're not using it in the component
   isSaving?: boolean; // Make isSaving optional
   onOperatingHoursChange?: (hours: OperatingHours) => void;
+  requireUpfrontPayment?: boolean;
+  onRequireUpfrontPaymentChange?: (value: boolean) => void;
 }
 
 export const BusinessInfoForm = ({
@@ -39,6 +42,8 @@ export const BusinessInfoForm = ({
   setLogoUrl,
   setLogoFile,
   onOperatingHoursChange,
+  requireUpfrontPayment: externalRequireUpfrontPayment,
+  onRequireUpfrontPaymentChange,
 }: BusinessInfoFormProps) => {
   // Refs for form inputs
   const businessNameRef = useRef<HTMLInputElement>(null);
@@ -50,6 +55,21 @@ export const BusinessInfoForm = ({
   const [operatingHours, setOperatingHours] = useState<OperatingHours | null>(
     workspaceProfile?.operating_hours || null
   );
+
+  // State for upfront payment toggle
+  const [requireUpfrontPayment, setRequireUpfrontPayment] = useState<boolean>(
+    externalRequireUpfrontPayment !== undefined
+      ? externalRequireUpfrontPayment
+      : workspaceProfile?.require_upfront_payment || false
+  );
+
+  // Handle upfront payment toggle change
+  const handleUpfrontPaymentChange = (value: boolean) => {
+    setRequireUpfrontPayment(value);
+    if (onRequireUpfrontPaymentChange) {
+      onRequireUpfrontPaymentChange(value);
+    }
+  };
 
   // State for Stripe Connect
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
@@ -279,6 +299,40 @@ export const BusinessInfoForm = ({
         translationFunc={t}
         onOperatingHoursChange={handleOperatingHoursChange}
       />
+
+      <Separator className="my-4" />
+
+      {/* Payment Settings */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-medium">
+              {t("business.paymentSettings") || "Payment Settings"}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {t("business.paymentSettingsDescription") ||
+                "Configure how customers pay for your services."}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <Label htmlFor="require-upfront-payment">
+              {t("business.requireUpfrontPayment") || "Require Upfront Payment"}
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              {t("business.requireUpfrontPaymentDescription") ||
+                "When enabled, customers must pay when booking an appointment."}
+            </p>
+          </div>
+          <Switch
+            id="require-upfront-payment"
+            checked={requireUpfrontPayment}
+            onCheckedChange={handleUpfrontPaymentChange}
+          />
+        </div>
+      </div>
 
       <Separator className="my-4" />
 

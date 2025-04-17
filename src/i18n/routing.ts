@@ -25,7 +25,6 @@ export const routing = defineRouting({
     "/dashboard/clients": "/dashboard/clients",
     "/dashboard/team": "/dashboard/team",
     "/dashboard/subscriptions": "/dashboard/subscriptions",
-    "/dashboard/analytics": "/dashboard/analytics",
     "/dashboard/messages": "/dashboard/messages",
     "/dashboard/services": "/dashboard/services",
     "/dashboard/usage": "/dashboard/usage",

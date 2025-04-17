@@ -11,132 +11,54 @@ import {
 import { CalendarHeader } from "@/components/dashboard/calendar/CalendarHeader";
 import { MultiMemberDayView } from "@/components/dashboard/calendar/MultiMemberDayView";
 import { MultiMemberWeekView } from "@/components/dashboard/calendar/MultiMemberWeekView";
-import { Appointment } from "@/types/calendar";
+// Import types from the calendar types file, but not Appointment since we're using the one from useAppointments
 import { useWorkspaceOperatingHours } from "@/hooks/useWorkspaceOperatingHours";
+import { useAppointments } from "@/hooks/useAppointments";
 import { Skeleton } from "@/components/ui/skeleton";
+// We use the workspace context indirectly through the useAppointments hook
+import { useToast } from "@/components/ui/use-toast";
 
 export default function CalendarPage() {
   const t = useTranslations("dashboard.calendar");
   const [date, setDate] = useState<Date>(new Date());
   const [view, setView] = useState<"day" | "week">("day");
   const [selectedTeamMember, setSelectedTeamMember] = useState<string>("all");
+  // We use the workspace context indirectly through the useAppointments hook
+  const { toast } = useToast();
 
   // Fetch team members with workspace operating hours
-  const { teamMembers, operatingHours, isLoading } =
-    useWorkspaceOperatingHours();
+  const {
+    teamMembers,
+    operatingHours,
+    isLoading: isLoadingTeamMembers,
+  } = useWorkspaceOperatingHours();
+
+  // Fetch appointments with real-time updates
+  const {
+    appointments,
+    isLoading: isLoadingAppointments,
+    error,
+    refreshAppointments,
+  } = useAppointments({
+    date,
+    view,
+    teamMemberId: selectedTeamMember,
+  });
+
+  // Show error toast if there's an error fetching appointments
+  if (error) {
+    toast({
+      title: t("error"),
+      description: error.message,
+      variant: "destructive",
+    });
+  }
 
   // Check if we have any team members
   const hasTeamMembers = teamMembers.length > 0;
 
-  // Create dates for the current week
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-  const dayAfterTomorrow = new Date(today);
-  dayAfterTomorrow.setDate(today.getDate() + 2);
-  const dayAfter3 = new Date(today);
-  dayAfter3.setDate(today.getDate() + 3);
-  const dayAfter4 = new Date(today);
-  dayAfter4.setDate(today.getDate() + 4);
-
-  // Mock appointments data with dates
-  const appointments: Appointment[] = [
-    // Today's appointments
-    {
-      id: "1",
-      teamMemberId: "1",
-      customerName: "Alice Brown",
-      serviceName: "Haircut",
-      date: new Date(today),
-      time: "10:00",
-      duration: 30,
-    },
-    {
-      id: "2",
-      teamMemberId: "2",
-      customerName: "Bob White",
-      serviceName: "Hair Coloring",
-      date: new Date(today),
-      time: "11:30",
-      duration: 90,
-    },
-    {
-      id: "3",
-      teamMemberId: "3",
-      customerName: "Carol Davis",
-      serviceName: "Massage",
-      date: new Date(today),
-      time: "09:00",
-      duration: 60,
-    },
-    {
-      id: "4",
-      teamMemberId: "1",
-      customerName: "David Miller",
-      serviceName: "Beard Trim",
-      date: new Date(today),
-      time: "14:00",
-      duration: 20,
-    },
-    // Tomorrow's appointments
-    {
-      id: "5",
-      teamMemberId: "2",
-      customerName: "Emily Johnson",
-      serviceName: "Manicure",
-      date: new Date(tomorrow),
-      time: "10:30",
-      duration: 45,
-    },
-    {
-      id: "6",
-      teamMemberId: "3",
-      customerName: "Frank Wilson",
-      serviceName: "Deep Tissue Massage",
-      date: new Date(tomorrow),
-      time: "13:00",
-      duration: 90,
-    },
-    // Day after tomorrow's appointments
-    {
-      id: "7",
-      teamMemberId: "1",
-      customerName: "Grace Taylor",
-      serviceName: "Haircut & Style",
-      date: new Date(dayAfterTomorrow),
-      time: "09:30",
-      duration: 60,
-    },
-    {
-      id: "8",
-      teamMemberId: "2",
-      customerName: "Henry Martinez",
-      serviceName: "Hair Coloring",
-      date: new Date(dayAfterTomorrow),
-      time: "15:00",
-      duration: 120,
-    },
-    // Day after 3 appointments
-    {
-      id: "9",
-      teamMemberId: "3",
-      customerName: "Isabella Lopez",
-      serviceName: "Facial Treatment",
-      date: new Date(dayAfter3),
-      time: "11:00",
-      duration: 75,
-    },
-    // Day after 4 appointments
-    {
-      id: "10",
-      teamMemberId: "1",
-      customerName: "Jack Robinson",
-      serviceName: "Haircut & Beard Trim",
-      date: new Date(dayAfter4),
-      time: "16:00",
-      duration: 45,
-    },
-  ];
+  // Combined loading state
+  const isLoading = isLoadingTeamMembers || isLoadingAppointments;
 
   // Find the earliest and latest operating hours
   const { earliest, latest } = findOperatingHoursRange(
@@ -226,12 +148,9 @@ export default function CalendarPage() {
                             (m: { id: string }) => m.id === selectedTeamMember
                           )
                     }
-                    appointments={appointments.filter((a) =>
-                      selectedTeamMember === "all"
-                        ? true
-                        : a.teamMemberId === selectedTeamMember
-                    )}
+                    appointments={appointments}
                     timeSlots={timeSlots}
+                    onAppointmentUpdated={refreshAppointments}
                   />
                 ) : (
                   <MultiMemberDayView
@@ -242,16 +161,9 @@ export default function CalendarPage() {
                             (m: { id: string }) => m.id === selectedTeamMember
                           )
                     }
-                    appointments={appointments.filter(
-                      (a) =>
-                        (selectedTeamMember === "all"
-                          ? true
-                          : a.teamMemberId === selectedTeamMember) &&
-                        a.date.getFullYear() === date.getFullYear() &&
-                        a.date.getMonth() === date.getMonth() &&
-                        a.date.getDate() === date.getDate()
-                    )}
+                    appointments={appointments}
                     timeSlots={timeSlots}
+                    onAppointmentUpdated={refreshAppointments}
                   />
                 )}
               </CardContent>

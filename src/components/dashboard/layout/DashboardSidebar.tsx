@@ -14,7 +14,6 @@ import {
   LayoutDashboard,
   Settings,
   Users,
-  BarChart3,
   Store,
   LogOut,
   Loader2,
@@ -69,7 +68,6 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
     | "/dashboard/clients"
     | "/dashboard/team"
     | "/dashboard/subscriptions"
-    | "/dashboard/analytics"
     | "/dashboard/services"
     | "/dashboard/usage"
     | "/dashboard/settings";
@@ -129,12 +127,6 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
       href: "/dashboard/usage",
       active: pathname?.includes("/dashboard/usage"),
     },
-    {
-      label: t("navigation.analytics"),
-      icon: BarChart3,
-      href: "/dashboard/analytics",
-      active: pathname?.includes("/dashboard/analytics"),
-    },
 
     {
       label: t("navigation.services"),
@@ -160,7 +152,6 @@ export function DashboardSidebar({ className }: DashboardSidebarProps) {
             ![
               "/dashboard/clients",
               "/dashboard/subscriptions",
-              "/dashboard/analytics",
               "/dashboard/usage",
             ].includes(route.href)
         )

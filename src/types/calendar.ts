@@ -25,6 +25,16 @@ export interface Appointment {
   date: Date; // Date of the appointment
   time: string; // Time in format "HH:MM"
   duration: number; // Duration in minutes
+  status?: string; // Status of the appointment (pending, confirmed, cancelled, completed, no_show)
+  anyAvailableTeamMember?: boolean; // Whether the customer requested any available team member
+  teamMemberPreference?: string; // The team member preference: "specific" or "any"
+  teamMemberName?: string; // Name of the team member
+  color?: string; // Color of the service
+  price?: number; // Price of the appointment
+  paymentStatus?: string; // Payment status
+  notes?: string; // General notes
+  customerNotes?: string; // Notes from the customer
+  internalNotes?: string; // Internal notes for staff only
 }
 
 export interface ProcessedAppointment extends Appointment {

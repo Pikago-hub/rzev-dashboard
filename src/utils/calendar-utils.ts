@@ -201,12 +201,17 @@ export const timeToMinutes = (timeStr: string): number => {
 
 /**
  * Generate time slots for a full day (12 AM to 12 PM)
+ * @param intervalMinutes - Optional interval in minutes (default: 30)
  */
-export const generateTimeSlots = (): string[] => {
-  return Array.from({ length: 48 }, (_, i) => {
-    const hour = Math.floor(i / 2);
-    const minute = i % 2 === 0 ? "00" : "30";
-    return `${hour.toString().padStart(2, "0")}:${minute}`;
+export const generateTimeSlots = (intervalMinutes: number = 30): string[] => {
+  // Calculate how many slots we need based on the interval
+  const slotsPerDay = (24 * 60) / intervalMinutes;
+
+  return Array.from({ length: slotsPerDay }, (_, i) => {
+    const totalMinutes = i * intervalMinutes;
+    const hour = Math.floor(totalMinutes / 60);
+    const minute = totalMinutes % 60;
+    return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
   });
 };
 
@@ -318,25 +323,51 @@ export const calculateAppointmentDisplay = (
   appointment: { startMinutes: number; endMinutes: number; duration: number },
   hourStartMinutes: number
 ) => {
-  // Only render the appointment in the hour where it starts
+  // Get the hour block boundaries in minutes
+  const hourEndMinutes = hourStartMinutes + 30; // Each block is 30 minutes
+
+  // Check if the appointment overlaps with this time block
+  const appointmentStart = appointment.startMinutes;
+  const appointmentEnd = appointment.endMinutes;
+
+  // If the appointment doesn't overlap with this time block, return null
   if (
-    Math.floor(appointment.startMinutes / 60) ===
-    Math.floor(hourStartMinutes / 60)
+    appointmentEnd <= hourStartMinutes ||
+    appointmentStart >= hourEndMinutes
   ) {
-    const topOffset = ((appointment.startMinutes % 60) / 60) * 100;
-
-    // Calculate the total height needed for the full duration
-    const durationInHours = appointment.duration / 60;
-    const heightPercentage = durationInHours * 100;
-
-    return {
-      top: `${topOffset}%`,
-      height: `${heightPercentage}%`,
-      isStart: true,
-      isEnd: true,
-      isFullAppointment: true,
-    };
+    return null;
   }
 
-  return null;
+  // Calculate the top position (where in this block the appointment starts)
+  let topOffset = 0;
+  if (appointmentStart > hourStartMinutes) {
+    // If appointment starts within this block
+    topOffset = ((appointmentStart - hourStartMinutes) / 30) * 100;
+  }
+
+  // Calculate the height (how much of this block the appointment takes up)
+  let heightPercentage;
+  if (appointmentEnd >= hourEndMinutes) {
+    // If appointment extends beyond this block
+    heightPercentage = 100 - topOffset;
+  } else {
+    // If appointment ends within this block
+    heightPercentage =
+      ((appointmentEnd - Math.max(appointmentStart, hourStartMinutes)) / 30) *
+      100;
+  }
+
+  // Determine if this is the start or end of the appointment
+  const isStart =
+    appointmentStart >= hourStartMinutes && appointmentStart < hourEndMinutes;
+  const isEnd =
+    appointmentEnd > hourStartMinutes && appointmentEnd <= hourEndMinutes;
+
+  return {
+    top: `${topOffset}%`,
+    height: `${heightPercentage}%`,
+    isStart,
+    isEnd,
+    isFullAppointment: isStart && isEnd,
+  };
 };

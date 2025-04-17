@@ -141,6 +141,10 @@ export async function POST(request: NextRequest) {
         lat: enhancedWorkspaceData.lat || null,
         lng: enhancedWorkspaceData.lng || null,
         timezone: enhancedWorkspaceData.timezone || null,
+        require_upfront_payment:
+          enhancedWorkspaceData.require_upfront_payment !== undefined
+            ? enhancedWorkspaceData.require_upfront_payment
+            : null,
         updated_at: new Date().toISOString(),
       };
     } else {
@@ -152,16 +156,22 @@ export async function POST(request: NextRequest) {
       updateData.description = workspaceData.description || null;
       updateData.logo_url = workspaceData.logo_url || null;
       updateData.timezone = workspaceData.timezone || null;
-      
+
       // Include address if provided
       if (workspaceData.address) {
         updateData.address = workspaceData.address;
       }
-      
+
       // Include coordinates if provided
       if (workspaceData.lat !== undefined && workspaceData.lng !== undefined) {
         updateData.lat = workspaceData.lat;
         updateData.lng = workspaceData.lng;
+      }
+
+      // Include require_upfront_payment if provided
+      if (workspaceData.require_upfront_payment !== undefined) {
+        updateData.require_upfront_payment =
+          workspaceData.require_upfront_payment;
       }
     }
 

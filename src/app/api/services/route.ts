@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 // POST: Create a new service
 export async function POST(request: NextRequest) {
   try {
-    const { name, description, color, active, workspaceId } =
+    const { name, description, color, category, active, workspaceId } =
       await request.json();
 
     if (!workspaceId) {
@@ -111,6 +111,7 @@ export async function POST(request: NextRequest) {
         name,
         description: description || null,
         color: color || null,
+        category: category || null,
         active: active !== undefined ? active : true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

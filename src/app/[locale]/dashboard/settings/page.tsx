@@ -47,6 +47,8 @@ export default function SettingsPage() {
   const [operatingHours, setOperatingHours] = useState<OperatingHours | null>(
     null
   );
+  const [requireUpfrontPayment, setRequireUpfrontPayment] =
+    useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("profile");
 
   // State for address data from Google Maps
@@ -86,6 +88,11 @@ export default function SettingsPage() {
     if (workspaceProfile?.operating_hours) {
       setOperatingHours(workspaceProfile.operating_hours);
     }
+
+    // Set require upfront payment if available
+    setRequireUpfrontPayment(
+      workspaceProfile?.require_upfront_payment || false
+    );
 
     // Reset addressData when workspaceProfile is loaded or changed
     if (workspaceProfile) {
@@ -222,6 +229,7 @@ export default function SettingsPage() {
           : null,
         lat: addressData.lat,
         lng: addressData.lng,
+        require_upfront_payment: requireUpfrontPayment,
       };
 
       // Call the server-side update endpoint
@@ -341,6 +349,8 @@ export default function SettingsPage() {
                       setLogoUrl={setLogoUrl}
                       setLogoFile={setLogoFile}
                       onOperatingHoursChange={handleUpdateOperatingHours}
+                      requireUpfrontPayment={requireUpfrontPayment}
+                      onRequireUpfrontPaymentChange={setRequireUpfrontPayment}
                     />
 
                     <Separator className="my-4" />

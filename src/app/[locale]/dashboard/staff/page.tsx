@@ -32,7 +32,6 @@ export default function StaffDashboardPage() {
     | "/dashboard/clients"
     | "/dashboard/team"
     | "/dashboard/subscriptions"
-    | "/dashboard/analytics"
     | "/dashboard/messages"
     | "/dashboard/services"
     | "/dashboard/settings";

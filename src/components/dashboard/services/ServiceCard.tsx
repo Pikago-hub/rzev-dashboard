@@ -159,6 +159,11 @@ export function ServiceCard({
             <Badge variant={service.active ? "default" : "outline"}>
               {service.active ? t("active") : t("inactive")}
             </Badge>
+            {service.category && (
+              <Badge variant="secondary">
+                {t(`servicesOffer.categories.${service.category}`)}
+              </Badge>
+            )}
           </div>
 
           <div className="mt-4">

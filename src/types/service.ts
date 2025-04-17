@@ -9,6 +9,7 @@ export interface Service {
   description: string | null;
   color: string | null;
   active: boolean;
+  category: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -34,6 +35,7 @@ export interface ServiceFormData {
   name: string;
   description: string;
   color: string;
+  category: string;
   active: boolean;
 }
 

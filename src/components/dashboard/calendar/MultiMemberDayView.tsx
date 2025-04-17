@@ -14,12 +14,14 @@ interface MultiMemberDayViewProps {
   teamMembers: TeamMember[];
   appointments: Appointment[];
   timeSlots: string[];
+  onAppointmentUpdated?: () => void; // Callback to refresh appointments
 }
 
 export function MultiMemberDayView({
   teamMembers,
   appointments,
   timeSlots,
+  onAppointmentUpdated,
 }: MultiMemberDayViewProps) {
   const t = useTranslations("dashboard.calendar");
   const [selectedAppointment, setSelectedAppointment] =
@@ -63,6 +65,24 @@ export function MultiMemberDayView({
     setDialogOpen(true);
   };
 
+  // Function to get status color based on appointment status
+  const getStatusColor = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case "confirmed":
+        return "bg-green-500";
+      case "pending":
+        return "bg-yellow-500";
+      case "cancelled":
+        return "bg-red-500";
+      case "completed":
+        return "bg-blue-500";
+      case "no_show":
+        return "bg-gray-500";
+      default:
+        return "bg-gray-300";
+    }
+  };
+
   // Determine grid columns based on number of team members and screen size
   const getGridColumns = () => {
     // For mobile, limit the number of visible columns
@@ -78,7 +98,7 @@ export function MultiMemberDayView({
       <div className="relative flex flex-col h-[calc(100vh-18rem)] md:h-[calc(100vh-16rem)]">
         {/* Header row with team members - Fixed outside of scrollable area */}
         <div className="grid grid-cols-[60px_1fr] sticky top-0 z-20 bg-background shadow-sm">
-          <div className="p-2 sm:p-3 font-medium border-b border-r text-xs text-center">
+          <div className="p-2 sm:p-3 font-medium border-b border-r text-xs sm:text-sm text-center">
             {t("time")}
           </div>
           <div className={`grid ${getGridColumns()} border-b`}>
@@ -114,7 +134,7 @@ export function MultiMemberDayView({
               // Calculate hour boundaries in minutes
               const [hourStr] = timeSlot.split(":");
               const hour = parseInt(hourStr, 10);
-              const hourStartMinutes = hour * 60;
+              // We'll calculate the specific hourStartMinutes in each cell based on the time slot
 
               return (
                 <div
@@ -122,7 +142,7 @@ export function MultiMemberDayView({
                   className="grid grid-cols-[60px_1fr] border-b"
                 >
                   {/* Time column */}
-                  <div className="p-2 sm:p-3 text-[10px] sm:text-xs font-medium border-r sticky left-0 bg-background">
+                  <div className="p-2 sm:p-3 text-xs sm:text-sm font-medium border-r sticky left-0 bg-background">
                     {formatTimeDisplay(timeSlot)}
                   </div>
 
@@ -170,13 +190,20 @@ export function MultiMemberDayView({
                           timeSlotMinutes < endMinutes;
                       }
 
-                      // Only show appointments that start in this hour for this member
+                      // Get all appointments for this member that might overlap with this time slot
                       const memberData = processedAppointmentsByMember.find(
                         (m) => m.memberId === member.id
                       );
+                      const hourStartMinutes =
+                        hour * 60 + (timeSlot.endsWith("30") ? 30 : 0);
+                      const hourEndMinutes = hourStartMinutes + 30;
+
+                      // Find appointments that overlap with this time slot
                       const hourAppointments = memberData
                         ? memberData.appointments.filter(
-                            (a) => Math.floor(a.startMinutes / 60) === hour
+                            (a) =>
+                              a.endMinutes > hourStartMinutes &&
+                              a.startMinutes < hourEndMinutes
                           )
                         : [];
 
@@ -202,7 +229,8 @@ export function MultiMemberDayView({
                             return (
                               <div
                                 key={`${appointment.id}-${hourStartMinutes}`}
-                                className="absolute bg-primary/10 border border-primary left-0 right-0 mx-1 overflow-hidden cursor-pointer hover:bg-primary/20 transition-colors"
+                                data-appointment-id={appointment.id}
+                                className={`absolute border left-0 right-0 mx-1 overflow-hidden cursor-pointer hover:opacity-80 transition-colors ${appointment.color ? "" : "bg-primary/10 border-primary"} ${displayInfo.isStart ? "rounded-t-sm" : "border-t-0"} ${displayInfo.isEnd ? "rounded-b-sm" : "border-b-0"}`}
                                 style={{
                                   top: displayInfo.top,
                                   height: displayInfo.height,
@@ -210,39 +238,66 @@ export function MultiMemberDayView({
                                   position: "absolute",
                                   // Ensure appointments are hidden when scrolling under the header
                                   visibility: "visible",
+                                  backgroundColor: appointment.color
+                                    ? `${appointment.color}20`
+                                    : undefined, // 20 is hex for 12% opacity
+                                  borderColor: appointment.color || undefined,
                                 }}
                                 onClick={() =>
                                   handleAppointmentClick(appointment, member)
                                 }
                               >
-                                <div className="text-[10px] sm:text-xs h-full flex flex-col p-1 sm:p-2 overflow-hidden">
-                                  {/* Always show customer name */}
-                                  <p className="font-medium truncate">
-                                    {appointment.customerName}
-                                  </p>
-
-                                  {/* Show service details based on screen size and appointment duration */}
-                                  <div className="flex items-center justify-between mt-0 sm:mt-1">
-                                    <div className="overflow-hidden">
-                                      {appointment.duration >= 30 ? (
-                                        <p className="truncate text-muted-foreground">
-                                          {appointment.serviceName} (
-                                          {t("appointmentDetails.duration", {
-                                            duration: appointment.duration,
-                                          })}
-                                          )
-                                        </p>
-                                      ) : (
-                                        <p className="truncate text-muted-foreground hidden sm:block">
-                                          {appointment.serviceName} (
-                                          {t("appointmentDetails.duration", {
-                                            duration: appointment.duration,
-                                          })}
-                                          )
-                                        </p>
+                                <div className="text-sm sm:text-base h-full flex flex-col p-2 sm:p-3 overflow-hidden">
+                                  {/* Only show details in the first block of a multi-block appointment */}
+                                  {displayInfo.isStart && (
+                                    <div className="flex items-center gap-1">
+                                      <p className="font-medium truncate text-sm sm:text-base">
+                                        {appointment.customerName}
+                                      </p>
+                                      {appointment.status && (
+                                        <span
+                                          className={`inline-block w-3 h-3 rounded-full ${getStatusColor(appointment.status)}`}
+                                          title={appointment.status}
+                                        />
                                       )}
                                     </div>
-                                  </div>
+                                  )}
+
+                                  {/* Show service details based on screen size and appointment duration */}
+                                  {displayInfo.isStart && (
+                                    <div className="flex items-center justify-between mt-1 sm:mt-2">
+                                      <div className="overflow-hidden">
+                                        {appointment.duration >= 30 ? (
+                                          <p className="truncate text-muted-foreground text-sm sm:text-base">
+                                            {appointment.serviceName} (
+                                            {t("appointmentDetails.duration", {
+                                              duration: appointment.duration,
+                                            })}
+                                            )
+                                            {/* Show team member preference indicator */}
+                                            {appointment.teamMemberPreference ===
+                                            "any" ? (
+                                              <span className="ml-1 text-xs sm:text-sm bg-secondary px-1 py-0.5 rounded">
+                                                {t("anyStaff")}
+                                              </span>
+                                            ) : (
+                                              <span className="ml-1 text-xs sm:text-sm bg-muted px-1 py-0.5 rounded">
+                                                {t("specificStaff")}
+                                              </span>
+                                            )}
+                                          </p>
+                                        ) : (
+                                          <p className="truncate text-muted-foreground hidden sm:block text-sm sm:text-base">
+                                            {appointment.serviceName} (
+                                            {t("appointmentDetails.duration", {
+                                              duration: appointment.duration,
+                                            })}
+                                            )
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -250,7 +305,7 @@ export function MultiMemberDayView({
 
                           {isWorkingHour && hourAppointments.length === 0 && (
                             <div className="h-full flex items-center justify-center">
-                              <p className="text-[10px] sm:text-xs text-muted-foreground">
+                              <p className="text-sm sm:text-base text-muted-foreground">
                                 {t("available")}
                               </p>
                             </div>
@@ -276,6 +331,7 @@ export function MultiMemberDayView({
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         teamMember={selectedTeamMember || undefined}
+        onAppointmentUpdated={onAppointmentUpdated}
       />
     </div>
   );

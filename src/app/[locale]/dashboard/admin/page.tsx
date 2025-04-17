@@ -41,7 +41,6 @@ function AdminActionPanel() {
     | "/dashboard/clients"
     | "/dashboard/team"
     | "/dashboard/subscriptions"
-    | "/dashboard/analytics"
     | "/dashboard/messages"
     | "/dashboard/services"
     | "/dashboard/settings";
@@ -119,7 +118,6 @@ export default function AdminDashboardPage() {
           <Tabs defaultValue="overview" className="space-y-4">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
               <TabsTrigger value="reports">Reports</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
             </TabsList>
@@ -197,18 +195,7 @@ export default function AdminDashboardPage() {
                 </Card>
               </div>
             </TabsContent>
-            <TabsContent value="analytics" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Analytics Content</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p>This is where your analytics content would go.</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
+
             <TabsContent value="reports" className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>

@@ -20,6 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+
 import { Switch } from "@/components/ui/switch";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,6 +34,7 @@ const serviceSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
   description: z.string().optional(),
   color: z.string().optional(),
+  category: z.string().optional(),
   active: z.boolean().default(true),
 });
 
@@ -66,6 +68,7 @@ export function ServiceForm({
       name: service?.name || "",
       description: service?.description || "",
       color: service?.color || "#6366F1", // Default indigo color
+      category: service?.category || "",
       active: service?.active ?? true,
     },
   });
@@ -77,6 +80,7 @@ export function ServiceForm({
         name: service.name,
         description: service.description || "",
         color: service.color || "#6366F1",
+        category: service.category || "",
         active: service.active ?? true,
       });
     } else {
@@ -84,6 +88,7 @@ export function ServiceForm({
         name: "",
         description: "",
         color: "#6366F1",
+        category: "",
         active: true,
       });
     }
@@ -139,6 +144,7 @@ export function ServiceForm({
             name: data.name,
             description: data.description || null,
             color: data.color || null,
+            category: data.category || null,
             active: data.active,
             workspaceId: workspaceId,
           }),
@@ -240,6 +246,24 @@ export function ServiceForm({
                       className="flex-1"
                     />
                   </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("category")}</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t("categoryPlaceholder")}
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

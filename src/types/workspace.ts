@@ -40,4 +40,6 @@ export interface WorkspaceProfile {
   stripe_connect_account_id?: string | null;
   stripe_connect_onboarding_complete?: boolean;
   subscription_status?: string | null;
+  // Payment settings
+  require_upfront_payment?: boolean;
 }

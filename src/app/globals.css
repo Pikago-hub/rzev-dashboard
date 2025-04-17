@@ -136,3 +136,22 @@ body {
   pointer-events: none;
   z-index: 1;
 }
+
+/* Calendar appointment styling for continuous blocks */
+.border-t-0 {
+  margin-top: -1px; /* Overlap borders to create a continuous look */
+}
+
+.border-b-0 {
+  margin-bottom: -1px; /* Overlap borders to create a continuous look */
+}
+
+/* Ensure appointments with the same ID appear as a single continuous block */
+[data-appointment-id] {
+  transition: background-color 0.2s ease;
+}
+
+/* When hovering over any part of an appointment, highlight all parts with the same ID */
+[data-appointment-id]:hover ~ [data-appointment-id] {
+  opacity: 0.8;
+}
