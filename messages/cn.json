@@ -914,6 +914,8 @@
         "displayNamePlaceholder": "您希望如何被称呼",
         "phone": "电话号码",
         "phonePlaceholder": "输入您的电话号码",
+        "email": "电子邮件",
+        "emailPlaceholder": "输入您的电子邮件地址",
         "saveChanges": "保存更改",
         "saveSuccess": "个人资料已成功更新",
         "saveError": "更新个人资料时出错",

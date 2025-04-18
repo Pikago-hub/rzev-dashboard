@@ -304,14 +304,21 @@ export default function TeamPage() {
     if (!workspaceProfile?.id || !session) return;
 
     try {
-      const { error } = await supabase
-        .from("workspace_invitations")
-        .update({ status: "expired" })
-        .eq("id", invitationId)
-        .eq("workspace_id", workspaceProfile.id);
+      const response = await fetch("/api/team/cancel-invitation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          invitationId,
+          workspaceId: workspaceProfile.id,
+        }),
+      });
 
-      if (error) {
-        throw new Error(error.message || "Failed to cancel invitation");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to cancel invitation");
       }
 
       toast({

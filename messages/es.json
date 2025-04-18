@@ -935,6 +935,8 @@
         "displayNamePlaceholder": "Cómo desea ser identificado",
         "phone": "Número de teléfono",
         "phonePlaceholder": "Ingrese su número de teléfono",
+        "email": "Correo electrónico",
+        "emailPlaceholder": "Ingrese su correo electrónico",
         "saveChanges": "Guardar cambios",
         "saveSuccess": "Perfil actualizado con éxito",
         "saveError": "Error al actualizar el perfil",

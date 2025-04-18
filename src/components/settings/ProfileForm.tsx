@@ -26,6 +26,7 @@ const profileSchema = z.object({
   first_name: z.string().min(1, { message: "First name is required" }),
   last_name: z.string().min(1, { message: "Last name is required" }),
   display_name: z.string().min(1, { message: "Display name is required" }),
+  email: z.string().email({ message: "Invalid email address" }),
   phone: z.string().optional(),
 });
 
@@ -55,6 +56,7 @@ export function ProfileForm({
       first_name: teamMemberProfile?.first_name || "",
       last_name: teamMemberProfile?.last_name || "",
       display_name: teamMemberProfile?.display_name || "",
+      email: teamMemberProfile?.email || user?.email || "",
     },
   });
 
@@ -78,6 +80,7 @@ export function ProfileForm({
           first_name: data.first_name,
           last_name: data.last_name,
           display_name: data.display_name,
+          email: data.email,
           phone: phoneNumber || null,
         },
       };
@@ -168,6 +171,25 @@ export function ProfileForm({
                 <Input
                   id="display-name"
                   placeholder={t("profile.displayNamePlaceholder")}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("profile.email")}</FormLabel>
+              <FormControl>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={t("profile.emailPlaceholder")}
                   {...field}
                 />
               </FormControl>

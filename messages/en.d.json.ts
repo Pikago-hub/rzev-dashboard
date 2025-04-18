@@ -939,6 +939,8 @@ declare const messages: {
         "phone": "Phone Number",
         "phonePlaceholder": "Enter your phone number",
         "saveChanges": "Save Changes",
+        "email": "Email",
+        "emailPlaceholder": "Enter your email address",
         "saveSuccess": "Profile updated successfully",
         "saveError": "Failed to update profile",
         "fetchError": "Failed to load profile information",
