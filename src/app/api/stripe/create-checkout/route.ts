@@ -209,20 +209,60 @@ export async function POST(request: NextRequest) {
                 );
               }
 
-              // Create a new checkout session with both the new plan and the additional seats
+              // Get the usage-based price IDs
+              const { data: usagePrices, error: usagePricesError } =
+                await supabaseAdmin
+                  .from("usage_prices")
+                  .select("*")
+                  .in("lookup_key", [
+                    "usage_messages",
+                    "usage_emails",
+                    "usage_call_minutes",
+                  ]);
+
+              if (usagePricesError) {
+                console.error("Error fetching usage prices:", usagePricesError);
+                // Continue without usage prices if there's an error
+              }
+
+              // Define a type that allows line items with or without quantity
+              type LineItem = {
+                price: string;
+                quantity?: number;
+              };
+
+              // Create line items array with base subscription and additional seats
+              const lineItems: LineItem[] = [
+                {
+                  price: priceId,
+                  quantity: 1,
+                },
+                {
+                  price: additionalSeatPriceId,
+                  quantity: additionalSeats,
+                },
+              ];
+
+              // Add usage-based prices if available
+              if (usagePrices && usagePrices.length > 0) {
+                for (const usagePrice of usagePrices) {
+                  // For metered prices, we don't specify quantity
+                  lineItems.push({
+                    price: usagePrice.stripe_price_id,
+                    // No quantity for metered prices
+                  });
+                }
+              } else {
+                console.warn(
+                  "No usage-based prices found. Usage-based billing may not work correctly."
+                );
+              }
+
+              // Create a new checkout session with the new plan, additional seats, and usage-based prices
               const session = await stripe.checkout.sessions.create({
                 customer: stripeCustomerId,
                 payment_method_types: ["card"],
-                line_items: [
-                  {
-                    price: priceId,
-                    quantity: 1,
-                  },
-                  {
-                    price: additionalSeatPriceId,
-                    quantity: additionalSeats,
-                  },
-                ],
+                line_items: lineItems,
                 mode: "subscription",
                 subscription_data: {
                   // Only apply trial period for new customers, not for existing customers changing plans
@@ -262,16 +302,56 @@ export async function POST(request: NextRequest) {
               return NextResponse.json({ url: session.url });
             }
 
+            // Get the usage-based price IDs
+            const { data: usagePrices, error: usagePricesError } =
+              await supabaseAdmin
+                .from("usage_prices")
+                .select("*")
+                .in("lookup_key", [
+                  "usage_messages",
+                  "usage_emails",
+                  "usage_call_minutes",
+                ]);
+
+            if (usagePricesError) {
+              console.error("Error fetching usage prices:", usagePricesError);
+              // Continue without usage prices if there's an error
+            }
+
+            // Define a type that allows line items with or without quantity
+            type LineItem = {
+              price: string;
+              quantity?: number;
+            };
+
+            // Create line items array with base subscription
+            const lineItems: LineItem[] = [
+              {
+                price: priceId,
+                quantity: 1,
+              },
+            ];
+
+            // Add usage-based prices if available
+            if (usagePrices && usagePrices.length > 0) {
+              for (const usagePrice of usagePrices) {
+                // For metered prices, we don't specify quantity
+                lineItems.push({
+                  price: usagePrice.stripe_price_id,
+                  // No quantity for metered prices
+                });
+              }
+            } else {
+              console.warn(
+                "No usage-based prices found. Usage-based billing may not work correctly."
+              );
+            }
+
             // If no additional seats, create a new checkout session without additional seats
             const session = await stripe.checkout.sessions.create({
               customer: stripeCustomerId,
               payment_method_types: ["card"],
-              line_items: [
-                {
-                  price: priceId,
-                  quantity: 1,
-                },
-              ],
+              line_items: lineItems,
               mode: "subscription",
               subscription_data: {
                 // Only apply trial period for new customers, not for existing customers changing plans
@@ -387,15 +467,54 @@ export async function POST(request: NextRequest) {
     const isFirstTimeSubscriber =
       !previousSubscriptions || previousSubscriptions.length === 0;
 
+    // Get the usage-based price IDs
+    const { data: usagePrices, error: usagePricesError } = await supabaseAdmin
+      .from("usage_prices")
+      .select("*")
+      .in("lookup_key", [
+        "usage_messages",
+        "usage_emails",
+        "usage_call_minutes",
+      ]);
+
+    if (usagePricesError) {
+      console.error("Error fetching usage prices:", usagePricesError);
+      // Continue without usage prices if there's an error
+    }
+
+    // Define a type that allows line items with or without quantity
+    type LineItem = {
+      price: string;
+      quantity?: number;
+    };
+
+    // Create line items array with base subscription
+    const lineItems: LineItem[] = [
+      {
+        price: priceId,
+        quantity: 1,
+      },
+    ];
+
+    // Add usage-based prices if available
+    if (usagePrices && usagePrices.length > 0) {
+      for (const usagePrice of usagePrices) {
+        // For metered prices, we don't specify quantity
+        lineItems.push({
+          price: usagePrice.stripe_price_id,
+          // No quantity for metered prices
+        });
+      }
+    } else {
+      console.warn(
+        "No usage-based prices found. Usage-based billing may not work correctly."
+      );
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       payment_method_types: ["card"],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       mode: "subscription",
       subscription_data: {
         // Only apply trial period for first-time subscribers

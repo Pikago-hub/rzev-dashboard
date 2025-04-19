@@ -1,6 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser, validateWorkspaceAccess } from "@/lib/server/auth-utils";
+import { sendRescheduleDeclinedEmail } from "@/lib/email-utils";
+import {
+  sendRescheduleDeclinedSMS,
+  getCustomerPhoneNumberFromAppointment,
+} from "@/lib/message-utils";
 
 // Create a Supabase client with the service role key for admin operations
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -54,7 +59,12 @@ export async function POST(request: NextRequest) {
     // First, get the appointment to check if it has a pending reschedule
     const { data: appointment, error: fetchError } = await supabaseAdmin
       .from("appointments")
-      .select("*")
+      .select(
+        `
+        *,
+        services(name)
+      `
+      )
       .eq("id", appointmentId)
       .eq("workspace_id", workspaceId)
       .single();
@@ -142,6 +152,62 @@ export async function POST(request: NextRequest) {
         { error: "Failed to decline reschedule" },
         { status: 500 }
       );
+    }
+
+    // Get workspace name for the email
+    const { data: workspace, error: workspaceError } = await supabaseAdmin
+      .from("workspaces")
+      .select("name")
+      .eq("id", workspaceId)
+      .single();
+
+    if (workspaceError) {
+      console.error("Error fetching workspace:", workspaceError);
+      // Continue anyway, we'll just log the error
+    }
+
+    // Send declined email to customer if email is available
+    if (appointment.customer_email) {
+      try {
+        await sendRescheduleDeclinedEmail(
+          appointment.customer_email,
+          {
+            customerName: appointment.customer_name || "Customer",
+            workspaceName: workspace?.name || "Our Business",
+            serviceName: appointment.services?.name || "Service",
+            date: appointment.date,
+            startTime: appointment.start_time,
+          },
+          workspaceId,
+          authResult.user.id
+        );
+      } catch (emailError) {
+        // Log the error but don't fail the request
+        console.error("Error sending reschedule declined email:", emailError);
+      }
+    }
+
+    // Send declined SMS to customer if phone number is available
+    try {
+      const customerPhone =
+        await getCustomerPhoneNumberFromAppointment(appointment);
+      if (customerPhone) {
+        await sendRescheduleDeclinedSMS(
+          customerPhone,
+          {
+            customerName: appointment.customer_name || "Customer",
+            workspaceName: workspace?.name || "Our Business",
+            serviceName: appointment.services?.name || "Service",
+            date: appointment.date,
+            startTime: appointment.start_time,
+          },
+          workspaceId,
+          authResult.user.id
+        );
+      }
+    } catch (smsError) {
+      // Log the error but don't fail the request
+      console.error("Error sending reschedule declined SMS:", smsError);
     }
 
     return NextResponse.json({

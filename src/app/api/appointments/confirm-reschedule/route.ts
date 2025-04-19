@@ -1,6 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser, validateWorkspaceAccess } from "@/lib/server/auth-utils";
+import { sendRescheduleConfirmationEmail } from "@/lib/email-utils";
+import {
+  sendRescheduleConfirmationSMS,
+  getCustomerPhoneNumberFromAppointment,
+} from "@/lib/message-utils";
 
 // Create a Supabase client with the service role key for admin operations
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -54,7 +59,13 @@ export async function POST(request: NextRequest) {
     // First, get the appointment to check if it has a pending reschedule
     const { data: appointment, error: fetchError } = await supabaseAdmin
       .from("appointments")
-      .select("*")
+      .select(
+        `
+        *,
+        services(name),
+        team_members(display_name)
+      `
+      )
       .eq("id", appointmentId)
       .eq("workspace_id", workspaceId)
       .single();
@@ -150,6 +161,69 @@ export async function POST(request: NextRequest) {
         { error: "Failed to confirm reschedule" },
         { status: 500 }
       );
+    }
+
+    // Get workspace name for the email
+    const { data: workspace, error: workspaceError } = await supabaseAdmin
+      .from("workspaces")
+      .select("name")
+      .eq("id", workspaceId)
+      .single();
+
+    if (workspaceError) {
+      console.error("Error fetching workspace:", workspaceError);
+      // Continue anyway, we'll just log the error
+    }
+
+    // Send confirmation email to customer if email is available
+    if (appointment.customer_email) {
+      try {
+        await sendRescheduleConfirmationEmail(
+          appointment.customer_email,
+          {
+            customerName: appointment.customer_name || "Customer",
+            workspaceName: workspace?.name || "Our Business",
+            serviceName: appointment.services?.name || "Service",
+            date: pendingReschedule.new_date,
+            startTime: pendingReschedule.new_time,
+            endTime: pendingReschedule.new_end_time,
+            teamMemberName: appointment.team_members?.display_name,
+          },
+          workspaceId,
+          authResult.user.id
+        );
+      } catch (emailError) {
+        // Log the error but don't fail the request
+        console.error(
+          "Error sending reschedule confirmation email:",
+          emailError
+        );
+      }
+    }
+
+    // Send confirmation SMS to customer if phone number is available
+    try {
+      const customerPhone =
+        await getCustomerPhoneNumberFromAppointment(appointment);
+      if (customerPhone) {
+        await sendRescheduleConfirmationSMS(
+          customerPhone,
+          {
+            customerName: appointment.customer_name || "Customer",
+            workspaceName: workspace?.name || "Our Business",
+            serviceName: appointment.services?.name || "Service",
+            date: pendingReschedule.new_date,
+            startTime: pendingReschedule.new_time,
+            endTime: pendingReschedule.new_end_time,
+            teamMemberName: appointment.team_members?.display_name,
+          },
+          workspaceId,
+          authResult.user.id
+        );
+      }
+    } catch (smsError) {
+      // Log the error but don't fail the request
+      console.error("Error sending reschedule confirmation SMS:", smsError);
     }
 
     return NextResponse.json({

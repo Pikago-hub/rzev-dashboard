@@ -4,6 +4,14 @@ import {
   supabaseAdmin,
   validateWorkspaceAccess,
 } from "@/lib/server/auth-utils";
+import {
+  sendAppointmentConfirmationEmail,
+  sendTeamMemberAppointmentNotificationEmail,
+} from "@/lib/email-utils";
+import {
+  sendAppointmentConfirmationSMS,
+  getCustomerPhoneNumberFromAppointment,
+} from "@/lib/message-utils";
 
 // POST: Confirm an appointment
 export async function POST(request: NextRequest) {
@@ -56,6 +64,44 @@ export async function POST(request: NextRequest) {
     // Get the current timestamp for updated_at
     const now = new Date().toISOString();
 
+    // First, get the appointment details to use for the email
+    const { data: appointmentData, error: fetchError } = await supabaseAdmin
+      .from("appointments")
+      .select(
+        `
+        *,
+        services(name),
+        team_members(display_name, email)
+      `
+      )
+      .eq("id", appointmentId)
+      .eq("workspace_id", workspaceId)
+      .eq("status", "pending") // Only confirm if it's currently pending
+      .single();
+
+    if (fetchError || !appointmentData) {
+      console.error("Error fetching appointment:", fetchError);
+      return NextResponse.json(
+        { error: "Appointment not found or already confirmed" },
+        { status: 404 }
+      );
+    }
+
+    // Get workspace name for the email
+    const { data: workspace, error: workspaceError } = await supabaseAdmin
+      .from("workspaces")
+      .select("name")
+      .eq("id", workspaceId)
+      .single();
+
+    if (workspaceError) {
+      console.error("Error fetching workspace:", workspaceError);
+      return NextResponse.json(
+        { error: "Failed to fetch workspace details" },
+        { status: 500 }
+      );
+    }
+
     // Update the appointment status to confirmed
     const { data, error } = await supabaseAdmin
       .from("appointments")
@@ -81,6 +127,84 @@ export async function POST(request: NextRequest) {
         { error: "Appointment not found or already confirmed" },
         { status: 404 }
       );
+    }
+
+    // Send confirmation email to customer if email is available
+    if (appointmentData.customer_email) {
+      try {
+        await sendAppointmentConfirmationEmail(
+          appointmentData.customer_email,
+          {
+            customerName: appointmentData.customer_name || "Customer",
+            workspaceName: workspace.name,
+            serviceName: appointmentData.services?.name || "Service",
+            date: appointmentData.date,
+            startTime: appointmentData.start_time,
+            endTime: appointmentData.end_time,
+            teamMemberName: appointmentData.team_members?.display_name,
+            price: appointmentData.price,
+            notes: appointmentData.notes,
+          },
+          workspaceId,
+          authResult.user.id
+        );
+      } catch (emailError) {
+        // Log the error but don't fail the request
+        console.error("Error sending confirmation email:", emailError);
+      }
+    }
+
+    // Send confirmation SMS to customer if phone number is available
+    try {
+      const customerPhone =
+        await getCustomerPhoneNumberFromAppointment(appointmentData);
+      if (customerPhone) {
+        await sendAppointmentConfirmationSMS(
+          customerPhone,
+          {
+            customerName: appointmentData.customer_name || "Customer",
+            workspaceName: workspace.name,
+            serviceName: appointmentData.services?.name || "Service",
+            date: appointmentData.date,
+            startTime: appointmentData.start_time,
+            endTime: appointmentData.end_time,
+            teamMemberName: appointmentData.team_members?.display_name,
+          },
+          workspaceId,
+          authResult.user.id
+        );
+      }
+    } catch (smsError) {
+      // Log the error but don't fail the request
+      console.error("Error sending confirmation SMS:", smsError);
+    }
+
+    // Send notification email to team member if assigned and email is available
+    if (appointmentData.team_member_id && appointmentData.team_members?.email) {
+      try {
+        await sendTeamMemberAppointmentNotificationEmail(
+          appointmentData.team_members.email,
+          {
+            teamMemberName:
+              appointmentData.team_members.display_name || "Team Member",
+            workspaceName: workspace.name,
+            customerName: appointmentData.customer_name || "Customer",
+            serviceName: appointmentData.services?.name || "Service",
+            date: appointmentData.date,
+            startTime: appointmentData.start_time,
+            endTime: appointmentData.end_time,
+            notes: appointmentData.notes,
+          },
+          workspaceId,
+          authResult.user.id
+        );
+      } catch (emailError) {
+        // Log the error but don't fail the request
+        console.error(
+          "Error sending team member notification email:",
+          emailError
+        );
+      }
     }
 
     return NextResponse.json({

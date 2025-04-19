@@ -298,13 +298,18 @@ export async function POST(request: NextRequest) {
       ? format(new Date(invitation.expires_at), "PPP")
       : "in 7 days";
 
-    const emailResult = await sendTeamInvitationEmail(email, {
-      workspaceName: workspace.name || "Your team",
-      inviterName,
-      invitationLink,
-      role,
-      expiresAt,
-    });
+    const emailResult = await sendTeamInvitationEmail(
+      email,
+      {
+        workspaceName: workspace.name || "Your team",
+        inviterName,
+        invitationLink,
+        role,
+        expiresAt,
+      },
+      workspaceId,
+      user.id
+    );
 
     if (!emailResult.success) {
       console.error("Error sending invitation email:", emailResult.error);

@@ -53,13 +53,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if the workspace has an active subscription
-    const { data: subscription, error: subscriptionError } = await supabaseAdmin
-      .from("subscriptions")
-      .select("id, status, usage_billing_start, usage_billing_end")
-      .eq("workspace_id", workspaceId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const { data: subscriptionData, error: subscriptionError } =
+      await supabaseAdmin
+        .from("subscriptions")
+        .select("id, status, usage_billing_start, usage_billing_end")
+        .eq("workspace_id", workspaceId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    // We use a separate variable that can be reassigned
+    let subscription = subscriptionData;
 
     if (subscriptionError) {
       console.error("Error fetching subscription:", subscriptionError);
@@ -72,13 +76,65 @@ export async function POST(request: NextRequest) {
     // Only record usage if there's an active subscription with usage billing periods set
     if (
       !subscription ||
-      (subscription.status !== "active" &&
-        subscription.status !== "trialing") ||
-      !subscription.usage_billing_start ||
-      !subscription.usage_billing_end
+      (subscription.status !== "active" && subscription.status !== "trialing")
     ) {
       return NextResponse.json(
-        { error: "No active subscription with usage billing periods found" },
+        { error: "No active subscription found" },
+        { status: 400 }
+      );
+    }
+
+    // Check if usage billing period has expired and trigger an update if needed
+    if (
+      subscription.status === "active" &&
+      subscription.usage_billing_end &&
+      new Date(subscription.usage_billing_end) < new Date()
+    ) {
+      console.log(
+        `Usage billing period has expired for subscription ${subscription.id}, triggering update`
+      );
+
+      try {
+        // Call the Edge Function to process the expired billing period
+        const functionUrl = `${process.env.SUPABASE_URL}/functions/v1/process-usage-billing`;
+        const response = await fetch(functionUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+        });
+
+        if (response.ok) {
+          console.log("Successfully triggered billing cycle update");
+
+          // Refetch the subscription with updated billing periods
+          const { data: updatedSubscription, error: refetchError } =
+            await supabaseAdmin
+              .from("subscriptions")
+              .select("id, status, usage_billing_start, usage_billing_end")
+              .eq("id", subscription.id)
+              .single();
+
+          if (!refetchError && updatedSubscription) {
+            subscription = updatedSubscription;
+          }
+        } else {
+          console.error(
+            "Failed to trigger billing cycle update:",
+            await response.text()
+          );
+        }
+      } catch (error) {
+        console.error("Error triggering billing cycle update:", error);
+        // Continue with the request even if the update fails
+      }
+    }
+
+    // Check if usage billing periods are set
+    if (!subscription.usage_billing_start || !subscription.usage_billing_end) {
+      return NextResponse.json(
+        { error: "No usage billing periods found for the subscription" },
         { status: 400 }
       );
     }
